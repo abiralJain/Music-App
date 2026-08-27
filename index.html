@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7c967b">
+  <meta name="description" content="A quiet collection of animated worlds for focus, rest, and daydreaming.">
+  <title>Dream Worlds</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23b8d9c6'/%3E%3Cpath d='M9 18c5-1 8-5 11-10 2 7-1 13-8 15' fill='none' stroke='%2328302e' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <main class="world" id="world">
+    <div class="scene-stage" aria-hidden="true">
+      <div class="scene-poster" id="scenePoster"></div>
+      <div class="youtube-wrap" id="youtubeWrap"><div id="youtubePlayer"></div></div>
+      <video class="local-scene" id="localScene" src="assets/rain-window.mp4" muted loop playsinline preload="auto"></video>
+      <div class="scene-veil"></div>
+      <div class="scene-grain"></div>
+    </div>
+
+    <header class="world-note" aria-live="polite">
+      <span class="world-dot"></span>
+      <div>
+        <p id="sceneEyebrow">Now drifting in</p>
+        <h1 id="sceneTitle">Piano rain</h1>
+      </div>
+    </header>
+
+    <div class="daily-cue" id="dailyCue" role="status" aria-live="polite">
+      <span aria-hidden="true">✦</span>
+      <p id="cueText">You do not need a perfect mood to begin.</p>
+    </div>
+
+    <button class="quiet-return" id="quietReturn" aria-label="Show controls">Show controls <kbd>Q</kbd></button>
+
+    <section class="scene-shelf" id="sceneShelf" aria-label="Choose a dream world" aria-hidden="true" inert>
+      <div class="shelf-topline">
+        <div>
+          <span class="micro-label">Dream shelf · 04 tapes</span>
+          <h2>Choose where to go</h2>
+        </div>
+        <button class="round-button pressable" data-close-panel="sceneShelf" aria-label="Close dream shelf">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="postcard-row" id="postcardRow"></div>
+      <p class="shelf-hint">Picture and base soundtrack travel together. Mixer layers stay with you.</p>
+    </section>
+
+    <section class="mixer-drawer" id="mixerDrawer" aria-label="Ambient mixer" aria-hidden="true" inert>
+      <div class="drawer-handle" aria-hidden="true"></div>
+      <div class="mixer-header">
+        <div>
+          <span class="micro-label">Pocket mixer · real field recordings</span>
+          <h2>Tune the room</h2>
+        </div>
+        <div class="mixer-actions">
+          <button class="text-button pressable" id="saveMix">Save mix</button>
+          <button class="round-button pressable" data-close-panel="mixerDrawer" aria-label="Close mixer">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="mixer-body">
+        <div class="preset-strip" aria-label="Mood tapes">
+          <span class="micro-label">Mood tapes</span>
+          <div class="preset-row" id="presetRow"></div>
+        </div>
+        <div class="channels" id="channels"></div>
+      </div>
+
+      <div class="drawer-footer">
+        <button class="utility-button pressable" id="driftButton" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8c3-4 6-4 9 0s6 4 9 0M3 16c3-4 6-4 9 0s6 4 9 0"/></svg>
+          Drift off
+        </button>
+        <button class="utility-button pressable" id="surpriseButton">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z"/></svg>
+          Surprise me
+        </button>
+        <p id="saveStatus" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <div class="panel-backdrop" id="panelBackdrop" aria-hidden="true"></div>
+
+    <nav class="control-dock" id="controlDock" aria-label="Dream Worlds controls">
+      <button class="scene-button pressable" id="sceneButton" aria-label="Choose dream world" aria-controls="sceneShelf" aria-expanded="false">
+        <span class="scene-thumb" id="sceneThumb"></span>
+        <span class="scene-copy">
+          <span>Dream world</span>
+          <strong id="dockSceneTitle">Piano rain</strong>
+        </span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+      </button>
+
+      <span class="dock-rule" aria-hidden="true"></span>
+
+      <button class="play-button pressable" id="playButton" aria-label="Play" aria-pressed="false">
+        <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7V5z"/></svg>
+        <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+      </button>
+
+      <label class="volume-control" title="Master volume">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zM17 8c1.7 2.2 1.7 5.8 0 8M20 5c3.3 4 3.3 10 0 14"/></svg>
+        <input id="masterVolume" type="range" min="0" max="100" value="68" aria-label="Master volume">
+        <output id="masterOutput">68</output>
+      </label>
+
+      <button class="dock-button pressable" id="mixerButton" aria-label="Open ambient mixer" aria-controls="mixerDrawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M8 14v6"/></svg>
+        <span>Mixer</span>
+      </button>
+
+      <div class="more-wrap">
+        <button class="round-button pressable" id="moreButton" aria-label="More controls" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+        </button>
+        <div class="more-menu" id="moreMenu" aria-hidden="true">
+          <button class="menu-item pressable" id="timerButton"><span>Sleep timer</span><strong id="timerValue">Off</strong></button>
+          <button class="menu-item pressable" id="quietButton"><span>Quiet mode</span><kbd>Q</kbd></button>
+          <button class="menu-item pressable" id="fullscreenButton"><span>Full screen</span><kbd>F</kbd></button>
+        </div>
+      </div>
+    </nav>
+
+    <audio id="baseAudio" src="assets/audio/placid-ambient.ogg" loop preload="auto"></audio>
+    <audio id="rainAudio" src="assets/audio/rain.ogg" loop preload="metadata"></audio>
+    <audio id="forestAudio" src="assets/audio/forest.ogg" loop preload="metadata"></audio>
+    <audio id="cafeAudio" src="assets/audio/cafe.ogg" loop preload="metadata"></audio>
+    <audio id="brownAudio" src="assets/audio/brown.ogg" loop preload="metadata"></audio>
+  </main>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
