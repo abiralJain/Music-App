@@ -17,7 +17,36 @@
 
   /* ---------- data ---------- */
 
-  var SUGGESTED_ID = "Q0AULj4UltI";
+  // Verified embeddable on 2026-08-28 by probing the player directly (oEmbed
+  // lies — it returns 200 for videos that are embed-blocked). Probed in order;
+  // the first that actually plays wins, so one uploader flipping a switch no
+  // longer takes the feature down. These are third-party re-uploads and can
+  // be withdrawn at any time — see README.
+  var STATIONS = [
+    { id: "-sanFLupL-E", label: "Ghibli piano for sleep",      note: "1 h 55 m" },
+    { id: "-pbjXqByPLA", label: "The best of Ghibli piano",     note: "1 h 21 m" },
+    { id: "7voSN82FGF0", label: "Ghibli summer night piano",    note: "7 h 18 m" }
+  ];
+
+  // What YouTube's numeric onError codes actually mean, so the app can say
+  // whose problem it is instead of a single vague sentence.
+  function sourceMessage(code) {
+    if (code === 101 || code === 150) return {
+      title: "The uploader blocked embedded playback",
+      body: "This video plays only on YouTube itself. Nothing is wrong with your link — the owner turned embedding off." };
+    if (code === 100) return {
+      title: "That video is gone",
+      body: "It was removed, made private, or never existed." };
+    if (code === 2) return {
+      title: "That video ID is not valid",
+      body: "Check the link and try again." };
+    if (code === 5) return {
+      title: "The player could not start",
+      body: "The HTML5 player failed here. Reloading usually clears it." };
+    return {
+      title: "This source will not play here",
+      body: "Your room and scene are untouched. Try another link below." };
+  }
 
   var worlds = [
     { id: "rain-window", title: "Rain window", kind: "local", note: "A quiet city seen through rain",
@@ -29,30 +58,6 @@
     { id: "your-source", title: "Your source", kind: "youtube", note: "Your tuned video as the scene",
       video: null, poster: null }
   ];
-
-  // Chapter marks for the suggested station only. They describe that one
-  // video, so they are never applied to a source the user supplies.
-  var SUGGESTED_CHAPTERS = [
-    ["A Town with an Ocean View", "Kiki's Delivery Service", 3],
-    ["Princess Mononoke", "Princess Mononoke", 286],
-    ["The Path of the Wind", "My Neighbor Totoro", 386],
-    ["Once in a While, Talk of the Old Days", "Porco Rosso", 713],
-    ["Wrapped in Gentleness", "Kiki's Delivery Service", 1058],
-    ["My Neighbor Totoro", "My Neighbor Totoro", 1381],
-    ["Nausicaä of the Valley of the Wind", "Nausicaä", 1642],
-    ["Carrying You", "Castle in the Sky", 1930],
-    ["The Name of Life", "Spirited Away", 2259],
-    ["Summer of Goodbye", "From Up on Poppy Hill", 2608],
-    ["Take Me Home, Country Roads", "Whisper of the Heart", 2926],
-    ["Message by Rouge", "Kiki's Delivery Service", 3266],
-    ["Stroll", "My Neighbor Totoro", 3555],
-    ["Therru's Song", "Tales from Earthsea", 3841],
-    ["Arrietty's Song", "The Secret World of Arrietty", 4164],
-    ["Ponyo on the Cliff by the Sea", "Ponyo", 4451],
-    ["Nausicaä Requiem", "Nausicaä", 4681],
-    ["The Promise of the World", "Howl's Moving Castle", 4935],
-    ["Reprise", "Spirited Away", 5264]
-  ].map(function (c) { return { title: c[0], subtitle: c[1], start: c[2] }; });
 
   var roomLayers = [
     { id: "rain",    name: "Gentle rain",    note: "window",  icon: "i-cloud-rain" },
@@ -92,7 +97,8 @@
     weather: "none", weatherIntensity: 48, drift: false, driftTimer: null,
     selectedMinutes: 25, focusEndsAt: null, focusTimer: null,
     surface: null,
-    source: null,              // { kind:'chapters'|'video'|'playlist', id, label }
+    source: null,              // { kind:'video'|'playlist', id, label, station? }
+    stationIndex: -1,
     tracks: [], trackIndex: 0,
     ytApiLoading: false, ytReady: false, ytFailed: false
   };
@@ -266,7 +272,7 @@
     state.ytFailed = false;
     state.ytReady = false;
     state.trackIndex = 0;
-    state.tracks = source.kind === "chapters" ? SUGGESTED_CHAPTERS.slice() : [];
+    state.tracks = [];
     if (ytPlayer) { try { ytPlayer.destroy(); } catch (e) {} ytPlayer = null; }
     $("#sourceNotice").hidden = true;
     $("#tunerError").hidden = true;
@@ -277,24 +283,49 @@
     if (announce !== false) toast("Tuning in " + source.label + "…");
   }
 
-  function sourceFailed(reason) {
+  function sourceFailed(code) {
     if (state.ytFailed) return;
+    var wasStation = state.source && state.source.station;
+
+    // Self-heal: if a curated station is blocked, quietly try the next one
+    // before bothering the user. This is the failure that broke the old build.
+    if (wasStation && state.stationIndex < STATIONS.length - 1) {
+      state.stationIndex += 1;
+      var next = STATIONS[state.stationIndex];
+      if (ytPlayer) { try { ytPlayer.destroy(); } catch (e) {} ytPlayer = null; }
+      state.ytReady = false;
+      clearTimeout(ytFailTimer);
+      state.source = { kind: "video", id: next.id, label: next.label, station: true };
+      state.tracks = [];
+      persist();
+      paintTuner();
+      loadYouTubeApi();
+      return;
+    }
+
     state.ytFailed = true;
     state.ytReady = false;
     clearTimeout(ytFailTimer);
     $("#youtubeWrap").classList.remove("is-live");
-    // A tuned-source scene cannot survive a dead source — fall back visibly.
     if (worlds[state.worldIndex].kind === "youtube") {
       state.worldIndex = 0;
       paintWorld();
       showLocalWorld(worlds[0], true);
       persist();
     }
-    $("#noticeTitle").textContent = reason || "This source will not play here";
+    var msg = sourceMessage(code);
+    $("#noticeTitle").textContent = msg.title;
+    $("#noticeBody").textContent = msg.body;
+    // Even a blocked video has a working path to the content.
+    var link = $("#noticeOpen");
+    if (link && state.source) {
+      link.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(state.source.id);
+      link.hidden = false;
+    }
     $("#sourceNotice").hidden = false;
     paintTuner();
     paintWorld();
-    toast("That source will not play here. Your room ambience still works.", 5200);
+    toast(msg.title + ". Your room ambience still works.", 5200);
   }
 
   function loadYouTubeApi() {
@@ -305,7 +336,7 @@
       var s = document.createElement("script");
       s.src = "https://www.youtube.com/iframe_api";
       s.async = true;
-      s.onerror = function () { sourceFailed("Could not reach YouTube"); };
+      s.onerror = function () { sourceFailed(null); };
       document.head.appendChild(s);
       window.onYouTubeIframeAPIReady = function () { createPlayer(); };
     }
@@ -313,7 +344,7 @@
     // on a stretched thumbnail with working-looking controls.
     clearTimeout(ytFailTimer);
     ytFailTimer = setTimeout(function () {
-      if (!state.ytReady) sourceFailed("This source did not respond");
+      if (!state.ytReady) sourceFailed(null);
     }, 12000);
   }
 
@@ -321,48 +352,53 @@
     if (!state.source || ytPlayer) return;
     var vars = {
       autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3,
-      modestbranding: 1, playsinline: 1, rel: 0
+      modestbranding: 1, playsinline: 1, rel: 0,
+      origin: location.origin
     };
     var config = { playerVars: vars, events: {
       onReady: function (e) {
+        // An embed-blocked video still fires onReady — it reports
+        // isPlayable:false with errorCode "auth" and a 0 duration, and only
+        // then fires onError. Checking here closes the window in which the
+        // interface looked functional for a source that cannot play.
+        var vd = {};
+        try { vd = e.target.getVideoData() || {}; } catch (err) {}
+        if (vd.isPlayable === false) { sourceFailed(vd.errorCode === "auth" ? 150 : null); return; }
+
         state.ytReady = true; state.ytFailed = false;
         clearTimeout(ytFailTimer);
-        e.target.setVolume(Math.round(state.master * 0.8));
+        try { e.target.setVolume(Math.round(state.master * 0.8)); } catch (err) {}
+
         if (state.source.kind === "playlist") {
           var ids = [];
           try { ids = e.target.getPlaylist() || []; } catch (err) {}
           state.tracks = ids.map(function (_, i) { return { title: "Track " + (i + 1), subtitle: "" }; });
-          refreshCurrentTrackTitle();   // name the one we can name now
-        } else if (state.source.kind === "video") {
-          var d = {};
-          try { d = e.target.getVideoData() || {}; } catch (err) {}
-          state.tracks = [{ title: d.title || state.source.label, subtitle: "" }];
+          refreshCurrentTrackTitle();
         } else {
-          try { e.target.seekTo(state.tracks[state.trackIndex].start, true); } catch (err) {}
+          state.tracks = [{ title: vd.title || state.source.label, subtitle: "" }];
         }
+        $("#sourceNotice").hidden = true;
         paintTuner();
         paintWorld();
         if (worlds[state.worldIndex].kind === "youtube") $("#youtubeWrap").classList.add("is-live");
         if (state.playing) { try { e.target.playVideo(); } catch (err) {} }
       },
       onStateChange: function (e) {
-        if (e.data === 1) {                       // PLAYING
+        if (e.data === 1) {
           state.ytFailed = false;
           refreshCurrentTrackTitle();
           if (worlds[state.worldIndex].kind === "youtube") $("#youtubeWrap").classList.add("is-live");
         }
-        if (e.data === 0 && state.playing && state.source.kind === "chapters") selectTrack(0, false);
       },
-      onError: function () { sourceFailed("This source will not play here"); }
+      onError: function (e) { sourceFailed(e && e.data); }
     } };
     if (state.source.kind === "playlist") {
       vars.listType = "playlist"; vars.list = state.source.id;
     } else {
       config.videoId = state.source.id;
-      if (state.source.kind === "chapters") vars.start = state.tracks[state.trackIndex].start;
     }
     try { ytPlayer = new YT.Player("youtubePlayer", config); }
-    catch (e) { sourceFailed("Could not start the player"); }
+    catch (e) { sourceFailed(5); }
   }
 
   function refreshCurrentTrackTitle() {
@@ -417,7 +453,6 @@
         '<span class="list-num">' + (i + 1 < 10 ? "0" : "") + (i + 1) + '</span>' +
         '<span class="list-copy"><strong>' + escapeHtml(t.title) + '</strong>' +
         (t.subtitle ? '<small>' + escapeHtml(t.subtitle) + '</small>' : '') + '</span>' +
-        '<span class="list-time">' + (t.start != null ? formatTime(t.start) : "") + '</span>' +
       '</button>';
     }).join("");
   }
@@ -436,7 +471,6 @@
     if (ytPlayer && state.ytReady) {
       try {
         if (state.source.kind === "playlist") ytPlayer.playVideoAt(n);
-        else if (state.tracks[n].start != null) { ytPlayer.seekTo(state.tracks[n].start, true); ytPlayer.playVideo(); }
         else ytPlayer.playVideo();
         state.playing = true;
         reflectPlaying();
@@ -445,22 +479,6 @@
     paintTuner();
     persist();
     if (announce !== false) toast(state.tracks[n].title);
-  }
-
-  function watchChapters() {
-    clearInterval(ytWatch);
-    ytWatch = setInterval(function () {
-      if (!ytPlayer || !state.ytReady || !state.playing || state.ytFailed) return;
-      if (!state.source || state.source.kind !== "chapters") return;
-      if (Date.now() < ignoreWatchUntil) return;
-      try {
-        var t = ytPlayer.getCurrentTime(), found = -1;
-        for (var i = state.tracks.length - 1; i >= 0; i--) {
-          if (t >= state.tracks[i].start) { found = i; break; }
-        }
-        if (found >= 0 && found !== state.trackIndex) { state.trackIndex = found; paintTuner(); }
-      } catch (e) {}
-    }, 1000);
   }
 
   /* ---------- transport ---------- */
@@ -957,7 +975,6 @@
     $("#sourceInput").value = "";
     setSource({ kind: parsed.kind, id: parsed.id,
                 label: parsed.kind === "playlist" ? "your playlist" : "your video" });
-    watchChapters();
   }
 
   function bind() {
@@ -1020,8 +1037,9 @@
       if (e.key === "Enter") { e.preventDefault(); tuneFromInput(); }
     });
     $("#suggestedStation").addEventListener("click", function () {
-      setSource({ kind: "chapters", id: SUGGESTED_ID, label: "the Ghibli piano collection" });
-      watchChapters();
+      state.stationIndex = 0;
+      var st = STATIONS[0];
+      setSource({ kind: "video", id: st.id, label: st.label, station: true });
     });
     function focusTuner() {
       openSurface("musicPanel", $("#musicButton"));
@@ -1138,7 +1156,6 @@
       el.setAttribute("aria-hidden", "true");
     });
 
-    if (state.source && state.source.kind === "chapters") state.tracks = SUGGESTED_CHAPTERS.slice();
     state.trackIndex = Math.min(state.trackIndex, Math.max(0, state.tracks.length - 1));
 
     renderPresets();
@@ -1175,7 +1192,7 @@
     bind();
     powerOn();
 
-    if (state.source) { loadYouTubeApi(); watchChapters(); }
+    if (state.source) loadYouTubeApi();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
