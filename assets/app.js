@@ -188,7 +188,8 @@
     var w = worlds[state.worldIndex];
     var poster = w.poster || (state.source ? ytPoster(state.source.id) : "");
     $("#sceneTitle").textContent = w.title;
-    $("#sceneKind").textContent = w.kind === "youtube" ? "Tuned source" : "Living loop";
+    $("#sceneKind").textContent = w.kind === "youtube" ? "Tuned source"
+      : w.kind === "gallery" ? "Pixel art" : "Living loop";
     $("#channelChip").textContent = "CH " + (state.worldIndex + 1 < 10 ? "0" : "") + (state.worldIndex + 1);
     $("#dockWorldTitle").textContent = w.title;
     $("#worldButton").setAttribute("aria-label", "Scene selector: " + w.title);
@@ -196,7 +197,7 @@
       $("#sceneThumb").style.backgroundImage = "url('" + poster + "')";
       $("#scenePoster").style.backgroundImage = "url('" + poster + "')";
     }
-    if (window.PixelScene) PixelScene.setRamp(w.ramp);
+    if (window.PixelScene) PixelScene.setRamp(w.ramp);   // null => untouched
     renderWorlds();
   }
 
