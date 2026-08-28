@@ -24,6 +24,7 @@ window.PixelScene = (function () {
   var FRAME_MS = 1000 / FPS;
 
   var cv = null, ctx = null, small = null, sctx = null;
+  var artLayers = [], artIndex = 0;     // authored pixel art, shown natively
   var from = null, to = null, mix = 1;          // mix: 0 = from, 1 = to
   var fadeStart = 0, fadeMs = 0;
   var running = false, raf = null, lastDraw = 0;
@@ -156,8 +157,44 @@ window.PixelScene = (function () {
     },
 
     setRamp: function (name) {
-      ramp = name || "slate";
-      if (cv) cv.style.filter = 'url("#ramp-' + ramp + '")';
+      // null = no ramp. Authored pixel art must not be re-quantised: the
+      // artist already chose those colours.
+      ramp = name || null;
+      if (cv) cv.style.filter = ramp ? 'url("#ramp-' + ramp + '")' : "none";
+    },
+
+    // Authored pixel art (still or animated GIF) is shown as an <img> at its
+    // OWN pixel scale rather than resampled onto the 260px ramp grid, which
+    // would make finished pixel art shimmer.
+    useArt: function (layers) { artLayers = layers || []; },
+
+    showArt: function (src, label, ms) {
+      if (!artLayers.length) return false;
+      var incoming = artLayers[(artIndex + 1) % artLayers.length];
+      var outgoing = artLayers[artIndex];
+      var self = this;
+      var swap = function () {
+        artIndex = (artIndex + 1) % artLayers.length;
+        incoming.classList.add("is-live");
+        outgoing.classList.remove("is-live");
+        if (cv) cv.classList.remove("is-live");
+        self.setPlaying(false);          // no canvas loop needed for art
+      };
+      if (incoming.getAttribute("src") === src) { swap(); return true; }
+      incoming.alt = label || "";
+      var done = false;
+      var go = function () { if (done) return; done = true; swap(); };
+      incoming.addEventListener("load", go, { once: true });
+      incoming.addEventListener("error", go, { once: true });
+      incoming.setAttribute("src", src);
+      setTimeout(go, 2500);
+      return true;
+    },
+
+    // Back to a video channel: the canvas takes over again.
+    showVideo: function () {
+      artLayers.forEach(function (l) { l.classList.remove("is-live"); });
+      if (cv) cv.classList.add("is-live");
     },
 
     get ramp() { return ramp; },

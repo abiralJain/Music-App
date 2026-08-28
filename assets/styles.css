@@ -216,10 +216,25 @@ button, a, input[type="range"] { touch-action: manipulation; }
   z-index: 1;
   image-rendering: pixelated;
   image-rendering: crisp-edges;   /* older Safari/Firefox */
+  opacity: 0;
+  transition: opacity var(--t-scene) var(--ease-out);
 }
+.pixel-scene.is-live { opacity: 1; }
 
 .pixel .scene-video,
 .pixel .scene-poster { opacity: 0 !important; }
+
+/* Authored pixel art, shown at its own pixel scale — no ramp, no resample. */
+.scene-art {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  z-index: 1;
+  object-fit: cover;
+  image-rendering: pixelated;
+  opacity: 0;
+  transition: opacity var(--t-scene) var(--ease-out);
+}
+.scene-art.is-live { opacity: 1; }
+
 
 .weather-canvas {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -1166,6 +1181,8 @@ input[type="range"]::-moz-range-thumb {
      already invisible via .pixel .scene-video. PixelScene simply never starts
      its loop under reduced motion, so the scene holds one static frame. */
   .weather-canvas { display: none; }
+  /* Gallery scenes still change, they just cut instead of fading. */
+  .scene-art, .pixel-scene { transition: none; }
   .panel, .focus-popover, .more-menu, .toast, .control-dock,
   .readout, .focus-status, .quiet-return {
     transform: none !important;

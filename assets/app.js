@@ -56,8 +56,22 @@
     { id: "wide-awake", title: "Wide awake", kind: "local", note: "Open lake light for clear work",
       video: "assets/lake-loop.mp4", poster: "assets/lake-loop-poster.jpg", ramp: "cool" },
     { id: "your-source", title: "Your source", kind: "youtube", note: "Your tuned video as the scene",
-      video: null, poster: null, ramp: "amber" }
+      video: null, poster: null, ramp: "amber" },
+    { id: "gallery", title: "Gallery", kind: "gallery", note: "Your pixel-art scenes, rotating",
+      video: null, poster: null, ramp: null }
   ];
+
+  // Rotation for the Gallery channel. "time" maps scenes to the part of day,
+  // which is the only mode that means anything on its own; "interval" just
+  // cycles. Both crossfade like any other channel change.
+  var ROTATE_MS = 8 * 60000;
+  function partOfDay(h) {
+    if (h < 7)  return "night";
+    if (h < 11) return "dawn";
+    if (h < 17) return "day";
+    if (h < 21) return "dusk";
+    return "night";
+  }
 
   var roomLayers = [
     { id: "rain",    name: "Gentle rain",    note: "window",  icon: "i-cloud-rain" },
@@ -99,6 +113,7 @@
     surface: null,
     source: null,              // { kind:'video'|'playlist', id, label, station? }
     stationIndex: -1,
+    gallery: [], galleryIndex: 0, rotate: "time", rotateTimer: null,
     tracks: [], trackIndex: 0,
     ytApiLoading: false, ytReady: false, ytFailed: false
   };
@@ -126,7 +141,8 @@
         worldIndex: state.worldIndex, master: state.master, values: state.values,
         muted: state.muted, activePreset: state.activePreset, savedRoom: state.savedRoom,
         weather: state.weather, weatherIntensity: state.weatherIntensity, drift: state.drift,
-        source: state.source, trackIndex: state.trackIndex
+        source: state.source, trackIndex: state.trackIndex,
+        rotate: state.rotate, galleryIndex: state.galleryIndex
       }));
     } catch (e) {}
   }
@@ -144,9 +160,12 @@
     state.weatherIntensity = Math.max(10, Math.min(100, Number(saved.weatherIntensity) || 48));
     state.drift = Boolean(saved.drift);
     state.source = saved.source || null;
+    state.rotate = ["time","interval","off"].indexOf(saved.rotate) >= 0 ? saved.rotate : "time";
+    state.galleryIndex = Math.max(0, Number(saved.galleryIndex) || 0);
     state.trackIndex = Math.max(0, Number(saved.trackIndex) || 0);
     // A saved "Your source" world is meaningless without a source.
     if (worlds[state.worldIndex].kind === "youtube" && !state.source) state.worldIndex = 0;
+    if (worlds[state.worldIndex].kind === "gallery") state.worldIndex = 0;  // re-enabled once the manifest loads
   }
 
   /* ---------- toast ---------- */
@@ -182,6 +201,54 @@
   }
 
   function ytPoster(id) { return "https://i.ytimg.com/vi/" + id + "/maxresdefault.jpg"; }
+
+  function loadGallery() {
+    fetch("assets/wallpapers/manifest.json", { cache: "no-cache" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (m) {
+        var list = (m && m.scenes) || [];
+        state.gallery = list.filter(function (s) { return s && s.file; }).map(function (s) {
+          return { src: "assets/wallpapers/" + s.file,
+                   label: s.label || s.file.replace(/\.[a-z0-9]+$/i, ""),
+                   timeOfDay: s.timeOfDay || "any" };
+        });
+        renderWorlds();
+        if (worlds[state.worldIndex].kind === "gallery") showGallery(false);
+      })
+      .catch(function () { state.gallery = []; renderWorlds(); });
+  }
+
+  // Pick by part of day when possible, else just advance.
+  function pickGalleryScene() {
+    if (!state.gallery.length) return null;
+    if (state.rotate === "time") {
+      var want = partOfDay(new Date().getHours());
+      var matches = state.gallery.filter(function (s) { return s.timeOfDay === want; });
+      if (matches.length) return matches[Math.floor(Math.random() * matches.length)];
+    }
+    state.galleryIndex = (state.galleryIndex + 1) % state.gallery.length;
+    return state.gallery[state.galleryIndex];
+  }
+
+  function showGallery(animate) {
+    var scene = pickGalleryScene();
+    if (!scene) return false;
+    if (window.PixelScene) {
+      PixelScene.setRamp(null);
+      PixelScene.showArt(scene.src, scene.label, animate === false ? 0 : 640);
+    }
+    $("#sceneKind").textContent = scene.label;
+    scheduleRotate();
+    return true;
+  }
+
+  function scheduleRotate() {
+    clearTimeout(state.rotateTimer);
+    if (worlds[state.worldIndex].kind !== "gallery") return;
+    if (state.rotate === "off" || state.gallery.length < 2) return;
+    // Under reduced motion the scene still changes, it just does not fade.
+    state.rotateTimer = setTimeout(function () { showGallery(true); }, ROTATE_MS);
+  }
 
   function showLocalWorld(w, animate) {
     var next = (liveVideo + 1) % 2;
@@ -223,14 +290,25 @@
       toast("Tune in a source first, then this scene becomes available.");
       return;
     }
+    if (w.kind === "gallery" && !state.gallery.length) {
+      toast("Add pixel art to assets/wallpapers to use the gallery.");
+      return;
+    }
     if (index === state.worldIndex) { closeSurface(); return; }
     state.worldIndex = index;
     paintWorld();
-    if (w.kind === "youtube") {
+    clearTimeout(state.rotateTimer);
+    if (w.kind === "gallery") {
+      videos[liveVideo].pause();
+      $("#youtubeWrap").classList.remove("is-live");
+      showGallery(true);
+    } else if (w.kind === "youtube") {
       videos[liveVideo].classList.remove("is-live");
       videos[liveVideo].pause();
+      if (window.PixelScene) PixelScene.showVideo();
       if (state.ytReady) $("#youtubeWrap").classList.add("is-live");
     } else {
+      if (window.PixelScene) PixelScene.showVideo();
       showLocalWorld(w, true);
     }
     persist();
@@ -240,9 +318,15 @@
 
   function renderWorlds() {
     $("#worldGrid").innerHTML = worlds.map(function (w, i) {
-      var unavailable = w.kind === "youtube" && (!state.source || state.ytFailed);
-      var poster = w.poster || (state.source ? ytPoster(state.source.id) : "");
-      var kind = unavailable ? "unavailable" : (w.kind === "youtube" ? "tuned source" : "living loop");
+      var unavailable = (w.kind === "youtube" && (!state.source || state.ytFailed)) ||
+                        (w.kind === "gallery" && !state.gallery.length);
+      var poster = w.poster ||
+                   (w.kind === "gallery" && state.gallery.length ? state.gallery[0].src : "") ||
+                   (w.kind === "youtube" && state.source ? ytPoster(state.source.id) : "");
+      var kind = unavailable
+        ? (w.kind === "gallery" ? "no art added" : "unavailable")
+        : (w.kind === "gallery" ? state.gallery.length + " scenes"
+        : (w.kind === "youtube" ? "tuned source" : "living loop"));
       return '<button class="world-card" data-world="' + i + '" style="--i:' + i + '"' +
         ' aria-current="' + (i === state.worldIndex) + '"' + (unavailable ? " disabled" : "") + '>' +
         '<span class="world-card-screen" style="background-image:url(\'' + poster + '\')">' +
@@ -1172,6 +1256,7 @@
     var w = worlds[state.worldIndex];
     if (window.PixelScene) {
       PixelScene.init($("#pixelScene"));
+      PixelScene.useArt([$("#sceneArtA"), $("#sceneArtB")]);
       PixelScene.setRamp(w.ramp);
       world.classList.add("pixel");
     }
@@ -1210,6 +1295,7 @@
     powerOn();
 
     if (state.source) loadYouTubeApi();
+    loadGallery();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

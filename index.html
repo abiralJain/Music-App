@@ -8,7 +8,7 @@
   <title>Dream Worlds</title>
   <link rel="preload" href="assets/fonts/plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/barlow-cond-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/styles.css?v=11">
+  <link rel="stylesheet" href="assets/styles.css?v=14">
 </head>
 <body>
   <!-- Per-channel palette ramps. feColorMatrix flattens to luminance,
@@ -66,7 +66,9 @@
       <video class="scene-video" id="sceneA" muted loop playsinline preload="metadata"></video>
       <video class="scene-video" id="sceneB" muted loop playsinline preload="none"></video>
       <div class="youtube-wrap" id="youtubeWrap"><div id="youtubePlayer"></div></div>
-      <canvas class="pixel-scene" id="pixelScene"></canvas>
+      <canvas class="pixel-scene is-live" id="pixelScene"></canvas>
+      <img class="scene-art" id="sceneArtA" alt="" aria-hidden="true">
+      <img class="scene-art" id="sceneArtB" alt="" aria-hidden="true">
       <canvas class="weather-canvas" id="weatherCanvas"></canvas>
       <div class="scene-screen"></div>
       <div class="scene-veil"></div>
@@ -335,8 +337,8 @@
     </nav>
   </main>
 
-  <script src="assets/audio-engine.js?v=11"></script>
-  <script src="assets/scene.js?v=11"></script>
-  <script src="assets/app.js?v=11"></script>
+  <script src="assets/audio-engine.js?v=14"></script>
+  <script src="assets/scene.js?v=14"></script>
+  <script src="assets/app.js?v=14"></script>
 </body>
 </html>
