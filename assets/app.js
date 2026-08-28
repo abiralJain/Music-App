@@ -50,13 +50,13 @@
 
   var worlds = [
     { id: "rain-window", title: "Rain window", kind: "local", note: "A quiet city seen through rain",
-      video: "assets/rain-window.mp4", poster: "assets/rain-window-poster.jpg" },
+      video: "assets/rain-window.mp4", poster: "assets/rain-window-poster.jpg", ramp: "slate" },
     { id: "pond-garden", title: "Pond garden", kind: "local", note: "Leaves, water, a patient afternoon",
-      video: "assets/garden-loop.mp4", poster: "assets/garden-loop-poster.jpg" },
+      video: "assets/garden-loop.mp4", poster: "assets/garden-loop-poster.jpg", ramp: "moss" },
     { id: "wide-awake", title: "Wide awake", kind: "local", note: "Open lake light for clear work",
-      video: "assets/lake-loop.mp4", poster: "assets/lake-loop-poster.jpg" },
+      video: "assets/lake-loop.mp4", poster: "assets/lake-loop-poster.jpg", ramp: "cool" },
     { id: "your-source", title: "Your source", kind: "youtube", note: "Your tuned video as the scene",
-      video: null, poster: null }
+      video: null, poster: null, ramp: "amber" }
   ];
 
   var roomLayers = [
@@ -177,6 +177,7 @@
       $("#sceneThumb").style.backgroundImage = "url('" + poster + "')";
       $("#scenePoster").style.backgroundImage = "url('" + poster + "')";
     }
+    if (window.PixelScene) PixelScene.setRamp(w.ramp);
     renderWorlds();
   }
 
@@ -188,15 +189,17 @@
     $("#youtubeWrap").classList.remove("is-live");
 
     function reveal() {
-      if (animate && !reduceMotion.matches) world.classList.add("crossfading");
       incoming.classList.add("is-live");
       outgoing.classList.remove("is-live");
       liveVideo = next;
       if (state.playing) { var p = incoming.play(); if (p && p.catch) p.catch(function () {}); }
+      if (window.PixelScene) {
+        PixelScene.crossfadeTo(incoming, animate && !reduceMotion.matches ? 640 : 0);
+        PixelScene.start();
+      }
       setTimeout(function () {
-        world.classList.remove("crossfading");
-        outgoing.pause();
-      }, animate && !reduceMotion.matches ? 660 : 30);
+        if (!state.playing || outgoing !== videos[liveVideo]) outgoing.pause();
+      }, animate && !reduceMotion.matches ? 700 : 40);
     }
 
     if (incoming.getAttribute("src") === w.video && incoming.readyState >= 2) { reveal(); return; }
@@ -497,6 +500,7 @@
     if (worlds[state.worldIndex].kind === "local" && !reduceMotion.matches) {
       var p = videos[liveVideo].play(); if (p && p.catch) p.catch(function () {});
     }
+    if (window.PixelScene) PixelScene.setPlaying(true);
     if (ytPlayer && state.ytReady && !state.ytFailed) { try { ytPlayer.playVideo(); } catch (e) {} }
     else if (!state.source) toast("Room ambience is playing. Tune in a source for music.");
   }
@@ -507,6 +511,7 @@
     AmbienceEngine.stop();
     stopMeters();
     videos.forEach(function (v) { v.pause(); });
+    if (window.PixelScene) PixelScene.setPlaying(false);
     if (ytPlayer && state.ytReady) { try { ytPlayer.pauseVideo(); } catch (e) {} }
   }
 
@@ -1165,10 +1170,22 @@
     reflectPlaying();
 
     var w = worlds[state.worldIndex];
+    if (window.PixelScene) {
+      PixelScene.init($("#pixelScene"));
+      PixelScene.setRamp(w.ramp);
+      world.classList.add("pixel");
+    }
     if (w.kind === "local") {
       videos[0].setAttribute("src", w.video);
       videos[0].classList.add("is-live");
       liveVideo = 0;
+      if (window.PixelScene) {
+        PixelScene.setSource(videos[0]);
+        // One frame as soon as there is one to draw, so the desktop is never
+        // blank before the user presses play.
+        videos[0].addEventListener("loadeddata", function () { PixelScene.redraw(); }, { once: true });
+        videos[0].addEventListener("canplay", function () { PixelScene.redraw(); }, { once: true });
+      }
     }
 
     $("#masterVolume").value = state.master;

@@ -107,7 +107,6 @@
   --fs-num: 26px;
 
   /* textures, defined once and reused */
-  --halftone: radial-gradient(circle, rgb(var(--chassis-rgb) / .20) .9px, transparent 1px);
   --scanline: repeating-linear-gradient(transparent 0 3px, rgb(var(--chassis-rgb) / .07) 3px 4px);
   --brushed:  repeating-linear-gradient(90deg, rgb(var(--bone-rgb) / .028) 0 1px, transparent 1px 3px);
 }
@@ -208,6 +207,20 @@ button, a, input[type="range"] { touch-action: manipulation; }
   border: 0; transform: translate(-50%, -50%); pointer-events: none;
 }
 
+.ramp-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* The scene, rendered as pixel art. The videos stay in the DOM as decode
+   sources at opacity 0 — they still play, they are just never shown. */
+.pixel-scene {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  z-index: 1;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;   /* older Safari/Firefox */
+}
+
+.pixel .scene-video,
+.pixel .scene-poster { opacity: 0 !important; }
+
 .weather-canvas {
   position: absolute; inset: 0; width: 100%; height: 100%;
   z-index: 2; pointer-events: none;
@@ -217,9 +230,8 @@ button, a, input[type="range"] { touch-action: manipulation; }
    Both are single gradients — the same technique Dead North and Galekto use. */
 .scene-screen {
   position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none;
-  background-image: var(--halftone), var(--scanline);
-  background-size: 7px 7px, auto;
-  opacity: .55;
+  background-image: var(--scanline);
+  opacity: .5;
 }
 
 /* Legibility by construction. Sized against the BRIGHTEST world (the lake,
@@ -1150,7 +1162,10 @@ input[type="range"]::-moz-range-thumb {
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
-  .scene-video, .weather-canvas { display: none; }
+  /* The video is NOT hidden here: it is the canvas's decode source, and it is
+     already invisible via .pixel .scene-video. PixelScene simply never starts
+     its loop under reduced motion, so the scene holds one static frame. */
+  .weather-canvas { display: none; }
   .panel, .focus-popover, .more-menu, .toast, .control-dock,
   .readout, .focus-status, .quiet-return {
     transform: none !important;
