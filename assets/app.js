@@ -560,8 +560,10 @@
       try {
         if (state.source.kind === "playlist") ytPlayer.playVideoAt(n);
         else ytPlayer.playVideo();
-        state.playing = true;
-        reflectPlaying();
+        // Picking a track is a play gesture like any other, so it has to go
+        // through playAll — setting state.playing here on its own lit the
+        // pause icon while the room stayed silent and the scene stayed frozen.
+        if (state.playing) reflectPlaying(); else playAll();
       } catch (e) {}
     }
     paintTuner();

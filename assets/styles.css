@@ -73,6 +73,10 @@
   --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px; --s5: 20px;
   --s6: 24px; --s7: 32px; --s8: 40px; --s9: 48px;
 
+  /* the dot grid punched through lit text — a token so a breakpoint that
+     shrinks the type below 17px can switch it off (see .dotmatrix) */
+  --dm-dots: radial-gradient(circle, #000 .9px, transparent 1px);
+
   /* motion — three durations, asymmetric in/out */
   --t-state: 140ms;
   --t-in:    240ms;
@@ -338,8 +342,8 @@ button, a, input[type="range"] { touch-action: manipulation; }
    where the bar is 3:1, and the bloom restores perceived weight. */
 .dotmatrix {
   color: var(--amber);
-  -webkit-mask-image: var(--dm, radial-gradient(circle, #000 .9px, transparent 1px));
-          mask-image: var(--dm, radial-gradient(circle, #000 .9px, transparent 1px));
+  -webkit-mask-image: var(--dm, var(--dm-dots));
+          mask-image: var(--dm, var(--dm-dots));
   -webkit-mask-size: 3px 3px;
           mask-size: 3px 3px;
   text-shadow: 0 0 6px rgb(var(--amber-rgb) / .55);
@@ -356,6 +360,9 @@ button, a, input[type="range"] { touch-action: manipulation; }
   position: absolute; z-index: 7;
   top: max(var(--s6), env(safe-area-inset-top)); left: 50%;
   display: flex; align-items: center; gap: var(--s3);
+  /* left:50% caps shrink-to-fit at half the viewport, which wraps this into a
+     column on a phone. max-content restores the real intrinsic width. */
+  width: max-content; max-width: calc(100vw - var(--s6));
   padding: var(--s2) var(--s2) var(--s2) var(--s4);
   border: 1px solid var(--edge);
   border-radius: var(--r-hw);
@@ -380,6 +387,9 @@ button, a, input[type="range"] { touch-action: manipulation; }
   position: absolute; z-index: 16;
   bottom: calc(env(safe-area-inset-bottom) + 118px); left: 50%;
   display: flex; align-items: center; gap: var(--s3);
+  /* Same left:50% shrink-to-fit trap as .focus-status — without max-content
+     the toast folds into a five-word column on a phone. */
+  width: max-content;
   max-width: min(520px, calc(100vw - var(--s7)));
   padding: var(--s3) var(--s4);
   border: 1px solid var(--edge);
@@ -1111,9 +1121,10 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ============================================================
-   RESPONSIVE — the dock sheds in a deliberate order:
-   button labels, then the scene name (already in the readout),
-   then the dividers, then the transport.
+   RESPONSIVE — the dock sheds in a deliberate order: button labels,
+   then the scene name (already in the readout), then the dividers,
+   then track skipping. The play key never sheds; below 640px the
+   faceplate folds onto a second row instead of shedding further.
    ============================================================ */
 
 @media (max-width: 1180px) {
@@ -1154,21 +1165,88 @@ input[type="range"]::-moz-range-thumb {
   .preset-list { grid-auto-flow: column; grid-auto-columns: 176px; overflow-x: auto; padding-bottom: var(--s1); }
   .control-dock { gap: var(--s1); padding: var(--s1); width: calc(100vw - var(--s4)); }
   .dock-divider, .volume-key > .icon { display: none; }
-  .volume-key { flex: 0 1 84px; min-width: 58px; padding: 0 var(--s1); }
+  /* A tablet has the room for a fader you can actually aim at — the old
+     84px left roughly 60px of travel for the whole range. It still
+     shrinks before anything else does. */
+  .volume-key { flex: 0 1 132px; min-width: 72px; padding: 0 var(--s1); }
   .now-key { flex: 1 1 auto; min-width: 0; padding: 0 var(--s2); }
   .now-copy small { display: none; }
-  .now-copy strong { font-size: var(--fs-sec); }
+  /* 13px is below the 17px floor the dot mask needs to stay above 3:1,
+     so the dots come off rather than the readout going illegible. */
+  .now-copy strong { font-size: var(--fs-sec); --dm: none; }
   .tuner, .notice { margin-left: var(--s3); margin-right: var(--s3); }
 }
 
 @media (max-width: 540px) {
-  .transport-group { display: none; }
+  /* One row has nothing left to give: the next thing to shed would be the
+     play key, and a machine you cannot switch on is not a smaller machine.
+     Skipping goes instead — the tuner's track list still does it. */
+  #previousButton, #nextButton { display: none; }
+
+  .panel-head { gap: var(--s3); padding: var(--s3) var(--s4); }
+  .panel-head h2 { font-size: 18px; }
+  /* The input is right there in the body — the button only needs its icon. */
+  #changeSourceButton span { display: none; }
+  #changeSourceButton { width: 36px; min-width: 36px; padding: 0; }
+  /* Once .tuner-row wraps, a natural-width button reads as a stray fragment. */
+  .tuner-row > .hw { flex: 1 1 100%; }
+
   .channel-grid, .world-grid { grid-template-columns: 1fr; }
   .readout-title { font-size: 26px; }
   .readout::before { inset: -22px -60px -26px -30px; }
   .notice { grid-template-columns: auto 1fr; }
   .notice button { grid-column: 2; justify-self: start; }
   .room-controls { mask-image: none; }
+}
+
+/* Portrait phones and narrow tablets: horizontal room is the scarce axis and
+   vertical room is not, so the faceplate folds onto two rows rather than
+   squeezing the readout to a stub. The lit readout and the fader take the
+   top row; the keys — transport included — take the bottom. */
+@media (max-width: 640px) and (min-height: 500px) {
+  .control-dock { flex-wrap: wrap; row-gap: var(--s2); }
+  /* These two bases sum to the full row, which is what forces the break. */
+  .now-key    { order: 1; flex: 1 1 calc(100% - 128px); min-width: 0; gap: var(--s2); padding: 0 var(--s2); }
+  .volume-key { order: 2; flex: 0 0 120px; min-width: 0; padding: 0; }
+  .transport-group { order: 4; margin-inline: auto; }
+  .room-key   { order: 5; }
+  .focus-key  { order: 6; }
+  .more-wrap  { order: 7; }
+  /* The bottom row has the width for skipping again, once the keys are
+     trimmed enough to keep the whole row inside 360px — the narrowest
+     phone still worth designing for. The play key stays the largest. */
+  .source-key { order: 3; flex: 0 0 48px; }
+  .source-thumb { width: 40px; height: 40px; }
+  .play-key { width: 48px; }
+  #previousButton, #nextButton { display: grid; width: 36px; }
+  /* Full-width row: the readout is back at 17px, so the dots come back too. */
+  .now-copy small  { display: block; }
+  .now-copy strong { font-size: var(--fs-read); --dm: var(--dm-dots); }
+
+  /* Two rows of dock measures 116px, so everything above it moves up to clear. */
+  .panel, .focus-popover {
+    bottom: max(150px, calc(env(safe-area-inset-bottom) + 142px));
+  }
+  .panel { max-height: calc(100dvh - 170px); }
+  .toast { bottom: calc(env(safe-area-inset-bottom) + 152px); }
+}
+
+/* Under 360px even the folded bottom row runs out — skipping goes again. */
+@media (max-width: 359px) {
+  #previousButton, #nextButton { display: none; }
+}
+
+/* Landscape phones and short tablet splits: height, not width, is the
+   scarce axis, so the panel sheds its description instead of its content. */
+@media (min-width: 541px) and (max-height: 460px) {
+  .panel-head { padding: var(--s3) var(--s4); }
+  .panel-head p { display: none; }
+  .panel, .focus-popover {
+    bottom: max(100px, calc(env(safe-area-inset-bottom) + 92px));
+  }
+  .panel { max-height: calc(100dvh - 116px); }
+  .toast { bottom: calc(env(safe-area-inset-bottom) + 102px); }
+  .readout-title { font-size: 26px; }
 }
 
 /* ============================================================

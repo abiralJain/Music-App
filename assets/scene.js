@@ -19,7 +19,14 @@
 window.PixelScene = (function () {
   "use strict";
 
-  var GRID = 260;          // source width in scene-pixels
+  // The grid is a scene-pixel COUNT, so a fixed one makes the block size a
+  // function of the viewport: 260 across reads as 5.5 CSS px per block on a
+  // laptop and 1.4 px on a phone, where the pixel art stops looking pixelated
+  // and starts looking like a soft video. Deriving the count from the width at
+  // a fixed target block size keeps the look constant instead. The floor stops
+  // a phone going to mush; the ceiling is the old desktop grid.
+  var BLOCK = 5.4;         // target CSS px per scene-pixel
+  var GRID_MIN = 140, GRID_MAX = 260;
   var FPS = 30;            // ample for an ambient loop, and halves the cost
   var FRAME_MS = 1000 / FPS;
 
@@ -28,7 +35,7 @@ window.PixelScene = (function () {
   var from = null, to = null, mix = 1;          // mix: 0 = from, 1 = to
   var fadeStart = 0, fadeMs = 0;
   var running = false, raf = null, lastDraw = 0;
-  var gridW = GRID, gridH = 146;
+  var gridW = GRID_MAX, gridH = 146;
   var ramp = "slate";
   var keepRunning = false;
   var fadeGuard = null;
@@ -42,7 +49,8 @@ window.PixelScene = (function () {
     if (cv) { var r = cv.getBoundingClientRect(); w = r.width; h = r.height; }
     if (!w || !h) { w = window.innerWidth; h = window.innerHeight; }
     var aspect = (w && h) ? (h / w) : (9 / 16);
-    var nextW = GRID, nextH = Math.max(2, Math.round(GRID * aspect));
+    var nextW = Math.max(GRID_MIN, Math.min(GRID_MAX, Math.round(w / BLOCK)));
+    var nextH = Math.max(2, Math.round(nextW * aspect));
     if (nextW === gridW && nextH === gridH && small && small.width === nextW) return false;
     gridW = nextW; gridH = nextH;
     if (small) { small.width = gridW; small.height = gridH; }
