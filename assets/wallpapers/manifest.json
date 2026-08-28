@@ -1,0 +1,7 @@
+{
+  "_comment": "Pixel-art scenes for the Gallery channel (CH 05). Drop image or GIF files in this folder and list them here. Empty = channel disabled. See README.md.",
+  "scenes": [
+    { "file": "meadow.png", "label": "High meadow", "timeOfDay": "day",
+      "credit": "Pixel Art Parallax Background by OlegKrylov, CC-BY 4.0 — opengameart.org/content/pixel-art-parallax-background" }
+  ]
+}

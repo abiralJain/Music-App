@@ -1,0 +1,9 @@
+Pixel Art Parallax Background
+Author:  OlegKrylov
+Source:  https://opengameart.org/content/pixel-art-parallax-background
+License: CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
+Attribution is REQUIRED wherever this scene ships. It is credited in
+README.md and in the app's own credits. Do not remove this file.
+
+Files: layer-1.png (farthest) .. layer-6.png (nearest), 272x160 each.

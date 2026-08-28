@@ -1,3 +1,7 @@
 .DS_Store
 .playwright-cli/
 output/
+
+# Untouched source media, kept on disk for re-encoding. 61MB — not worth
+# versioning; the shipped assets in assets/ are derived from these.
+assets/original/
