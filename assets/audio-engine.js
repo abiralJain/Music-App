@@ -33,31 +33,45 @@ window.AmbienceEngine = (function () {
 
   // Per-layer spec. `trim` is perceptual normalisation so that 50% of
   // one layer sits at roughly the same loudness as 50% of another.
+  //
+  // These were re-derived from measurement, not estimated. Each layer was
+  // played alone at value=100, master=100, and its post-limiter RMS read from
+  // an AnalyserNode (mean of the top decile over 3s). The old table was badly
+  // off for the recordings: rain measured 0.019 against a 0.09-0.13 median —
+  // roughly 10x below `stream` — so the rain channel, which is both the layer
+  // users reach for first and the loudest layer of the default preset, was
+  // inaudible under music at ANY fader position. Measured RMS at the old
+  // trims: rain .019 forest .040 brown .060 night .034 fire .089 white .094
+  // cafe .106 wind .110 soft .113 ocean .133 thunder .134 stream .204.
+  // Each trim is now scaled to land near 0.10, except `night`, held
+  // deliberately below parity because sparse chirps read as accents rather
+  // than a bed. A trim above 1 means the source recording itself is quiet;
+  // re-encoding those files at a normalised level would let it drop back.
   var SPEC = {
-    rain:    { kind: "file", src: "assets/audio/rain.ogg",           trim: 0.90 },
-    forest:  { kind: "file", src: "assets/audio/forest.ogg",         trim: 0.80 },
-    cafe:    { kind: "file", src: "assets/audio/cafe.m4a",           trim: 0.85 },
-    brown:   { kind: "file", src: "assets/audio/brown.ogg",          trim: 0.70 },
-    soft:    { kind: "file", src: "assets/audio/placid-ambient.ogg", trim: 0.80 },
+    rain:    { kind: "file", src: "assets/audio/rain.ogg",           trim: 4.60 },
+    forest:  { kind: "file", src: "assets/audio/forest.ogg",         trim: 2.00 },
+    cafe:    { kind: "file", src: "assets/audio/cafe.m4a",           trim: 0.80 },
+    brown:   { kind: "file", src: "assets/audio/brown.ogg",          trim: 1.16 },
+    soft:    { kind: "file", src: "assets/audio/placid-ambient.ogg", trim: 0.71 },
 
-    white:   { kind: "noise", base: "white", trim: 0.32,
+    white:   { kind: "noise", base: "white", trim: 0.34,
                filters: [["highpass", 90, 0.4], ["lowpass", 7600, 0.4]] },
-    wind:    { kind: "noise", base: "brown", trim: 0.75,
+    wind:    { kind: "noise", base: "brown", trim: 0.68,
                filters: [["lowpass", 700, 0.8], ["highpass", 70, 0.4]],
                gust: { min: 380, max: 1400, rate: 0.045 } },
-    ocean:   { kind: "noise", base: "brown", trim: 0.80,
+    ocean:   { kind: "noise", base: "brown", trim: 0.60,
                filters: [["lowpass", 560, 1.0], ["highpass", 50, 0.4]],
                swell: { rate: 0.055, depth: 0.30, cutoffLow: 320, cutoffHigh: 900 } },
-    stream:  { kind: "noise", base: "white", trim: 0.44,
+    stream:  { kind: "noise", base: "white", trim: 0.22,
                filters: [["highpass", 1400, 0.7], ["lowpass", 7200, 0.5]],
                shimmer: true },
-    fire:    { kind: "noise", base: "brown", trim: 0.62,
+    fire:    { kind: "noise", base: "brown", trim: 0.70,
                filters: [["highpass", 90, 0.5], ["lowpass", 1250, 0.8]],
                crackle: { rate: 11, gain: 0.5 } },
-    night:   { kind: "noise", base: "white", trim: 0.20,
+    night:   { kind: "noise", base: "white", trim: 0.38,
                filters: [["bandpass", 4600, 2.4], ["highpass", 2600, 0.7]],
                chirp: { rate: 0.75 } },
-    thunder: { kind: "noise", base: "brown", trim: 0.85,
+    thunder: { kind: "noise", base: "brown", trim: 0.64,
                filters: [["lowpass", 150, 1.1], ["highpass", 26, 0.5]],
                rumble: { minGap: 26, maxGap: 74 } }
   };
@@ -81,6 +95,11 @@ window.AmbienceEngine = (function () {
   var layers = Object.create(null);
   var buffers = { white: null, brown: null };
   var building = Object.create(null);
+  // Room output scalar. This was 0.62, which capped a channel at 100% around
+  // -11 dBFS while the YouTube music sat well above it — so "turn the rain up
+  // over the music" was not achievable at any fader position. At 0.95 the room
+  // can reach and pass the music; the limiter below catches the sum.
+  var ROOM_CEILING = 0.95;
   var master = 0.52;
   var running = false;
   var schedulerId = null;
@@ -175,19 +194,38 @@ window.AmbienceEngine = (function () {
     var depthGain = ctx.createGain(); depthGain.gain.value = 1;
     var layerGain = ctx.createGain(); layerGain.gain.value = 0;
 
+    // The meters used to be computed from the fader position, so a channel
+    // that produced nothing still animated its bar and looked alive. That is
+    // what let a silent mixer pass as a working one. Read the real signal.
+    var analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.6;
+    layerGain.connect(analyser);
+
     var node = {
       id: id, spec: spec, depthGain: depthGain, layerGain: layerGain,
       value: 0, muted: false, built: false, disposed: false,
       lfo: null, lfoDepth: 0, lfoRate: 0, lfoPhase: Math.random() * Math.PI * 2,
-      nextEvent: 0, element: null, heads: [], chainIn: null
+      nextEvent: 0, element: null, heads: [], chainIn: null,
+      analyser: analyser, meterBuf: new Uint8Array(analyser.fftSize), failed: false
     };
 
     depthGain.connect(layerGain).connect(bus);
 
     if (spec.kind === "file") {
       var el = new Audio();
-      el.src = spec.src; el.loop = true; el.preload = "none";
+      // crossOrigin must be set BEFORE src, or it does not apply to the load.
       el.crossOrigin = "anonymous";
+      el.src = spec.src; el.loop = true; el.preload = "none";
+      // Four of these are Ogg Vorbis, which Safari and iOS cannot decode at
+      // all. Nothing used to report that: the play() rejection was swallowed
+      // and the meter kept moving. Now the failure is recorded.
+      el.addEventListener("error", function () {
+        node.failed = true;
+        if (window.__dw && window.__dw.errors) {
+          window.__dw.errors.push("audio layer failed to load: " + id + " (" + spec.src + ")");
+        }
+      });
       node.element = el;
       var msrc = ctx.createMediaElementSource(el);
       msrc.connect(depthGain);
@@ -359,7 +397,7 @@ window.AmbienceEngine = (function () {
     Object.keys(layers).forEach(function (id) { applyLayer(id, immediate); });
     if (bus) {
       var now = ctx.currentTime;
-      var level = running ? master * 0.62 : 0;
+      var level = running ? master * ROOM_CEILING : 0;
       if (immediate) bus.gain.setValueAtTime(level, now);
       else bus.gain.setTargetAtTime(level, now, 0.08);
     }
@@ -407,6 +445,7 @@ window.AmbienceEngine = (function () {
 
   return {
     get ready() { return ready; },
+    get running() { return running; },
     get context() { return ctx; },
     layerIds: Object.keys(SPEC),
 
@@ -449,18 +488,30 @@ window.AmbienceEngine = (function () {
 
     setMaster: function (v) {
       master = Math.max(0, Math.min(100, v)) / 100;
-      if (bus && ctx) bus.gain.setTargetAtTime(running ? master * 0.62 : 0, ctx.currentTime, 0.08);
+      if (bus && ctx) bus.gain.setTargetAtTime(running ? master * ROOM_CEILING : 0, ctx.currentTime, 0.08);
     },
 
-    // Live level for the LED meters. The LFO phase is computed rather than
-    // read, which is exact enough and costs nothing.
+    // Live level for the LED meters, measured from the layer's own output.
+    // This used to be derived from node.value, which meant a dead channel —
+    // a failed file, a graph that never connected — still lit its meter.
+    // 12 analysers at 10fps is a few thousand byte reads a second: cheap, and
+    // worth it to have the UI tell the truth about what is audible.
     getLevel: function (id) {
       var node = layers[id];
-      if (!node || !running || node.muted || node.value <= 0) return 0;
-      var base = node.value / 100;
-      if (!node.lfoDepth || !ctx) return base;
-      var mod = 1 + node.lfoDepth * Math.sin(2 * Math.PI * node.lfoRate * ctx.currentTime + node.lfoPhase);
-      return Math.max(0, Math.min(1, base * mod));
+      if (!node || !running || !node.analyser) return 0;
+      var buf = node.meterBuf;
+      node.analyser.getByteTimeDomainData(buf);
+      var sum = 0, n = buf.length;
+      for (var i = 0; i < n; i++) { var d = (buf[i] - 128) / 128; sum += d * d; }
+      // Ambience sits at a low RMS by nature; scale so a channel at 100%
+      // reads near the top of the bar without pinning it.
+      return Math.max(0, Math.min(1, Math.sqrt(sum / n) * 3.2));
+    },
+
+    // True once a file layer's media failed to load (a codec the browser
+    // cannot decode, or a missing file), so the UI can say so.
+    failedLayers: function () {
+      return Object.keys(layers).filter(function (id) { return layers[id].failed; });
     },
 
     // Focus-session end. The old code scheduled a 5s ramp and then cancelled

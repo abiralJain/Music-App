@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23191713'/%3E%3Ccircle cx='8' cy='8' r='3.5' fill='%23e8a33d'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0E0D0B">
   <meta name="description" content="A tabletop ambience machine: a living scene, your own music source, and a twelve-channel room mixer.">
   <title>Dream Worlds</title>
   <link rel="preload" href="assets/fonts/plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/barlow-cond-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/styles.css?v=14">
+  <link rel="stylesheet" href="assets/styles.css?v=24">
 </head>
 <body>
   <!-- Per-channel palette ramps. feColorMatrix flattens to luminance,
@@ -66,6 +67,9 @@
       <video class="scene-video" id="sceneA" muted loop playsinline preload="metadata"></video>
       <video class="scene-video" id="sceneB" muted loop playsinline preload="none"></video>
       <div class="youtube-wrap" id="youtubeWrap"><div id="youtubePlayer"></div></div>
+      <!-- A second, permanently muted player: backdrop channels are wallpaper,
+           independent of whatever the tuner is playing. -->
+      <div class="youtube-wrap" id="backdropWrap" aria-hidden="true"><div id="backdropPlayer"></div></div>
       <canvas class="pixel-scene is-live" id="pixelScene"></canvas>
       <img class="scene-art" id="sceneArtA" alt="" aria-hidden="true">
       <img class="scene-art" id="sceneArtB" alt="" aria-hidden="true">
@@ -106,7 +110,7 @@
     <section class="panel" id="worldPanel" aria-labelledby="worldPanelTitle" hidden>
       <header class="panel-head">
         <div>
-          <span class="micro">Source · four channels</span>
+          <span class="micro" id="worldPanelCount">Source</span>
           <h2 id="worldPanelTitle" tabindex="-1">Scene selector</h2>
           <p>Pick a channel. Your music and room stay exactly as they are.</p>
         </div>
@@ -118,6 +122,7 @@
       </header>
       <div class="panel-body">
         <div class="world-grid stagger" id="worldGrid"></div>
+        <p class="scene-credits" id="sceneCredits" hidden></p>
       </div>
     </section>
 
@@ -130,8 +135,8 @@
           <p id="musicPanelDescription">Tune in any YouTube video or playlist. Your scene and room stay put.</p>
         </div>
         <div class="panel-head-actions">
-          <button class="hw hw-sm" id="changeSourceButton">
-            <svg class="icon" aria-hidden="true"><use href="#i-radio"/></svg>Change source
+          <button class="hw hw-sm" id="changeSourceButton" aria-label="Change source">
+            <svg class="icon" aria-hidden="true"><use href="#i-radio"/></svg><span>Change source</span>
           </button>
           <button class="hw hw-icon" data-close-panel aria-label="Close tuner">
             <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
@@ -165,13 +170,21 @@
           </div>
           <p class="tuner-error" id="tunerError" role="alert" hidden></p>
           <p class="tuner-hint" id="tunerHint">Paste a link, or start with the suggested station below.</p>
-          <button class="station" id="suggestedStation">
-            <svg class="icon" aria-hidden="true" style="font-size:var(--ic-lg);color:var(--amber)"><use href="#i-radio"/></svg>
-            <span class="station-copy">
-              <strong id="stationTitle">Ghibli piano for sleep</strong>
-              <small>Suggested station · 1 h 55 m · third-party upload</small>
-            </span>
-          </button>
+
+          <div class="tuner-section">
+            <div class="tuner-section-head">
+              <span class="micro">Stations</span>
+              <button class="hw hw-sm" id="saveSourceButton" disabled>
+                <svg class="icon" aria-hidden="true"><use href="#i-bookmark-simple"/></svg><span>Save this source</span>
+              </button>
+            </div>
+            <div class="station-list" id="stationList"></div>
+          </div>
+
+          <div class="tuner-section" id="savedSourceSection" hidden>
+            <span class="micro">Saved by you</span>
+            <div class="station-list" id="savedSourceList"></div>
+          </div>
         </div>
         <div class="track-list stagger" id="trackList"></div>
       </div>
@@ -211,6 +224,15 @@
           </button>
         </aside>
         <div class="room-controls">
+          <div class="room-master">
+            <span class="room-master-copy">
+              <strong>Room level</strong>
+              <small>All twelve channels, against the music</small>
+            </span>
+            <input id="roomVolume" type="range" min="0" max="100" value="52"
+                   aria-label="Room level" style="--fill:52%">
+            <output id="roomOutput" aria-live="off">52</output>
+          </div>
           <div class="channel-grid stagger" id="channelGrid"></div>
           <div class="room-options">
             <div class="option">
@@ -312,8 +334,8 @@
 
       <div class="volume-key">
         <svg class="icon" aria-hidden="true"><use href="#i-speaker-high"/></svg>
-        <input id="masterVolume" type="range" min="0" max="100" value="52" aria-label="Master volume">
-        <output id="masterOutput" aria-live="off">52</output>
+        <input id="musicVolume" type="range" min="0" max="100" value="52" aria-label="Music volume">
+        <output id="musicOutput" aria-live="off">52</output>
       </div>
 
       <div class="dock-divider" aria-hidden="true"></div>
@@ -337,8 +359,8 @@
     </nav>
   </main>
 
-  <script src="assets/audio-engine.js?v=14"></script>
-  <script src="assets/scene.js?v=14"></script>
-  <script src="assets/app.js?v=14"></script>
+  <script src="assets/audio-engine.js?v=24"></script>
+  <script src="assets/scene.js?v=24"></script>
+  <script src="assets/app.js?v=24"></script>
 </body>
 </html>
