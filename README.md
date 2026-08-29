@@ -5,10 +5,16 @@ a machined faceplate and an amber dot-matrix readout over a full-screen scene.
 
 Three layers stay independent — changing one never disturbs the others:
 
-- **Scene** — the full-screen visual channel (4 channels).
-- **Music** — any YouTube video or playlist you tune in.
+- **Scene** — the full-screen visual channel (14 channels): three filmed
+  loops, the same three through the pixel grid, six looping video backdrops,
+  your own tuned video, and the pixel-art gallery.
+- **Music** — any YouTube video or playlist you tune in, with saved sources.
 - **Room** — a twelve-channel ambience mixer with six presets, saved mixes,
   drift, and a sleep timer.
+
+Music level and room level are **separate faders**. They used to be one, which
+meant turning the rain up turned the music up with it and the balance between
+them could never change.
 
 ## Run locally
 
@@ -74,6 +80,26 @@ the transport disables, no fake track list appears, and the mixer keeps working.
 > answer for a shipping product is licensed or first-party audio; the station
 > chain buys resilience, not permanence.
 
+## Scenes
+
+Every filmed scene is offered twice: as itself, and through the pixel grid.
+The pixel pass was previously applied to every channel at once, so the filmed
+scenes were still loading and playing but were never visible — the canvas
+covered them.
+
+**Video backdrops** are looping YouTube videos played muted in their own
+player, independent of the tuner. Each shipped id was probed with a real
+`YT.Player` and reported `isPlayable`; of sixteen candidates, six came back
+`errorCode: "auth"` while still returning a valid oEmbed response. A backdrop
+that stops being embeddable disables its own channel rather than showing a
+dead frame.
+
+> The backdrops are third-party uploads of copyrighted footage and can be
+> withdrawn at any time, exactly as the original hardcoded Ghibli video was.
+> `Studio Ghibli Nature Loop` is from an official HBO Max channel and
+> `Free 4K Rain Loop` is published royalty-free; those two are the most
+> durable of the set.
+
 ## Sound
 
 The twelve room channels are five field recordings plus seven layers
@@ -86,6 +112,28 @@ swells its cutoff and gain in antiphase.
 A channel at 0% is silent. Level modulation is relative to the channel's own
 level, so nothing you have switched off can make a sound.
 
+### Channel levels are measured, not estimated
+
+Each layer's `trim` was derived by playing it alone at 100% and reading its
+post-limiter RMS from an `AnalyserNode`. The previous table was badly off for
+the recordings — rain measured 0.019 against a 0.09–0.13 median, roughly 10x
+below `stream`, so the channel users reach for first was inaudible under music
+at any fader position. All twelve now land within about 4 dB of each other.
+
+A `trim` above 1 means the source recording itself is quiet. Re-encoding those
+files at a normalised level would let it drop back toward 1.
+
+**Four of the five recordings are Ogg Vorbis, which Safari and iOS cannot
+decode.** Those channels are silent there. A failed layer is now recorded and
+its meter reads dark, but the durable fix is re-encoding to a format every
+browser plays.
+
+### Meters read the signal
+
+The LED meters used to be computed from the fader position, so a channel
+producing nothing still animated its bar. They now measure the layer's own
+output, which is why a dead channel is visible as dead.
+
 ### Included recordings
 
 - "Placid Ambient" by MusicLFiles, CC BY 4.0, via Wikimedia Commons.
@@ -94,6 +142,14 @@ level, so nothing you have switched off can make a sound.
 - "Cafe ambiance" by Marble Toast, CC0, via Wikimedia Commons —
   trimmed to a 90-second loop and re-encoded to AAC.
 - "Brownnoise", public domain, via Wikimedia Commons.
+
+### Scene art
+
+- "Pixel Art Parallax Background" by **OlegKrylov**, **CC-BY 4.0**, via
+  opengameart.org — <https://opengameart.org/content/pixel-art-parallax-background>.
+  Flattened to `assets/wallpapers/meadow.png`; the source layers are kept in
+  `assets/scenes/meadow/`. Attribution is required wherever this ships, and is
+  also shown in the app at the foot of the scene selector.
 
 ## Accessibility
 
@@ -110,7 +166,15 @@ Targeted at WCAG 2.2 AA. Verified in-browser:
   `Esc` closes any surface. Opening a panel moves focus into it and closing
   returns focus to the control that opened it.
 - `prefers-reduced-motion` removes the scene video, weather, the power-on
-  sequence and all movement, keeping opacity and colour.
+  sequence and all movement, keeping opacity and colour. The dock fades rather
+  than slides.
+- The dock withdraws when unused and returns on hover, on focus, or on a
+  pointer near the bottom edge. It is held open while a panel is open, while
+  focus is inside it, and mid-drag — a control that slides away under a
+  keyboard user is worse than one that never moves.
+- Skip back / forward seek 30 s inside a single video and step tracks inside a
+  playlist; the `aria-label` says which it is currently doing. They used to be
+  disabled for every single-video source, which is all three stations.
 
 Still untested: screen readers (VoiceOver, NVDA), 200% zoom, and forced-colors.
 

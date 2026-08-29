@@ -199,10 +199,19 @@ window.PixelScene = (function () {
       return true;
     },
 
-    // Back to a video channel: the canvas takes over again.
+    // Back to a pixel video channel: the canvas takes over again.
     showVideo: function () {
       artLayers.forEach(function (l) { l.classList.remove("is-live"); });
       if (cv) cv.classList.add("is-live");
+    },
+
+    // Take the canvas off screen entirely, for channels that are shown by
+    // something else — a crisp <video>, or the YouTube iframe. Leaving it live
+    // meant it kept painting its last source over whatever was underneath.
+    hideCanvas: function () {
+      artLayers.forEach(function (l) { l.classList.remove("is-live"); });
+      if (cv) cv.classList.remove("is-live");
+      this.setPlaying(false);
     },
 
     get ramp() { return ramp; },

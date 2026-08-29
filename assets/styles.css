@@ -426,6 +426,22 @@ button, a, input[type="range"] { touch-action: manipulation; }
 }
 
 .quiet .control-dock { opacity: 0; pointer-events: none; transform: translate(-50%, 120%); }
+
+/* The dock steps out of the way when it is not being used. A permanent bar
+   across the bottom of a full-screen scene competes with the thing the app is
+   for. It withdraws to a grab strip and returns on hover, on focus, or on any
+   pointer near the bottom of the screen — never while a panel is open, while
+   focus is inside it, or mid-drag. Quiet mode (Q) still hides it outright,
+   hence the :not(.quiet) guard rather than relying on source order. */
+.dock-idle:not(.quiet) .control-dock {
+  transform: translate(-50%, calc(100% - 18px));
+  opacity: .48;
+}
+.dock-idle:not(.quiet) .control-dock:hover,
+.dock-idle:not(.quiet) .control-dock:focus-within {
+  transform: translateX(-50%);
+  opacity: 1;
+}
 .quiet .readout { opacity: 0; pointer-events: none; transform: translateY(-10px); }
 .quiet .focus-status { opacity: 0; pointer-events: none; transform: translate(-50%, -10px); }
 .quiet .quiet-return { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
@@ -588,6 +604,30 @@ button, a, input[type="range"] { touch-action: manipulation; }
   flex: 0 1 176px; min-width: 120px; padding: 0 var(--s2);
 }
 .volume-key > .icon { color: var(--muted); font-size: var(--ic-md); }
+
+/* The room's own level. It lives here rather than in the dock because it
+   governs these twelve channels, and because pairing it with the dock's music
+   fader is what makes the balance between the two adjustable at all. */
+.room-master {
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s3);
+  margin-bottom: var(--s3);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-hw);
+  background: rgb(var(--shadow-rgb) / .25);
+}
+.room-master-copy { display: flex; flex-direction: column; min-width: 0; }
+.room-master-copy strong { font-size: var(--fs-body); color: var(--bone); }
+.room-master-copy small  { font-size: var(--fs-micro); color: var(--muted); }
+.room-master input[type=range] { flex: 1 1 auto; min-width: 80px; }
+.room-master output {
+  min-width: 30px; color: var(--amber); font-size: var(--fs-micro);
+  font-variant-numeric: tabular-nums; text-align: right;
+}
+@media (max-width: 540px) {
+  .room-master { flex-wrap: wrap; row-gap: var(--s2); }
+  .room-master-copy { flex: 1 1 100%; }
+}
 .volume-key output {
   min-width: 26px; color: var(--muted); font-size: var(--fs-micro);
   font-variant-numeric: tabular-nums; text-align: right;
@@ -910,6 +950,27 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: inset 0 1px var(--edge-soft);
   color: var(--bone); cursor: pointer; text-align: left;
 }
+/* Stations and the user's own saved sources share one row shape: the only
+   difference is that a saved row can be discarded. */
+.tuner-section { display: grid; gap: var(--s2); }
+.tuner-section-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
+}
+.station-list { display: grid; gap: var(--s2); }
+.station-row { display: flex; align-items: stretch; gap: var(--s2); }
+.station-row > .station { flex: 1 1 auto; min-width: 0; }
+.station-row.is-live > .station { border-color: rgb(var(--amber-rgb) / .55); }
+.station-row .station > .icon { font-size: var(--ic-lg); color: var(--muted); }
+.station-row.is-live .station > .icon { color: var(--amber); }
+.station-drop { flex: 0 0 auto; align-self: center; }
+
+/* CC-BY attribution for the shipped pixel art. It ships with the app, so the
+   credit has to ship where the app can be seen, not only in a text file. */
+.scene-credits {
+  margin: var(--s3) 0 0;
+  color: var(--muted); font-size: var(--fs-micro); line-height: 1.5;
+}
+
 .station-copy { display: grid; gap: 2px; min-width: 0; }
 .station-copy strong { font-size: var(--fs-sec); font-weight: 500; }
 .station-copy small { color: var(--muted); font-size: var(--fs-micro); }
@@ -1178,9 +1239,11 @@ input[type="range"]::-moz-range-thumb {
 }
 
 @media (max-width: 540px) {
-  /* One row has nothing left to give: the next thing to shed would be the
+  /* Landscape phones only: portrait folds to two rows below and keeps these.
+     One row has nothing left to give — the next thing to shed would be the
      play key, and a machine you cannot switch on is not a smaller machine.
-     Skipping goes instead — the tuner's track list still does it. */
+     Note this is the one layout with no way to seek: the tuner's track list
+     substitutes for skipping between tracks, but not for seeking inside one. */
   #previousButton, #nextButton { display: none; }
 
   .panel-head { gap: var(--s3); padding: var(--s3) var(--s4); }
@@ -1268,6 +1331,9 @@ input[type="range"]::-moz-range-thumb {
   }
   .panel.is-open, .focus-popover.is-open, .more-menu.is-open { transform: none !important; }
   .quiet .control-dock { transform: none !important; }
+  .dock-idle:not(.quiet) .control-dock { transform: translateX(-50%) !important; opacity: .48; }
+  .dock-idle:not(.quiet) .control-dock:hover,
+  .dock-idle:not(.quiet) .control-dock:focus-within { opacity: 1; }
   .panel.is-open .stagger > * { animation: none; }
   .booting .readout-ch, .booting .now-copy strong, .booting .control-dock,
   .booting .readout-title, .booting .readout-meta { animation: none; }
