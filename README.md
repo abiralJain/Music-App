@@ -1,20 +1,47 @@
-# Dream Worlds
+# UKIYO — a floating world machine
 
-A tabletop ambience machine, built as one piece of 1990s audio hardware:
-a machined faceplate and an amber dot-matrix readout over a full-screen scene.
+**Drag sounds onto a 160-year-old painting and hear them rain.**
 
-Three layers stay independent — changing one never disturbs the others:
+Hiroshige and Hokusai painted the exact weather this machine renders — sudden
+rain, evening snow, morning mist, fireflies. UKIYO puts their prints behind a
+tabletop deck: twelve sounds you place *on the painting* (height is volume,
+left is left), live weather falling across the print, a window shade that
+pulls the whole world from day to night, and your own music tuned in from
+YouTube. 浮世 — "the floating world" — is the genre's own name for itself.
 
-- **Scene** — the full-screen visual channel (14 channels): three filmed
-  loops, the same three through the pixel grid, six looping video backdrops,
-  your own tuned video, and the pixel-art gallery.
-- **Music** — any YouTube video or playlist you tune in, with saved sources.
-- **Room** — a twelve-channel ambience mixer with six presets, saved mixes,
-  drift, and a sleep timer.
+## What it does
 
-Music level and room level are **separate faders**. They used to be one, which
-meant turning the rain up turned the music up with it and the balance between
-them could never change.
+- **Sound tokens.** The twelve room layers are objects on the artwork. Drag
+  one: its level and stereo pan follow your hand on every frame, and it lands
+  with an ink ripple and a paper thump.
+- **The prints bring their own sky.** Pick *Sudden Shower* and it arrives
+  raining. Weather you choose by hand stays yours.
+- **A window shade.** Pull it down and the scene dims while the chrome
+  crossfades washi → dusk → indigo, bound live to the drag.
+- **Rooms are shareable.** Copy a room link — anyone who opens it gets your
+  exact arrangement, no backend. Or save a postcard: the print, the weather
+  mid-fall, a cartouche with the room's name and a vermillion seal.
+- **Today's pairing.** A date-seeded print + mix everyone gets in common.
+  Press T on the boot screen.
+- **Rare moments.** Some things only appear at certain hours, in certain
+  weather. Nothing announces them. There are three.
+- **A bonsai** grows from quiet minutes spent here. It never wilts and
+  nothing punishes you.
+- The console is part of the toy: `UKIYO.room()`, `UKIYO.postcard()`.
+
+## Art
+
+Two packs:
+
+- **The floating world** (ships): 15 woodblock prints by Hiroshige, Hokusai
+  and Chōki, public domain via the Met's Open Access program — fully
+  publishable. See `assets/scenes/ukiyoe/CREDITS.txt`.
+- **Ghibli** (personal option, in the more menu): Studio Ghibli's freely
+  offered stills, personal use only. See `assets/scenes/ghibli/CREDITS.txt`.
+
+Landscape prints bleed full-screen; a portrait print on a landscape screen is
+*mounted* — shown whole on the paper ground with a blurred echo behind it —
+because cover-cropping a Hiroshige is a crime with a CSS property.
 
 ## Run locally
 
@@ -157,9 +184,14 @@ Targeted at WCAG 2.2 AA. Verified in-browser:
 
 - Every interactive control is at least 24×24px; primary controls are 44px.
 - Nothing renders below 11px.
-- Text over the scene is protected by a gradient scrim sized against the
-  *brightest* channel, not the darkest — the worst measured case is 11.8:1 for
-  the scene title and 5.8:1 for the 11px label beside it.
+- Text over the scene sits on its own bevelled plate rather than on a scrim.
+  The scrim was calibrated against the old dark video loops and was never
+  re-measured when the Ghibli paintings landed: against the brightest region of
+  the readout band it had fallen to **2.17:1** for the kind label, **3.31:1**
+  for the number and **3.20:1** for the title. On the plate they measure
+  **8.1:1**, **11.6:1** and **16.5:1**. The lesson is in the failure mode — the
+  figures were correct when written and silently wrong the moment the artwork
+  changed underneath them.
 - Palette: amber on chassis 9.66:1, bone 15.6:1, muted 7.2:1. The deep red is
   used only for indicator fills, never for text.
 - Keyboard: `Space` play/pause, `←`/`→` track, `Q` quiet, `F` full screen,
@@ -181,7 +213,7 @@ Still untested: screen readers (VoiceOver, NVDA), 200% zoom, and forced-colors.
 ## Deploying
 
 There is no build step, so `index.html` carries a version query on its own
-assets (`styles.css?v=4`). **Bump it when you change CSS or JS**, or returning
+assets (`styles.css?v=32`). **Bump it when you change CSS or JS**, or returning
 visitors will run cached scripts against new markup — which is precisely how a
 fix can appear not to work.
 
@@ -207,3 +239,184 @@ Two known asset limits:
   resolution at a much larger file size or drop to 480×252, which is worse than
   shipping them as they are. With `ffmpeg` installed, 1280×720 at ~1.5MB each
   is the target.
+
+
+## The 2026-08-30 pass
+
+The app worked but felt grim, and four things that read as taste turned out to
+be bugs.
+
+### Colour was the problem, not brightness
+
+Measured, by sampling the actual pixels: the old default scene ran at **9.5%
+mean saturation**; the reference it was being compared against ran at **57.7%**.
+Luminance was only a 3.5x gap. Colour is what reads as joy, so the fix was
+chroma, not light level — which is also why a dark pixel desktop and "I want to
+feel happy" were never actually in conflict.
+
+The fourteen Ghibli stills were not picked by eye either. Every still across
+eight films was decoded and scored on saturation with brightness as a secondary
+term; the shipped set measures **0.42 saturation**, four and a half times the
+old default.
+
+### Bugs fixed
+
+- **`--face-chan: var(--face-chan)`** was a cyclic custom property, so it
+  computed to nothing and **all twelve mixer channel cards rendered with no
+  background at all**.
+- **Weather covered 0.21% of the screen at maximum intensity** — 4,876 pixels
+  out of 2.3 million. Intensity drove particle *count* and nothing else. It now
+  covers **2.4%** at maximum and drives count, speed, size, opacity and wind,
+  across a 100x range instead of a 16x one.
+- **The LED meters could not exceed ~43%**; a channel at full lit 13% of its
+  bar. The scale factor was linear, which cannot serve ambience whose RMS
+  varies threefold between layers. It is now a power curve. Worth knowing: all
+  twelve channels were producing audio the whole time — the meter was lying.
+- **The gallery channel could not survive a reload**, and `restore()`
+  overwrote the saved index with 0 on the way past, so the setting was
+  destroyed rather than merely ignored.
+- **Pause stopped controlling the room** the moment you touched a fader:
+  `wakeRoom()` restarted the audio while the transport still read "Play".
+- **The dot-matrix mask removed ~72% of every glyph**, so the track readout
+  rendered essentially blank.
+- **The dock withdrew four seconds after load**, before you had touched
+  anything.
+- **"Drift" was an audio feature wearing a weather costume** — it nudged room
+  faders by ±2 every 28 seconds, and the setter rounded, so any nudge under 0.5
+  was a literal no-op. It never touched the scene.
+- **Panels were centred with `translateX(-50%)`** over a fractional width, so
+  on any odd viewport the whole box landed on a half pixel and every glyph in
+  it was rasterised off-grid. Centring is now done with auto margins, which
+  also means the reduced-motion `transform: none` override no longer shoves
+  the dock half its own width to the right.
+
+### Drift is now Sway
+
+Each live channel gets its own slow sine with a random period (34–80s) and
+phase, so the room breathes instead of stepping and no two channels line up.
+The moving value goes to the engine as a float — `state.values` never moves,
+so the fader, the readout and the saved mix still show what you actually set.
+
+**Sway is deliberately exempt from `prefers-reduced-motion`.** It is an audio
+feature; the motion preference governs visual motion. The meter's transition is
+already removed under that preference, which takes care of the visible part.
+
+### Three modes, each authored
+
+Night is the default and lives in `:root`. Day and dusk are authored palettes,
+not inversions: on a pale ground the amber has to lose most of its lightness or
+it fails contrast outright (`#FFC24A` on cream is 1.6:1).
+
+They are scoped to chrome surfaces and **never to `:root`** — the readout, the
+scene title and the veil float over the scene photo and are measured against the
+brightest frame, so they stay light-on-dark in every mode.
+
+On **auto**, the mode follows the *scene*, not the clock: a bright scene gets a
+dark faceplate and a dark scene gets a light one, so the chrome always separates
+from the picture.
+
+### Interface sound
+
+Synthesised at play time — no asset files, and nothing to download before the
+first click can make a noise. Ramps rather than value assignments (a
+discontinuity in a waveform is itself a click), a few percent of pitch variation
+per trigger so forty presses a minute do not turn into a smoke alarm, and a
+180Hz high-pass so the sounds sit above the ambience bed and cut through quietly
+rather than loudly.
+
+The browser will not start audio without a user gesture, so a gate had to exist
+regardless. The BIOS boot screen *is* that gate — same click, spent better.
+
+### Pixel identity
+
+Thirty-two icons redrawn on a 16x16 grid, each compiled to a single path of
+rectangle subpaths (smaller than individual rects, and it removes the hairline
+seams between adjacent pixels). `shape-rendering: crispEdges`, and icon sizes
+moved to whole multiples of 16 — the bar used to show icons at 11, 15, 18 and
+20px simultaneously, because icons in *labelled* hardware keys inherited the
+11px label size.
+
+Display type is **Silkscreen**, a true 8px-grid bitmap face, used at 16px and
+32px and at no other size, because that is where it is sharp. Everything that
+has to stay readable small stays in IBM Plex Mono, which is not a bitmap face
+and does not care.
+
+### Scene art
+
+Studio Ghibli publishes these stills themselves and invites free use "within the
+bounds of common sense" — a goodwill grant covering personal use, not
+publication. **If this is ever put on the public internet or monetised, those
+files have to come out first.** See `assets/scenes/ghibli/CREDITS.txt`, which
+lists every file and its film.
+
+### The room drives the scene
+
+Turn the rain fader up and rain appears on the window; fire gives embers, night
+garden gives fireflies, wind gives mist. The loudest weather-shaped channel above
+22 chooses the effect and its fader position sets the intensity. Picking a
+weather chip by hand takes the wheel back until you hand it over again.
+
+The three layers still don't disturb each other — that part was always right.
+What was missing is that nothing you did in one place was *visible* anywhere
+else, and independence was reading as disconnection.
+
+### Poking the scene
+
+Press the picture and it answers: a burst of sparks at the point you touched,
+tinted to whatever weather is running, falling under gravity with drag. It is
+the one place in the app where the thing you press is the thing that moves —
+everywhere else you press a control and something else changes.
+
+Sparks keep the render loop alive on their own, so this works with weather off,
+and it is disabled entirely under `prefers-reduced-motion`.
+
+### The dock meter
+
+Twelve bars of real analyser output, summed across the room, with a peak cap
+that falls at a fixed rate rather than tracking the signal. The falling cap is
+what makes a meter read as an instrument instead of a bar chart. Hidden below
+1080px, where the dock has better uses for the space.
+
+### Focus rings
+
+`outline`, not `box-shadow`. It has followed `border-radius` since Safari 16.4,
+it survives forced-colors mode where shadows are dropped, and it sits outside
+the box model so nothing reflows. The offset collapses from 4px to 1px on press,
+so the ring travels back to the key as it goes down.
+
+
+## The interaction pass (2026-08-30, later)
+
+Two reference clips were studied frame by frame — a calendar whose cards tilt
+and carry their own drop target while dragged, and a portfolio whose airplane
+window has a shade that binds the whole page's lightness to the drag, frame by
+frame, springing back if released below halfway.
+
+Neither has a modal panel. Nothing in either is a button in a box. That is the
+gap this pass closes.
+
+- **Sound tokens.** The twelve room layers are objects on the painting. Height
+  sets the level, horizontal position sets the stereo pan, so you place a sound
+  in the room you are looking at. Both apply on every `pointermove`, not on
+  release. Each carries its own colour, because twelve identical grey slabs read
+  as equipment and twelve coloured objects read as things you can pick up.
+- **A window shade.** Every scene here is a window, so the light control is a
+  blind you pull rather than a row in a menu. It crossfades night → dusk → day
+  continuously and commits past halfway.
+- **Panels became a drawer.** They used to cover 67.2% of the screen, including
+  the scene the mixer drives. Now 23.1% at desktop and 35.7% at tablet, and the
+  scene's name no longer disappears at the moment you are choosing a scene.
+- **`grabbable.js`** carries the physics: lift, a stable tilt, rubber-banded
+  edges, a flick threshold and a spring settle. Its paint is deliberately
+  **synchronous** rather than batched into `requestAnimationFrame` — there is
+  no layout read to thrash against, and rAF is throttled to zero in a background
+  tab, which is exactly where this app is meant to live.
+
+### A bug worth remembering
+
+`--ease-in-out` was used by the Ken Burns drift and declared nowhere. An
+unresolvable `var()` voids the whole `animation` shorthand, so it computed to
+`none` and **every still had been frozen since the day it shipped**, with a
+`will-change: transform` promoting a layer for nothing. Nothing warned; the
+feature simply did not exist. There is now a check for variables used with no
+fallback and never declared.
