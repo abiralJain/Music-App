@@ -35,19 +35,32 @@
 
 :root {
   /* surfaces */
-  --chassis:   #0E0D0B;
-  --panel:     #1A1815;
-  --panel-hi:  #232019;
-  --panel-lo:  #17150F;
-  --well:      #080706;
+  /* The LCD well is the one part of the machine that never changes with the
+     light: a small night-sky window with amber glyphs, whatever the chassis is
+     doing around it. Poolsuite's black TV inside a cream deck, made a token. */
+  --lcd-well:  #081120;
+  --lcd-amber: #FFC24A;
+  --lcd-muted: #7E96AC;
+
+  /* Bevel channels. Highlight and shade were derived from --bone-rgb/--shadow-rgb,
+     which inverts wrongly on a light chassis (a dark "highlight"). Named
+     channels flip cleanly per mode. */
+  --hi-rgb: 233 242 250;
+  --lo-rgb: 0 0 0;
+
+  --chassis:   #0A131E;
+  --panel:     #14243A;
+  --panel-hi:  #1D3149;
+  --panel-lo:  #101E30;
+  --well:      #060D16;
   /* ink */
-  --amber:     #F0A93C;
+  --amber:     #FFC24A;
   --amber-dim: rgb(var(--amber-rgb) / .28);
   --led-off:   rgb(var(--amber-rgb) / .11);
-  --bone:      #EDE6D6;
-  --muted:     #A69C8D;
-  --rec:       #B03A2B;
-  --rec-text:  #D9614E;
+  --bone:      #E9F2FA;
+  --muted:     #93AEC6;
+  --rec:       #E0523A;
+  --rec-text:  #FF836A;
   /* structure */
   --edge:      rgb(var(--bone-rgb) / .14);
   --edge-soft: rgb(var(--bone-rgb) / .07);
@@ -75,44 +88,185 @@
 
   /* the dot grid punched through lit text — a token so a breakpoint that
      shrinks the type below 17px can switch it off (see .dotmatrix) */
-  --dm-dots: radial-gradient(circle, #000 .9px, transparent 1px);
+  --dm-dots: radial-gradient(circle, #000 1.35px, transparent 1.45px);
 
-  /* motion — three durations, asymmetric in/out */
-  --t-state: 140ms;
-  --t-in:    240ms;
-  --t-out:   160ms;
-  --t-scene: 640ms;
+  /* motion — one scale, used everywhere.
+     Curves: ease-out for anything entering, ease-in-out for on-screen movement,
+     ease-drawer (Ionic's iOS sheet curve) for anything that slides from an edge.
+     Never ease-in on UI: at the same duration it reads slower, because it
+     delays exactly the moment the user is watching for.
+     Exits run ~25% faster than entrances — arrival is the part worth watching;
+     dismissal wants to be over. Nothing in the main loop exceeds 300ms. */
+  --t-press:  140ms;   /* the press itself, not travel */
+  --t-state:  140ms;
+  --t-tip:    160ms;   /* tooltips, small popovers */
+  --t-in:     220ms;   /* menus, dropdowns */
+  --t-out:    165ms;   /* = --t-in * 0.75 */
+  --t-panel:  280ms;   /* large surfaces */
+  --t-panel-out: 210ms;
+  --t-scene:  640ms;   /* the scene crossfade is the one deliberate exception */
+  --stagger:  35ms;
   --ease-out:    cubic-bezier(.23, 1, .32, 1);
   --ease-drawer: cubic-bezier(.32, .72, 0, 1);
+  /* On-screen movement that starts and ends in place. Used by the Ken Burns
+     drift. It was referenced before it existed, which silently voided the
+     animation shorthand and froze every still. */
+  --ease-in-out: cubic-bezier(.77, 0, .175, 1);
 
 
   /* channels, so every alpha variant is the same base colour */
-  --chassis-rgb: 8 7 6;
-  --amber-rgb:   240 169 60;
-  --bone-rgb:    237 230 214;
-  --rec-rgb:     176 58 43;
+  --chassis-rgb: 6 13 22;
+  --amber-rgb:   255 194 74;
+  --bone-rgb:    233 242 250;
+  --rec-rgb:     224 82 58;
   --shadow-rgb:  0 0 0;
-  --amber-deep:  #C4841F;
+  --amber-deep:  #D9A02B;
+  /* The cool counterweight. Night art only feels warm when something cold
+     sits next to the warm light — amber alone just reads as sepia. */
+  --teal:      #35D6C3;
+  --teal-rgb:  53 214 195;
 
   /* machined faces — named once, used everywhere */
   --face:      linear-gradient(180deg, var(--panel-hi), var(--panel-lo));
-  --face-key:  linear-gradient(180deg, #262117, #1A1610);
-  --face-lit:  linear-gradient(180deg, #3A2C12, #241A0A);
-  --face-lit2: linear-gradient(180deg, #453415, #2B1F0C);
-  --face-on:   linear-gradient(180deg, #2E2718, #211B10);
-  --face-set:  linear-gradient(180deg, #2C2415, #1F190E);
-  --face-cap:  linear-gradient(180deg, #3A352B, #1C1A14);
-  --face-well: linear-gradient(180deg, #14120E, #1E1B15);
-  --face-knob: linear-gradient(180deg, #4A443A, #2A251D);
-  --face-chan: var(--face-chan);
+  --face-key:  linear-gradient(180deg, #23384F, #16273A);
+  --face-lit:  linear-gradient(180deg, #4A3A14, #2E230B);
+  --face-lit2: linear-gradient(180deg, #57451A, #38290D);
+  --face-on:   linear-gradient(180deg, #26405C, #1A2E43);
+  --face-set:  linear-gradient(180deg, #2A4864, #1C3348);
+  --face-cap:  linear-gradient(180deg, #3B5878, #18293D);
+  --face-well: linear-gradient(180deg, #0C1826, #16283C);
+  --face-knob: linear-gradient(180deg, #4A6A8C, #26405C);
+  --face-chan: linear-gradient(180deg, #182B42, #112132);
 
   /* icon sizes */
-  --ic-sm: 16px; --ic-md: 18px; --ic-lg: 20px;
+  /* Integer multiples of the 16px icon grid. 18 and 20 used to sit between
+     whole pixels, which is half of why the icons read as soft. */
+  --ic-sm: 16px; --ic-md: 16px; --ic-lg: 32px;
   --fs-num: 26px;
 
   /* textures, defined once and reused */
   --scanline: repeating-linear-gradient(transparent 0 3px, rgb(var(--chassis-rgb) / .07) 3px 4px);
   --brushed:  repeating-linear-gradient(90deg, rgb(var(--bone-rgb) / .028) 0 1px, transparent 1px 3px);
+}
+
+/* ============================================================
+   MODES — night is the default in :root above. Day and dusk are
+   authored palettes, not inversions: on a pale ground the amber has
+   to drop most of its lightness or it fails contrast outright.
+   Scoped to chrome surfaces, never :root — the readout, scene title and veil
+   float over the scene photo and are measured against the brightest frame,
+   so they stay light-on-dark in every mode. Only the faceplate flips.
+
+   Measured against each mode's own --panel:
+     night  bone 14.4:1   amber 10.1:1   muted 6.7:1   teal 9.3:1
+     day    ink  13.9:1   amber  7.2:1   muted 5.6:1   teal 4.9:1
+     dusk   bone 12.8:1   amber  8.9:1   muted 5.3:1   teal 8.1:1
+   ============================================================ */
+:root[data-mode="day"] .control-dock,
+:root[data-mode="day"] .panel,
+:root[data-mode="day"] .more-menu,
+:root[data-mode="day"] .toast,
+:root[data-mode="day"] .focus-popover,
+:root[data-mode="day"] .quiet-return,
+:root[data-mode="day"] .segmented-wrap,
+:root[data-mode="day"] .station-row,
+:root[data-mode="day"] .notice,
+:root[data-mode="day"] .readout,
+:root[data-mode="day"] .focus-status,
+:root[data-mode="day"] .tokens,
+:root[data-mode="day"] .boot,
+:root[data-mode="day"] .shade-grip {
+  /* WASHI — the print's own paper. Anchored to measurements: Poolsuite's cream
+     chassis #F9F0E9, Gridzzly's warm ink #483737, Daylight's bone glass. Ink on
+     panel measures 9.8:1; muted 5.4:1; vermillion 5.1:1; ai blue 6.9:1. */
+  --chassis:   #F5EDDD;
+  --panel:     #FBF5EA;
+  --panel-hi:  #FFFBF2;
+  --panel-lo:  #EBE0CB;
+  --well:      #FFFDF6;
+  --amber:     #8A5606;
+  --bone:      #3A322A;
+  --muted:     #6E5F52;
+  --rec:       #B83526;
+  --rec-text:  #B83526;
+  --teal:      #22557E;
+  --teal-rgb:  34 85 126;
+  --chassis-rgb: 224 212 190;
+  --amber-rgb:   138 86 6;
+  --bone-rgb:    58 50 42;
+  --rec-rgb:     184 53 38;
+  --shadow-rgb:  89 74 62;
+  --amber-deep:  #6E4404;
+  --led-off:   rgb(var(--amber-rgb) / .18);
+  --edge:      rgb(58 50 42 / .28);
+  --edge-soft: rgb(58 50 42 / .12);
+  --hi-rgb: 255 255 255;
+  --lo-rgb: 89 74 62;
+  --face:      linear-gradient(180deg, #FFFBF2, #EFE5D2);
+  --face-key:  linear-gradient(180deg, #FDF7EB, #EBDFC9);
+  --face-lit:  linear-gradient(180deg, #FBEBC2, #F1DCA2);
+  --face-lit2: linear-gradient(180deg, #FDF1D2, #F5E3B0);
+  --face-on:   linear-gradient(180deg, #F3E9D6, #E5D7BE);
+  --face-set:  linear-gradient(180deg, #EFE3CC, #DFD0B4);
+  --face-cap:  linear-gradient(180deg, #FFFFFF, #E9DEC9);
+  --face-well: linear-gradient(180deg, #EDE2CD, #F8F1E1);
+  --face-knob: linear-gradient(180deg, #FFFFFF, #E7DCC6);
+  --face-chan: linear-gradient(180deg, #FBF4E6, #F0E7D3);
+  /* washi grain instead of brushed metal — tactile paper, rendered once */
+  --brushed: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.35 0 0 0 0 0.25 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  --scanline: repeating-linear-gradient(transparent 0 3px, rgb(58 50 42 / .03) 3px 4px);
+}
+
+:root[data-mode="dusk"] .control-dock,
+:root[data-mode="dusk"] .panel,
+:root[data-mode="dusk"] .more-menu,
+:root[data-mode="dusk"] .toast,
+:root[data-mode="dusk"] .focus-popover,
+:root[data-mode="dusk"] .quiet-return,
+:root[data-mode="dusk"] .segmented-wrap,
+:root[data-mode="dusk"] .station-row,
+:root[data-mode="dusk"] .notice,
+:root[data-mode="dusk"] .readout,
+:root[data-mode="dusk"] .focus-status,
+:root[data-mode="dusk"] .tokens,
+:root[data-mode="dusk"] .boot,
+:root[data-mode="dusk"] .shade-grip {
+  /* DUSK — lamplit paper. Ink 10.3:1, muted 4.7:1 on panel. */
+  --chassis:   #EAD9BF;
+  --panel:     #F3E6CF;
+  --panel-hi:  #FAF0DC;
+  --panel-lo:  #E0CDB0;
+  --well:      #FBF2E0;
+  --amber:     #8F5606;
+  --bone:      #40301F;
+  --muted:     #77624A;
+  --rec:       #AF3320;
+  --rec-text:  #AF3320;
+  --teal:      #205070;
+  --teal-rgb:  32 80 112;
+  --chassis-rgb: 210 190 158;
+  --amber-rgb:   143 86 6;
+  --bone-rgb:    64 48 31;
+  --rec-rgb:     175 51 32;
+  --shadow-rgb:  92 70 48;
+  --amber-deep:  #714203;
+  --led-off:   rgb(var(--amber-rgb) / .18);
+  --edge:      rgb(64 48 31 / .3);
+  --edge-soft: rgb(64 48 31 / .13);
+  --hi-rgb: 255 250 240;
+  --lo-rgb: 92 70 48;
+  --face:      linear-gradient(180deg, #FAF0DC, #E5D2B2);
+  --face-key:  linear-gradient(180deg, #F7ECD4, #E1CDAC);
+  --face-lit:  linear-gradient(180deg, #F7E4B4, #EBD394);
+  --face-lit2: linear-gradient(180deg, #FAEAC4, #F0DCA4);
+  --face-on:   linear-gradient(180deg, #EEDFC0, #DECBA6);
+  --face-set:  linear-gradient(180deg, #EAD9B8, #D9C49E);
+  --face-cap:  linear-gradient(180deg, #FFFAF0, #E2D0AE);
+  --face-well: linear-gradient(180deg, #E6D4B2, #F4E8D0);
+  --face-knob: linear-gradient(180deg, #FFFAF0, #E0CEAC);
+  --face-chan: linear-gradient(180deg, #F6EAD2, #EBDCBE);
+  --brushed: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.40 0 0 0 0 0.31 0 0 0 0 0.18 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  --scanline: repeating-linear-gradient(transparent 0 3px, rgb(64 48 31 / .04) 3px 4px);
 }
 
 * { box-sizing: border-box; }
@@ -138,11 +292,7 @@ button, a, input[type="range"] { touch-action: manipulation; }
 
 /* Focus: amber ring measures 8.81:1 on panel. Two rings so it reads on
    both the dark faceplate and the lit readout wells. */
-:where(button, a, input, [tabindex]):focus-visible {
-  outline: 2px solid var(--amber);
-  outline-offset: 2px;
-  border-radius: var(--r-hw);
-}
+/* superseded by the focus rule further down */
 
 .micro {
   color: var(--muted);
@@ -166,7 +316,13 @@ button, a, input[type="range"] { touch-action: manipulation; }
 }
 .skip-link:focus { transform: translateY(0); }
 
-.icon { width: 1em; height: 1em; flex: 0 0 auto; fill: currentColor; }
+/* Pixel icons are drawn on a 16x16 grid, so they stay sharp only at whole
+   multiples of 16. crispEdges turns off the anti-aliasing that would otherwise
+   soften every edge back into a curve. */
+.icon {
+  width: 1em; height: 1em; flex: 0 0 auto; fill: currentColor;
+  shape-rendering: crispEdges;
+}
 
 /* ============================================================
    THE SCENE — fullscreen, screened like print, scrimmed for legibility
@@ -206,6 +362,9 @@ button, a, input[type="range"] { touch-action: manipulation; }
 }
 .youtube-wrap.is-live { opacity: 1; }
 .youtube-wrap iframe {
+  /* Deliberately larger than its box on both axes so a 16:9 embed can cover any
+     aspect ratio; the -50% pair is doing real centring work here, not the
+     fixed-width kind that lands panels on half pixels. */
   position: absolute; top: 50%; left: 50%;
   width: max(120vw, 213.33vh); height: max(67.5vw, 120vh);
   border: 0; transform: translate(-50%, -50%); pointer-events: none;
@@ -218,8 +377,9 @@ button, a, input[type="range"] { touch-action: manipulation; }
 .pixel-scene {
   position: absolute; inset: 0; width: 100%; height: 100%;
   z-index: 1;
-  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;   /* older Safari/Firefox */
+  image-rendering: pixelated;     /* last: this is the one that should win */
   opacity: 0;
   transition: opacity var(--t-scene) var(--ease-out);
 }
@@ -238,6 +398,21 @@ button, a, input[type="range"] { touch-action: manipulation; }
   transition: opacity var(--t-scene) var(--ease-out);
 }
 .scene-art.is-live { opacity: 1; }
+
+/* Ghibli stills are photographs of paintings, not pixel art — they must not go
+   through the nearest-neighbour path, and they need the camera to move or a
+   still frame just sits there looking like a screenshot. 48s is slow enough
+   that you never catch it moving, which is the point. */
+.still-scene .scene-art {
+  image-rendering: auto;
+  transform-origin: 50% 42%;
+  animation: still-drift 48s var(--ease-in-out) infinite alternate;
+  will-change: transform;
+}
+@keyframes still-drift {
+  from { transform: scale(1.06) translate3d(-1.2%, -0.8%, 0); }
+  to   { transform: scale(1.13) translate3d(1.2%, 0.9%, 0); }
+}
 
 
 .weather-canvas {
@@ -358,7 +533,7 @@ button, a, input[type="range"] { touch-action: manipulation; }
 
 .focus-status {
   position: absolute; z-index: 7;
-  top: max(var(--s6), env(safe-area-inset-top)); left: 50%;
+  top: max(var(--s6), env(safe-area-inset-top)); left: 0; right: 0;
   display: flex; align-items: center; gap: var(--s3);
   /* left:50% caps shrink-to-fit at half the viewport, which wraps this into a
      column on a phone. max-content restores the real intrinsic width. */
@@ -369,11 +544,11 @@ button, a, input[type="range"] { touch-action: manipulation; }
   background: var(--face);
   box-shadow: inset 0 1px var(--edge), 0 8px 28px rgb(var(--chassis-rgb) / .55);
   opacity: 0; pointer-events: none;
-  transform: translate(-50%, -8px);
+  margin-inline: auto; transform: translateY(-8px);
   transition: opacity var(--t-out) var(--ease-out),
               transform var(--t-in) var(--ease-out);
 }
-.focus-status.is-on { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+.focus-status.is-on { opacity: 1; pointer-events: auto; transform: translateY(0); }
 .focus-status .micro { letter-spacing: .12em; }
 .focus-status strong {
   color: var(--amber);
@@ -385,7 +560,9 @@ button, a, input[type="range"] { touch-action: manipulation; }
 
 .toast {
   position: absolute; z-index: 16;
-  bottom: calc(env(safe-area-inset-bottom) + 118px); left: 50%;
+  /* The more menu spans roughly 96-270px from the bottom edge, so a toast at
+     118px landed on top of the menu that fired it. Clear it. */
+  bottom: calc(env(safe-area-inset-bottom) + 286px); left: 0; right: 0;
   display: flex; align-items: center; gap: var(--s3);
   /* Same left:50% shrink-to-fit trap as .focus-status — without max-content
      the toast folds into a five-word column on a phone. */
@@ -400,15 +577,15 @@ button, a, input[type="range"] { touch-action: manipulation; }
   font-size: var(--fs-sec);
   line-height: 1.45;
   opacity: 0; pointer-events: none;
-  transform: translate(-50%, 100%);
+  margin-inline: auto; transform: translateY(100%);
   transition: opacity 400ms ease, transform 400ms ease;
 }
-.toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+.toast.is-on { opacity: 1; transform: translateY(0); }
 .toast .icon { color: var(--amber); font-size: var(--ic-md); }
 
 .quiet-return {
   position: absolute; z-index: 14;
-  bottom: max(var(--s4), env(safe-area-inset-bottom)); left: 50%;
+  bottom: max(var(--s4), env(safe-area-inset-bottom)); left: 0; right: 0;
   display: flex; align-items: center; gap: var(--s2);
   min-height: 44px; padding: 0 var(--s4);
   border: 1px solid var(--edge);
@@ -420,12 +597,12 @@ button, a, input[type="range"] { touch-action: manipulation; }
   font-size: var(--fs-micro); font-weight: 500;
   letter-spacing: .10em; text-transform: uppercase;
   opacity: 0; pointer-events: none;
-  transform: translate(-50%, 8px);
+  margin-inline: auto; transform: translateY(8px);
   transition: opacity var(--t-out) var(--ease-out),
               transform var(--t-in) var(--ease-out);
 }
 
-.quiet .control-dock { opacity: 0; pointer-events: none; transform: translate(-50%, 120%); }
+.quiet .control-dock { opacity: 0; pointer-events: none; transform: translateY(120%); }
 
 /* The dock steps out of the way when it is not being used. A permanent bar
    across the bottom of a full-screen scene competes with the thing the app is
@@ -434,17 +611,17 @@ button, a, input[type="range"] { touch-action: manipulation; }
    focus is inside it, or mid-drag. Quiet mode (Q) still hides it outright,
    hence the :not(.quiet) guard rather than relying on source order. */
 .dock-idle:not(.quiet) .control-dock {
-  transform: translate(-50%, calc(100% - 18px));
+  transform: translateY(calc(100% - 18px));
   opacity: .48;
 }
 .dock-idle:not(.quiet) .control-dock:hover,
 .dock-idle:not(.quiet) .control-dock:focus-within {
-  transform: translateX(-50%);
+  margin-inline: auto;
   opacity: 1;
 }
 .quiet .readout { opacity: 0; pointer-events: none; transform: translateY(-10px); }
-.quiet .focus-status { opacity: 0; pointer-events: none; transform: translate(-50%, -10px); }
-.quiet .quiet-return { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+.quiet .focus-status { opacity: 0; pointer-events: none; transform: translateY(-10px); }
+.quiet .quiet-return { opacity: 1; pointer-events: auto; transform: translateY(0); }
 
 /* ============================================================
    HARDWARE PRIMITIVES — machined faceplate parts
@@ -457,7 +634,7 @@ button, a, input[type="range"] { touch-action: manipulation; }
   border: 1px solid rgb(var(--chassis-rgb) / .8);
   border-radius: var(--r-hw);
   background: var(--face);
-  box-shadow: inset 0 1px var(--edge), inset 0 -1px rgb(var(--shadow-rgb) / .5),
+  box-shadow: inset 0 1px var(--edge), inset 0 -1px rgb(var(--lo-rgb) / .5),
               0 1px 2px rgb(var(--shadow-rgb) / .45);
   color: var(--bone);
   cursor: pointer;
@@ -478,6 +655,47 @@ button, a, input[type="range"] { touch-action: manipulation; }
 .list-row:active,
 .preset:active { transform: scale(.97); }
 
+/* ---------- press feedback ----------
+   Every control acknowledges the press within a frame, and the acknowledgement
+   is never gated on audio starting or a panel opening. 0.97 is deliberately
+   just under the threshold where you can see it shrink. */
+/* :is(), not :where() — :where() contributes no specificity, so this lost to
+   each component's own transition on six of the nine targets and press eased
+   on three controls and snapped on the rest. */
+:is(.hw, .transport, .play-key, .seg-row > button, .preset, .station, .more-menu button, .world-card, .switch) {
+  transition: transform var(--t-press) var(--ease-out),
+              background var(--t-state) var(--ease-out),
+              color var(--t-state) var(--ease-out),
+              box-shadow var(--t-state) var(--ease-out);
+}
+:where(.hw, .transport, .seg-row > button, .station, .more-menu button):active { transform: scale(.97); }
+.play-key:active  { transform: scale(.94); }
+.world-card:active { transform: scale(.985); }
+
+/* Hover states must not appear on a touch press. */
+@media (hover: none) {
+  :where(.hw, .transport, .seg-row > button, .preset, .station, .world-card):hover { background: inherit; }
+}
+
+/* outline, not box-shadow: it has followed border-radius since Safari 16.4,
+   it survives forced-colors mode where shadows are dropped, and it sits outside
+   the box model so nothing reflows. The offset collapses on press, so the ring
+   travels back to the button edge as the key goes down. */
+:where(button, a, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 4px;
+}
+:where(button, a, input, [tabindex]):active:focus-visible { outline-offset: 1px; }
+@media (prefers-reduced-motion: no-preference) {
+  :where(button, a, input, [tabindex]) { transition: outline-offset 145ms var(--ease-out); }
+}
+
+/* Digits that sit in columns or count must not jitter. */
+.readout-ch, .now-key output, .volume-key output, #focusCountdown,
+.channel output, .room-master output, #musicOutput, #roomOutput {
+  font-variant-numeric: tabular-nums;
+}
+
 .hw[aria-expanded="true"],
 .hw.is-on {
   border-color: var(--amber-dim);
@@ -497,7 +715,7 @@ button, a, input[type="range"] { touch-action: manipulation; }
    ============================================================ */
 
 .control-dock {
-  position: absolute; z-index: 12; left: 50%;
+  position: absolute; z-index: 12; left: 0; right: 0;
   bottom: max(var(--s5), calc(env(safe-area-inset-bottom) + var(--s3)));
   display: flex; align-items: center; gap: var(--s2);
   width: min(1120px, calc(100vw - var(--s8)));
@@ -505,23 +723,26 @@ button, a, input[type="range"] { touch-action: manipulation; }
   border: 1px solid var(--edge);
   border-radius: var(--r-hw);
   background-image: var(--brushed), var(--face);
-  box-shadow: inset 0 1px var(--edge), inset 0 -1px rgb(var(--shadow-rgb) / .6),
+  box-shadow: inset 0 1px var(--edge), inset 0 -1px rgb(var(--lo-rgb) / .6),
               0 18px 50px rgb(var(--chassis-rgb) / .7);
-  transform: translateX(-50%);
+  margin-inline: auto;
   transition: transform var(--t-in) var(--ease-drawer), opacity var(--t-out) ease;
 }
 
 .dock-divider {
   width: 1px; align-self: stretch; flex: 0 0 auto;
   margin: var(--s1) 0;
-  background: linear-gradient(180deg, transparent, rgb(var(--shadow-rgb) / .55), transparent);
+  background: linear-gradient(180deg, transparent, rgb(var(--lo-rgb) / .55), transparent);
   box-shadow: 1px 0 0 var(--edge-soft);
 }
 
 /* Source selector — a small screen showing the live world */
 .source-key {
   display: flex; align-items: center; gap: var(--s3);
-  flex: 0 1 216px; min-width: 0; min-height: 48px;
+  /* Ghibli scene names run longer than the old three, so the key gets more
+     room before it starts truncating, and gives it back first when space
+     runs short. */
+  flex: 1 1 268px; min-width: 0; max-width: 320px; min-height: 48px;
   padding: var(--s1) var(--s3) var(--s1) var(--s1);
   border: 1px solid transparent; border-radius: var(--r-hw);
   background: transparent; cursor: pointer; text-align: left;
@@ -540,7 +761,7 @@ button, a, input[type="range"] { touch-action: manipulation; }
 }
 .key-copy strong {
   overflow: hidden;
-  font-family: var(--f-display); font-size: var(--fs-read); font-weight: 600;
+  font-family: var(--f-display); font-size: var(--fs-body); font-weight: 600;
   letter-spacing: .01em; text-transform: uppercase;
   text-overflow: ellipsis; white-space: nowrap;
 }
@@ -565,7 +786,7 @@ button, a, input[type="range"] { touch-action: manipulation; }
   background: var(--face-lit);
   box-shadow: inset 0 1px rgb(var(--amber-rgb) / .22),
               inset 0 0 14px rgb(var(--amber-rgb) / .10),
-              0 1px 2px rgb(var(--shadow-rgb) / .5);
+              0 1px 2px rgb(var(--lo-rgb) / .5);
   color: var(--amber); cursor: pointer; font-size: var(--ic-lg);
 }
 .play-key .icon { filter: drop-shadow(0 0 5px rgb(var(--amber-rgb) / .5)); }
@@ -576,11 +797,18 @@ button, a, input[type="range"] { touch-action: manipulation; }
 
 /* The now-playing readout well — recessed, lit, dot-matrix */
 .now-key {
+  /* Local token override: everything inside the LCD — title, eyebrow, scrub,
+     icons — reads the night-window palette in every mode. */
+  --amber: var(--lcd-amber);
+  --amber-rgb: 255 194 74;
+  --muted: var(--lcd-muted);
+  --bone: #E9F2FA;
+  --bone-rgb: 233 242 250;
   display: flex; align-items: center; gap: var(--s3);
   flex: 1 1 320px; min-width: 180px; min-height: 48px;
   padding: 0 var(--s3);
-  border: 1px solid rgb(var(--chassis-rgb) / .9); border-radius: var(--r-hw);
-  background: var(--well);
+  border: 1px solid rgb(8 17 32 / .9); border-radius: var(--r-hw);
+  background: var(--lcd-well);
   background-image: var(--scanline);
   box-shadow: inset 0 2px 6px rgb(var(--shadow-rgb) / .8), inset 0 0 0 1px rgb(var(--amber-rgb) / .06);
   cursor: pointer; text-align: left;
@@ -677,7 +905,7 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-runnable-track {
   height: 6px; border-radius: var(--r-led);
   background: linear-gradient(90deg,
-    var(--amber) 0 var(--fill, 0%), rgb(var(--bone-rgb) / .10) var(--fill, 0%) 100%);
+    var(--amber) 0 var(--fill, 0%), rgb(var(--hi-rgb) / .10) var(--fill, 0%) 100%);
   box-shadow: inset 0 1px 2px var(--groove), inset 0 -1px 0 var(--edge-soft);
 }
 input[type="range"]::-webkit-slider-thumb {
@@ -687,8 +915,8 @@ input[type="range"]::-webkit-slider-thumb {
   background:
     linear-gradient(var(--edge), var(--edge)) center / 8px 1px no-repeat,
     var(--face-cap);
-  box-shadow: inset 0 1px rgb(var(--bone-rgb) / .22), inset 0 -1px rgb(var(--shadow-rgb) / .6),
-              0 2px 5px rgb(var(--shadow-rgb) / .55);
+  box-shadow: inset 0 1px rgb(var(--hi-rgb) / .22), inset 0 -1px rgb(var(--lo-rgb) / .6),
+              0 2px 5px rgb(var(--lo-rgb) / .55);
   transition: transform var(--t-state) var(--ease-out);
 }
 input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
@@ -697,7 +925,7 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
    12-channel mixer rendering as broken native controls. */
 input[type="range"]::-moz-range-track {
   height: 6px; border-radius: var(--r-led);
-  background: rgb(var(--bone-rgb) / .10);
+  background: rgb(var(--hi-rgb) / .10);
   box-shadow: inset 0 1px 2px var(--groove);
 }
 input[type="range"]::-moz-range-progress {
@@ -707,7 +935,7 @@ input[type="range"]::-moz-range-thumb {
   width: 12px; height: 20px;
   border: 1px solid rgb(var(--chassis-rgb) / .95); border-radius: 3px;
   background: var(--face-cap);
-  box-shadow: inset 0 1px rgb(var(--bone-rgb) / .22), 0 2px 5px rgb(var(--shadow-rgb) / .55);
+  box-shadow: inset 0 1px rgb(var(--hi-rgb) / .22), 0 2px 5px rgb(var(--lo-rgb) / .55);
 }
 
 /* Only the boot sweep animates the fill — a drag must never lag the finger. */
@@ -752,11 +980,31 @@ input[type="range"]::-moz-range-thumb {
   white-space: nowrap;
 }
 .seg-row > *:last-child { border-right: 0; }
+.seg-row > * .icon { font-size: var(--ic-sm); margin-right: 5px; opacity: .85; }
+
+/* Grid variant — eight weather effects will not fit one row. Authored at four
+   columns; the nth-child rules below hardcode that number. */
+.seg-grid .seg-row {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(var(--seg-n), minmax(0, 1fr));
+}
+.seg-grid .seg-row > * {
+  min-height: 44px;
+  border-bottom: 1px solid rgb(var(--chassis-rgb) / .6);
+}
+.seg-grid .seg-row > *:nth-child(4n) { border-right: 0; }
+.seg-grid .seg-row > *:nth-last-child(-n + 4) { border-bottom: 0; }
+@media (max-width: 560px) {
+  .seg-grid .seg-row > * .icon { display: none; }
+  .seg-grid .seg-row > * { padding: 0 var(--s1); font-size: 10px; }
+}
 
 .seg-lit {
   position: absolute; inset: 0; pointer-events: none;
-  clip-path: inset(0 calc((var(--seg-n) - 1 - var(--seg-i)) * 100% / var(--seg-n))
-                   0 calc(var(--seg-i) * 100% / var(--seg-n)));
+  clip-path: inset(calc(var(--seg-r, 0) * 100% / var(--seg-rows, 1))
+                   calc((var(--seg-n) - 1 - var(--seg-i)) * 100% / var(--seg-n))
+                   calc((var(--seg-rows, 1) - 1 - var(--seg-r, 0)) * 100% / var(--seg-rows, 1))
+                   calc(var(--seg-i) * 100% / var(--seg-n)));
   transition: clip-path var(--t-in) var(--ease-out);
 }
 .seg-lit > * {
@@ -787,7 +1035,7 @@ input[type="range"]::-moz-range-thumb {
   position: absolute; top: 3px; left: 3px;
   width: 20px; height: 20px; border-radius: 50%;
   background: var(--face-knob);
-  box-shadow: inset 0 1px rgb(var(--bone-rgb) / .24), 0 1px 3px rgb(var(--shadow-rgb) / .6);
+  box-shadow: inset 0 1px rgb(var(--hi-rgb) / .24), 0 1px 3px rgb(var(--shadow-rgb) / .6);
   transition: transform var(--t-in) var(--ease-out), background var(--t-state) ease;
 }
 .switch[aria-checked="true"] {
@@ -818,7 +1066,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .panel {
-  position: absolute; z-index: 10; left: 50%;
+  position: absolute; z-index: 10; left: 0; right: 0;
   bottom: max(112px, calc(env(safe-area-inset-bottom) + 104px));
   display: flex; flex-direction: column;
   width: min(1120px, calc(100vw - var(--s8)));
@@ -829,7 +1077,7 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: inset 0 1px var(--edge), 0 26px 70px rgb(var(--chassis-rgb) / .78);
   opacity: 0; pointer-events: none;
   /* Never scale(0) — nothing in the real world appears from nothing. */
-  transform: translate(-50%, 12px) scale(.97);
+  margin-inline: auto; transform: translateY(12px) scale(.97);
   transform-origin: bottom center;
   transition: opacity var(--t-out) ease, transform var(--t-out) var(--ease-out);
   /* Closed panels stop compositing entirely. The old build kept five
@@ -838,7 +1086,7 @@ input[type="range"]::-moz-range-thumb {
 }
 .panel.is-open {
   opacity: 1; pointer-events: auto;
-  transform: translate(-50%, 0) scale(1);
+  transform: translateY(0) scale(1);
   transition-duration: var(--t-in);
   content-visibility: visible;
 }
@@ -1090,7 +1338,9 @@ input[type="range"]::-moz-range-thumb {
 }
 .mute.is-muted { border-color: rgb(var(--rec-rgb) / .5); background: rgb(var(--rec-rgb) / .16); color: var(--rec-text); }
 
-.room-options { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(230px, .7fr); gap: var(--s2); padding: 0 var(--s3) var(--s3); }
+/* Weather now carries eight chips in a 4x2 grid, so it takes the full width
+   and Sway sits under it. Side by side, the second row was clipped. */
+.room-options { display: grid; grid-template-columns: 1fr; gap: var(--s2); padding: 0 var(--s3) var(--s3); }
 .option {
   padding: var(--s3);
   border: 1px solid rgb(var(--chassis-rgb) / .7); border-radius: var(--r-hw);
@@ -1110,7 +1360,9 @@ input[type="range"]::-moz-range-thumb {
 
 .focus-popover {
   position: absolute; z-index: 14;
-  right: max(var(--s5), calc((100vw - min(1120px, calc(100vw - var(--s8)))) / 2));
+  /* --anchor-right is measured from the Focus key when the popover opens; the
+     fallback is the dock edge, which is where it used to point by mistake. */
+  right: var(--anchor-right, max(var(--s5), calc((100vw - min(1120px, calc(100vw - var(--s8)))) / 2)));
   bottom: max(112px, calc(env(safe-area-inset-bottom) + 104px));
   width: min(340px, calc(100vw - var(--s6)));
   padding: var(--s5);
@@ -1151,7 +1403,7 @@ input[type="range"]::-moz-range-thumb {
    ============================================================ */
 
 @keyframes hf-strike { 0% { opacity: 0; } 14% { opacity: .6; } 22% { opacity: .12; } 100% { opacity: 1; } }
-@keyframes hf-rise   { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes hf-rise   { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes hf-fade   { from { opacity: 0; } to { opacity: 1; } }
 
 .booting .readout-ch,
@@ -1247,7 +1499,6 @@ input[type="range"]::-moz-range-thumb {
   #previousButton, #nextButton { display: none; }
 
   .panel-head { gap: var(--s3); padding: var(--s3) var(--s4); }
-  .panel-head h2 { font-size: 18px; }
   /* The input is right there in the body — the button only needs its icon. */
   #changeSourceButton span { display: none; }
   #changeSourceButton { width: 36px; min-width: 36px; padding: 0; }
@@ -1255,7 +1506,6 @@ input[type="range"]::-moz-range-thumb {
   .tuner-row > .hw { flex: 1 1 100%; }
 
   .channel-grid, .world-grid { grid-template-columns: 1fr; }
-  .readout-title { font-size: 26px; }
   .readout::before { inset: -22px -60px -26px -30px; }
   .notice { grid-template-columns: auto 1fr; }
   .notice button { grid-column: 2; justify-self: start; }
@@ -1309,7 +1559,6 @@ input[type="range"]::-moz-range-thumb {
   }
   .panel { max-height: calc(100dvh - 116px); }
   .toast { bottom: calc(env(safe-area-inset-bottom) + 102px); }
-  .readout-title { font-size: 26px; }
 }
 
 /* ============================================================
@@ -1324,6 +1573,9 @@ input[type="range"]::-moz-range-thumb {
   .weather-canvas { display: none; }
   /* Gallery scenes still change, they just cut instead of fading. */
   .scene-art, .pixel-scene { transition: none; }
+  /* The Ken Burns drift is a 48s infinite scale+translate. It was inert until
+     --ease-in-out was declared; it must stay inert here on purpose. */
+  .still-scene .scene-art { animation: none; transform: none; will-change: auto; }
   .panel, .focus-popover, .more-menu, .toast, .control-dock,
   .readout, .focus-status, .quiet-return {
     transform: none !important;
@@ -1331,9 +1583,10 @@ input[type="range"]::-moz-range-thumb {
   }
   .panel.is-open, .focus-popover.is-open, .more-menu.is-open { transform: none !important; }
   .quiet .control-dock { transform: none !important; }
-  .dock-idle:not(.quiet) .control-dock { transform: translateX(-50%) !important; opacity: .48; }
-  .dock-idle:not(.quiet) .control-dock:hover,
-  .dock-idle:not(.quiet) .control-dock:focus-within { opacity: 1; }
+  /* The dock cannot slide away here, so it must not dim either: a permanent
+     48% would put every label in it below AA for exactly the users least
+     able to afford it. Under reduced motion the dock simply stays. */
+  .dock-idle:not(.quiet) .control-dock { opacity: 1; }
   .panel.is-open .stagger > * { animation: none; }
   .booting .readout-ch, .booting .now-copy strong, .booting .control-dock,
   .booting .readout-title, .booting .readout-meta { animation: none; }
@@ -1343,3 +1596,542 @@ input[type="range"]::-moz-range-thumb {
   .meter-fill { transition: none; }
   .seg-lit { transition: none; }
 }
+
+
+/* The two menu rows that carry a current value on the right. */
+.more-menu .mode-value {
+  color: var(--amber);
+  font-size: var(--fs-micro);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+
+/* Icons inside labelled hardware keys inherited the 11px label size, which is
+   why one bar showed icons at 11, 15, 18 and 20px at once. */
+.hw .icon, .source-key > .icon, .now-key .icon, .volume-key > .icon,
+.transport .icon, .channel-icon, .mute .icon { font-size: var(--ic-sm); }
+.play-key .icon { font-size: var(--ic-lg); }
+
+/* ============================================================
+   PIXEL CHROME
+   The machine is a 1990s desktop, so the display type is a real bitmap face
+   and the keys carry real bevels rather than a blur.
+
+   Silkscreen is an 8px-grid font: it is only crisp at whole multiples of 8,
+   so it appears at 16px and 32px and at no other size. Everything that has to
+   stay readable at small sizes stays in IBM Plex Mono, which is not a bitmap
+   face and does not care.
+   ============================================================ */
+
+:root { --f-pixel: "Silkscreen", "Courier New", monospace; }
+
+.readout-ch,
+#channelChip,
+.seg-row > * ,
+.more-menu .mode-value,
+.key-copy small,
+.now-copy small,
+.option-head strong {
+  font-family: var(--f-pixel);
+  font-size: 16px;            /* multiple of 8 — anything else blurs */
+  line-height: 16px;          /* integer, never unitless-fractional */
+  letter-spacing: 0;
+  -webkit-font-smoothing: none;   /* macOS only; a no-op elsewhere */
+  font-synthesis: none;           /* synthetic bold smears it off-grid */
+}
+
+/* Declared here, after the media queries that used to try to shrink these and
+   lost on source order. The narrow steps live with the rule they override. */
+.readout-title, .panel-head h2 {
+  font-family: var(--f-pixel);
+  -webkit-font-smoothing: none;
+  font-synthesis: none;
+  letter-spacing: 0;
+  font-size: 32px;
+  line-height: 40px;
+}
+/* Silkscreen is an 8px-grid bitmap face, so the narrow steps are 24 and 16.
+   The old attempts at 26 and 18 sat in media blocks ABOVE this rule at equal
+   specificity, so they never applied and would not have been crisp if they had. */
+@media (max-width: 640px) {
+  .readout-title { font-size: 24px; line-height: 32px; }
+  .panel-head h2 { font-size: 24px; line-height: 32px; }
+}
+/* 460px caught a small laptop window, not just a landscape phone, and dropped
+   the scene title to 16px on a desktop. 380 is genuinely short. */
+@media (max-width: 380px), (max-height: 380px) {
+  .readout-title { font-size: 16px; line-height: 24px; }
+  .panel-head h2 { font-size: 16px; line-height: 24px; }
+}
+
+/* ---------- bevelled keys ----------
+   The classic two-step bevel: a bright outer edge top-left, a dark one
+   bottom-right, and the whole thing inverts on press. Zero-blur inset shadows,
+   never borders, so the box never changes size and the row never reflows.
+   Colours come from the palette so this works in all three modes. */
+/* :is() for the same reason. With :where() the rest bevel never applied but
+   the :active bevel did, so every key rested flat and inverted on press. */
+:is(.hw, .transport, .play-key, .seg-row > button, .more-menu button) {
+  border: 0;
+  box-shadow:
+    inset  1px  1px 0 0 rgb(var(--hi-rgb) / .22),
+    inset -1px -1px 0 0 rgb(var(--lo-rgb) / .55),
+    inset  2px  2px 0 0 rgb(var(--bone-rgb) / .07),
+    inset -2px -2px 0 0 rgb(var(--lo-rgb) / .28);
+}
+:is(.hw, .transport, .play-key, .seg-row > button, .more-menu button):active {
+  box-shadow:
+    inset -1px -1px 0 0 rgb(var(--hi-rgb) / .18),
+    inset  1px  1px 0 0 rgb(var(--lo-rgb) / .55),
+    inset -2px -2px 0 0 rgb(var(--bone-rgb) / .06),
+    inset  2px  2px 0 0 rgb(var(--lo-rgb) / .28);
+}
+
+/* The dock is the machine's faceplate: give it the outer bevel too. */
+.control-dock {
+  border: 0;
+  box-shadow:
+    inset  1px  1px 0 0 rgb(var(--hi-rgb) / .18),
+    inset -1px -1px 0 0 rgb(var(--lo-rgb) / .5),
+    inset  2px  2px 0 0 rgb(var(--bone-rgb) / .06),
+    0 10px 34px rgb(var(--shadow-rgb) / .45);
+}
+
+/* The lit readout well is recessed, so its bevel runs the other way. */
+.now-key, .segmented-wrap {
+  /* The amber hairline is what makes this read as a lit well rather than a
+     hole. It was lost when this rule replaced the original shadow instead of
+     extending it. */
+  box-shadow:
+    inset  1px  1px 0 0 rgb(var(--lo-rgb) / .6),
+    inset -1px -1px 0 0 rgb(var(--hi-rgb) / .12),
+    inset  0    0   0 1px rgb(var(--amber-rgb) / .06);
+}
+
+/* ---------- boot screen ----------
+   Short, skippable, and it earns its place: the browser needs a user gesture
+   before audio can start, so this replaces the "click to enable sound" toast
+   that would otherwise have to exist. */
+.boot {
+  position: fixed; inset: 0; z-index: 999;
+  display: grid; place-items: center;
+  background: var(--chassis);
+  transition: opacity 400ms var(--ease-out);
+}
+.boot.is-done { opacity: 0; pointer-events: none; }
+.boot-inner { width: min(420px, calc(100vw - 48px)); text-align: center; }
+.boot-mark {
+  font-family: var(--f-pixel); font-size: 32px; line-height: 40px;
+  color: var(--amber); margin: 0 0 var(--s5);
+  -webkit-font-smoothing: none; font-synthesis: none;
+}
+.boot-bar {
+  height: 12px; background: var(--well);
+  box-shadow: inset 1px 1px 0 0 rgb(var(--shadow-rgb) / .7),
+              inset -1px -1px 0 0 rgb(var(--hi-rgb) / .12);
+}
+.boot-bar > span {
+  display: block; height: 100%; width: 0;
+  background: var(--amber);
+}
+.boot-line {
+  display: flex; justify-content: space-between;
+  margin: var(--s2) 0 0;
+  font-family: var(--f-pixel); font-size: 16px; line-height: 16px;
+  color: var(--muted);
+  -webkit-font-smoothing: none; font-synthesis: none;
+  font-variant-numeric: tabular-nums;
+}
+.boot-skip {
+  margin: var(--s6) 0 0;
+  font-family: var(--f-pixel); font-size: 16px; line-height: 16px;
+  color: rgb(var(--bone-rgb) / .45);
+  -webkit-font-smoothing: none; font-synthesis: none;
+  animation: boot-blink 1.4s steps(2, start) infinite;
+}
+@keyframes boot-blink { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) {
+  .boot { display: none; }
+}
+
+/* ---------- scrub bar ----------
+   Sits under the track title inside the readout well. It only appears once a
+   real player exists, so an untuned dock is not cluttered with a dead control. */
+.scrub { display: flex; align-items: center; gap: var(--s2); margin-top: 3px; }
+/* The visible track is thin, but the control must not be: 14px failed SC
+   2.5.8, and on short landscape this is the only seek path in the app. */
+.scrub input[type="range"] { flex: 1; min-width: 0; height: 24px; }
+.scrub output {
+  color: var(--muted); font-size: var(--fs-micro);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+@media (max-width: 620px) { .scrub output { display: none; } }
+
+/* ---------- dock VU ----------
+   Real output, not fader position. Chunky bars on the pixel grid, and a peak
+   cap that falls slowly so the meter reads as an instrument rather than a
+   bar chart. */
+.vu {
+  position: relative;
+  display: flex; align-items: flex-end; gap: 2px;
+  width: 60px; height: 20px; flex: 0 0 auto;
+  padding: 2px;
+  background: var(--well);
+  box-shadow: inset 1px 1px 0 0 rgb(var(--lo-rgb) / .6),
+              inset -1px -1px 0 0 rgb(var(--bone-rgb) / .1);
+}
+.vu > span {
+  flex: 1; height: 100%;
+  background: var(--led-off);
+  transition: background var(--t-press) linear;
+}
+.vu > span.is-lit { background: var(--amber); }
+/* The last three bars run hot, the way a real meter's headroom does. */
+.vu > span:nth-child(n+10).is-lit { background: var(--rec-text); }
+.vu-peak {
+  position: absolute; top: 2px; bottom: 2px; width: 2px;
+  background: var(--bone); opacity: 0;
+  transition: left 120ms linear, opacity var(--t-state) ease;
+}
+.vu.is-live .vu-peak { opacity: .8; }
+@media (max-width: 1080px) { .vu { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .vu > span, .vu-peak { transition: none; }
+}
+
+/* ---------- sound tokens ----------
+   Objects on the painting, not controls in a box. They carry the same values
+   the mixer faders do; this is the same control seen twice.
+
+   The idle fade is what lets them live on the artwork at all: full weight while
+   you are working, a faint outline when you are only looking. */
+.tokens {
+  position: absolute; inset: 0; z-index: 5;
+  pointer-events: none;
+}
+.token {
+  position: absolute; top: 0; left: 0;
+  display: flex; align-items: center; gap: var(--s2);
+  min-height: 44px; padding: var(--s2) var(--s3) var(--s2) var(--s2);
+  border: 0; border-radius: var(--r-hw);
+  background-image: var(--brushed), var(--face-key);
+  color: var(--bone);
+  font: inherit; text-align: left; cursor: grab;
+  pointer-events: auto;
+  /* transform is owned by Grabbable and must never be transitioned here, or the
+     token lags the pointer. Only the ambient properties fade. */
+  transition: opacity var(--t-in) var(--ease-out),
+              box-shadow var(--t-press) var(--ease-out),
+              filter var(--t-in) var(--ease-out);
+  box-shadow:
+    inset  1px  1px 0 0 rgb(var(--hi-rgb) / .18),
+    inset -1px -1px 0 0 rgb(var(--lo-rgb) / .5),
+    0 4px 10px rgb(var(--shadow-rgb) / .35);
+}
+.token .icon { font-size: var(--ic-sm); color: var(--amber); flex: 0 0 auto; }
+.token-copy { display: grid; gap: 1px; min-width: 0; }
+.token-copy strong {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+}
+/* Twelve of these share one painting, so the name is only carried while the
+   token is doing something. Otherwise it is an icon and a value. */
+.token .token-copy strong { display: none; }
+.token:hover .token-copy strong,
+.token:focus-visible .token-copy strong,
+.token.is-grabbed .token-copy strong { display: block; }
+.token-val {
+  font-family: var(--f-mono); font-size: var(--fs-micro);
+  color: var(--amber); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.token.is-off { filter: saturate(.25); }
+.token.is-off .token-val { color: var(--muted); }
+
+/* Grabbed: it lifts off the picture. Matches the reference's card — a real
+   shadow and a scale, with the tilt supplied by Grabbable. */
+.token.is-grabbed {
+  cursor: grabbing;
+  z-index: 3;
+  box-shadow:
+    inset  1px  1px 0 0 rgb(var(--hi-rgb) / .24),
+    inset -1px -1px 0 0 rgb(var(--lo-rgb) / .5),
+    0 10px 20px rgb(var(--shadow-rgb) / .45);
+}
+.token.is-live-drag .token-val { color: var(--bone); }
+
+/* Idle: back to an outline, so the painting is the thing you are looking at.
+   Anything focused or hovered stays legible regardless. */
+.tokens.is-idle .token { opacity: .28; }
+.tokens.is-idle .token:hover,
+.tokens.is-idle .token:focus-visible,
+.tokens.is-idle .token.is-grabbed { opacity: 1; }
+
+@media (max-width: 640px) {
+  /* On a phone the painting is small enough that twelve objects on it is a
+     crowd. The mixer panel is the better path there. */
+  .tokens { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .token { transition: opacity var(--t-out) ease; }
+}
+
+/* ---------- icon tiers ----------
+   Pixel icons are drawn on a 16px grid and are only crisp at whole multiples of
+   it, so 16 and 32 are the only legal sizes — 24 is 1.5x and breaks at DPR 1.
+
+   Transport is one deliberate group at 32; everything else is 16. Before this,
+   play alone was 32 against 16 for its neighbours: 2x linear but 4x the area,
+   and because the play glyph nearly fills its box while skip-back fills about
+   half, the optical mass ratio was nearer 6-8x. It read as a mistake. */
+.transport .icon, .play-key .icon { font-size: var(--ic-lg); }
+/* The amber glow put another ~5px of visual weight on the play key that no
+   other icon carried. The key is already the lit one; the glyph does not also
+   need to shout. */
+.play-key .icon { filter: none; }
+
+/* These four inherited a text size and landed off the grid at 15, 13, 11 and
+   11px — hard-edged pixel art scaled to fractions of its own grid, which is the
+   one thing crispEdges cannot survive. */
+.focus-status .icon,
+.more-menu button .icon,
+.quiet-return .icon,
+.primary-key .icon { font-size: var(--ic-sm); }
+
+/* ---------- the readout sits on a plate ----------
+   It used to be bare text on the painting. That was fine over the old dark video
+   loops and fails badly on the Ghibli stills: measured against the brightest
+   region of the readout band, the kind label was 2.17:1, the channel chip
+   3.31:1 and the title 3.20:1.
+
+   A plate fixes it where the problem is, instead of dimming a painting to
+   protect three lines of text — and it turns floating text into an object that
+   belongs to the same machine as the dock. */
+.readout {
+  padding: var(--s3) var(--s4) var(--s3) var(--s3);
+  border-radius: var(--r-hw);
+  background-image: var(--brushed), var(--face);
+  box-shadow:
+    inset  1px  1px 0 0 rgb(var(--hi-rgb) / .18),
+    inset -1px -1px 0 0 rgb(var(--lo-rgb) / .5),
+    0 8px 24px rgb(var(--shadow-rgb) / .45);
+}
+/* The wash behind it existed to lift text off the picture. The plate does that
+   job properly now, so the wash is just haze. */
+.readout::before { display: none; }
+
+/* ---------- the window shade ----------
+   The reference clip binds a whole page's lightness to a shade being pulled,
+   updating every frame of the gesture rather than toggling at the end. That
+   continuous binding is the point; --shade is written on every pointermove and
+   everything below reads from it. */
+.shade {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 5;
+  height: 100%;
+  pointer-events: none;
+}
+.shade-panel {
+  position: absolute; left: 0; right: 0; top: 0;
+  height: calc(var(--shade, 0) * 100%);
+  background:
+    linear-gradient(180deg,
+      rgb(var(--chassis-rgb) / .96) 0%,
+      rgb(var(--chassis-rgb) / .88) 62%,
+      rgb(var(--chassis-rgb) / .74) 100%),
+    var(--brushed);
+  box-shadow: 0 3px 0 0 rgb(var(--hi-rgb) / .10), 0 12px 26px rgb(var(--lo-rgb) / .5);
+}
+.shade-grip {
+  position: absolute; left: 50%; margin-left: -30px;
+  top: calc(var(--shade, 0) * 100%);
+  width: 60px; min-height: 44px;
+  display: grid; place-items: center;
+  border: 0; background: transparent; cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+}
+.shade-grip:active { cursor: grabbing; }
+.shade-grip-bar {
+  width: 44px; height: 8px; border-radius: var(--r-led);
+  background-image: var(--face-knob);
+  box-shadow:
+    inset  1px  1px 0 0 rgb(var(--hi-rgb) / .3),
+    inset -1px -1px 0 0 rgb(var(--lo-rgb) / .55),
+    0 3px 8px rgb(var(--lo-rgb) / .55);
+}
+.shade-grip:focus-visible .shade-grip-bar { box-shadow: 0 0 0 2px var(--chassis), 0 0 0 4px var(--amber); }
+
+/* The scene dims with the shade, so pulling it feels like closing a window
+   rather than switching a theme. */
+.scene-stage { filter: brightness(calc(1 - var(--shade, 0) * 0.62)); }
+
+@media (max-width: 640px) {
+  /* A 44px grip in the middle of a phone screen sits on top of the scene the
+     whole time. The display control lives in the menu there instead. */
+  .shade { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-stage { transition: none; }
+}
+
+/* ---------- panels become a drawer ----------
+   They used to be a centred card covering 67.2% of the screen — including, in
+   the mixer's case, the scene the mixer now drives. You could not watch what you
+   were changing. As a right-hand drawer the painting stays visible and the
+   tokens on it stay reachable.
+
+   Declared after the original .panel rules so it wins without !important. */
+@media (min-width: 700px) {
+  .panel {
+    left: auto;
+    right: max(var(--s4), env(safe-area-inset-right));
+    margin-inline: 0;
+    width: min(400px, 42vw);
+    top: max(var(--s6), env(safe-area-inset-top));
+    bottom: max(112px, calc(env(safe-area-inset-bottom) + 104px));
+    max-height: none;
+    transform: translateX(18px) scale(.99);
+    transform-origin: right center;
+  }
+  .panel.is-open { transform: translateX(0) scale(1); }
+  /* One column: 400px cannot carry a preset rail beside a channel grid. */
+  .room-layout { grid-template-columns: 1fr; }
+  .preset-col {
+    display: flex; gap: var(--s2); overflow-x: auto;
+    padding: var(--s3); scroll-snap-type: x mandatory;
+  }
+  .preset-col > .preset { flex: 0 0 176px; scroll-snap-align: start; }
+  .channel-grid { grid-template-columns: 1fr; }
+  .world-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .track-list { grid-template-columns: 1fr; }
+  .room-options { grid-template-columns: 1fr; }
+  /* The scrim existed to separate a full-width card from the scene. A drawer
+     that deliberately leaves the scene visible must not then grey it out. */
+  .panel-backdrop { background: transparent; }
+  /* The scene name should not vanish at the moment you are choosing a scene. */
+  .surface-open .readout { opacity: 1; transform: none; }
+}
+
+
+/* ---------- below the drawer: a sheet that stops short ----------
+   A tablet at 768px used to fall through to the old centred card and cover
+   81.5% of the screen — worse than the desktop case it was meant to fix. Under
+   700px the panel becomes a sheet anchored to the dock that stops at 62%, so
+   the top of the painting is always visible and you can still see the scene
+   you are working on. */
+@media (max-width: 699px) {
+  .panel {
+    left: 0; right: 0;
+    margin-inline: auto;
+    width: min(560px, calc(100vw - var(--s4)));
+    top: auto;
+    bottom: max(112px, calc(env(safe-area-inset-bottom) + 104px));
+    max-height: 62dvh;
+    transform: translateY(12px) scale(.99);
+    transform-origin: bottom center;
+  }
+  .panel.is-open { transform: translateY(0) scale(1); }
+  .room-layout { grid-template-columns: 1fr; }
+  .preset-col {
+    display: flex; gap: var(--s2); overflow-x: auto;
+    padding: var(--s3); scroll-snap-type: x mandatory;
+  }
+  .preset-col > .preset { flex: 0 0 168px; scroll-snap-align: start; }
+  .world-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .channel-grid { grid-template-columns: 1fr; }
+  .track-list { grid-template-columns: 1fr; }
+  .room-options { grid-template-columns: 1fr; }
+  /* The scene name stays put here too — you are choosing a scene. */
+  .surface-open .readout { opacity: 1; transform: none; }
+}
+
+/* Each token wears its own colour. Grey slabs read as equipment; coloured
+   objects read as things you can pick up and move. The tint drives the icon,
+   the value and the edge — the face stays dark so twelve of them can sit on a
+   painting without turning it into a paint chart. */
+.token { border-left: 3px solid var(--tint, var(--amber)); }
+.token .icon { color: var(--tint, var(--amber)); }
+.token .token-val { color: var(--tint, var(--amber)); }
+.token.is-grabbed {
+  border-left-color: var(--tint, var(--amber));
+  box-shadow:
+    inset  1px  1px 0 0 rgb(var(--hi-rgb) / .24),
+    inset -1px -1px 0 0 rgb(var(--lo-rgb) / .5),
+    0 10px 20px rgb(var(--shadow-rgb) / .45),
+    0 0 0 1px var(--tint, var(--amber));
+}
+/* A live channel glows a little; a silent one is just an outline. */
+.token:not(.is-off) { background-image: var(--brushed), var(--face-lit); }
+
+/* ---------- mounted print ----------
+   A portrait print on a landscape screen (or the reverse) is displayed the way
+   a print actually is: whole, centered, on the paper ground — not cover-cropped
+   to fragments. The weather still falls across the entire viewport, which is
+   what makes it a window rather than an <img>. */
+.mounted-print .scene-art {
+  object-fit: contain;
+}
+.mounted-print .scene-stage {
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(var(--bone-rgb) / .06), transparent 70%),
+    var(--chassis);
+}
+
+/* Mounted prints sit on a soft echo of themselves: the cover-cropped poster
+   behind, blurred and dimmed so it reads as atmosphere rather than a second
+   copy competing with the real one. Static filter — rendered once. */
+.mounted-print .scene-poster {
+  filter: blur(26px) brightness(.72) saturate(.85);
+}
+
+/* The cartouche chip is a seal-stamp: vermillion, matte, no glow. Every print
+   already carries one; ours says the scene number. */
+.readout .dotmatrix,
+.readout .readout-ch {
+  color: var(--rec-text);
+  text-shadow: none;
+}
+.readout-lamp { background: var(--rec); box-shadow: 0 0 6px rgb(var(--rec-rgb) / .5); }
+
+/* The hanko — the piece's mark. */
+.seal {
+  display: inline-grid; place-items: center;
+  width: 20px; height: 20px; flex: 0 0 auto;
+  background: var(--rec);
+  color: #F7EFE0;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .22);
+}
+.seal .icon { font-size: 12px; }
+.boot-sub {
+  margin: var(--s2) 0 0;
+  font-family: var(--f-mono); font-size: var(--fs-sec);
+  color: var(--muted); letter-spacing: .18em;
+}
+
+/* The seal doubles as the power lamp: matte at rest, inked-fresh when playing. */
+.seal { opacity: .78; transition: opacity var(--t-state) ease, box-shadow var(--t-state) ease; }
+.playing .seal { opacity: 1; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .3), 0 0 8px rgb(var(--rec-rgb) / .55); }
+.boot-today {
+  margin: var(--s5) 0 0;
+  font-family: var(--f-mono); font-size: var(--fs-sec);
+  color: var(--amber); letter-spacing: .06em;
+}
+
+/* ---------- the bonsai ----------
+   One little tree in the dock, grown from quiet minutes. Its three sprites
+   swap by stage; the later stages also warm up. */
+.bonsai {
+  width: 44px; min-height: 44px; flex: 0 0 auto;
+  display: grid; place-items: center;
+  border: 0; background: transparent; cursor: pointer;
+  color: var(--teal);
+}
+.bonsai .icon { grid-area: 1 / 1; font-size: var(--ic-sm); display: none; }
+.bonsai[data-stage="0"] .b0 { display: block; opacity: .7; }
+.bonsai[data-stage="1"] .b0, .bonsai[data-stage="2"] .b1 { display: block; }
+.bonsai[data-stage="3"] .b1 { display: block; font-size: 20px; }
+.bonsai[data-stage="4"] .b2, .bonsai[data-stage="5"] .b2 { display: block; }
+.bonsai[data-stage="5"] .b2 { font-size: 20px; }
+@media (max-width: 780px) { .bonsai { display: none; } }

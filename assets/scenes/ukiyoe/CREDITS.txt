@@ -1,0 +1,38 @@
+Ukiyo-e woodblock prints — the floating world pack
+===================================================
+
+Source:  The Metropolitan Museum of Art, Open Access program
+         https://www.metmuseum.org/about-the-met/policies-and-documents/open-access
+License: Public domain (CC0). The Met designates these images of
+         public-domain works as free for any use, without permission.
+
+THIS PACK IS FULLY PUBLISHABLE. It exists so the app can be shared,
+published and shown as a portfolio piece without spending anyone's goodwill.
+(The Ghibli pack in ../ghibli/ remains personal-use only — see its CREDITS.)
+
+FILES — artist · title · date · Met object ID
+----------------------------------------------
+shin-ohashi   Utagawa Hiroshige · Sudden Shower over Shin-Ōhashi Bridge
+              and Atake · 1857 · #36461
+shono         Utagawa Hiroshige · Sudden Shower in Shōno · c. 1833 · #36967
+asukayama     Utagawa Hiroshige · Asukayama in Evening Snow · c. 1837 · #56902
+evening-snow  Utagawa Hiroshige · Evening Snow · 18th–19th c. · #57044
+great-wave    Katsushika Hokusai · Under the Wave off Kanagawa
+              (The Great Wave) · c. 1830 · #45434
+ejiri         Katsushika Hokusai · Ejiri in Suruga Province · c. 1830 · #36493
+kamata        Utagawa Hiroshige · Plum Garden at Kamata · 1857 · #53681
+mishima       Utagawa Hiroshige · Morning Mist at Mishima · c. 1833 · #36520
+tama-moon     Utagawa Hiroshige · Autumn Moon on the Tama River · c. 1838 · #56519
+red-fuji      Katsushika Hokusai · South Wind, Clear Sky (Red Fuji) · c. 1830 · #36490
+asakusa-cat   Utagawa Hiroshige · Pilgrimage to the Torinomachi Festival
+              across the Ricefields of Asakusa · 1857 · #36539
+mama-maples   Utagawa Hiroshige · Maples at Mama · 1857 · #37096
+ryogoku       Utagawa Hiroshige · Fireworks at Ryōgoku Bridge · 1858 · #37093
+miyanokoshi   Utagawa Hiroshige · Moonlit Night at Miyanokoshi · c. 1835 · #56677
+fireflies     Eishōsai Chōki · Woman and Child Catching Fireflies · c. 1793 · #44993
+
+Originals fetched at full resolution from the Met's collection API and
+resized to 1800px (sips, quality 74). thumb-*.jpg are 300px card art.
+Object pages: https://www.metmuseum.org/art/collection/search/<object ID>
+
+Do not remove this file.

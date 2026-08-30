@@ -79,13 +79,163 @@
 
   // The filmed scenes. Each appears twice below: once as itself, once through
   // the pixel grid.
+  /* ---------- scene packs ----------
+     Two libraries of paintings.
+
+     `ukiyoe` ships. Hiroshige and Hokusai painted the exact weather this
+     machine renders — sudden rain, evening snow, morning mist, fireflies —
+     and every file is public domain via the Met's Open Access program, so
+     this pack can be published, shared and shown without asking anyone.
+
+     `ghibli` stays as a personal option. The studio's grant covers common
+     sense, not publication; see each pack's CREDITS.txt.
+
+     `sat`/`luma` are measured (48px decode, mean sRGB-linear luminance and
+     HSV saturation), not guessed. `weather` is the effect the print itself
+     depicts — picking the scene can bring its own sky with it. `orient`
+     drives the mounted-print treatment when the print and the screen
+     disagree about which way is long.                                     */
+
+  var PACKS = {
+    ukiyoe: {
+      label: "The floating world",
+      base: "assets/scenes/ukiyoe/",
+      ext: ".jpg", thumbExt: ".jpg",
+      scenes: [
+        { id: "shin-ohashi", title: "Sudden Shower", note: "Ōhashi bridge, caught in the rain",
+          file: "shin-ohashi", sat: .192, luma: .331, tone: "light", orient: "portrait",
+          weather: "rain", artist: "Hiroshige, 1857",
+          moods: ["rain", "lofi", "melancholy", "evening", "calm"] },
+        { id: "shono", title: "Shōno in the Rain", note: "travellers running for cover",
+          file: "shono", sat: .173, luma: .375, tone: "light", orient: "landscape",
+          weather: "rain", artist: "Hiroshige, c. 1833",
+          moods: ["rain", "storm", "epic", "focus"] },
+        { id: "asukayama", title: "Evening Snow", note: "Asukayama going quiet",
+          file: "asukayama", sat: .187, luma: .509, tone: "light", orient: "landscape",
+          weather: "snow", artist: "Hiroshige, c. 1837",
+          moods: ["winter", "sleep", "calm", "piano"] },
+        { id: "evening-snow", title: "River Snow", note: "one boat, six jewel rivers",
+          file: "evening-snow", sat: .209, luma: .481, tone: "light", orient: "landscape",
+          weather: "snow", artist: "Hiroshige",
+          moods: ["winter", "quiet", "ambient", "night"] },
+        { id: "great-wave", title: "The Great Wave", note: "you know this one",
+          file: "great-wave", sat: .173, luma: .573, tone: "light", orient: "landscape",
+          weather: "sea", artist: "Hokusai, c. 1830",
+          moods: ["sea", "epic", "classical", "uplifting"] },
+        { id: "ejiri", title: "The Gust at Ejiri", note: "papers stolen by the wind",
+          file: "ejiri", sat: .192, luma: .472, tone: "light", orient: "landscape",
+          weather: "mist", artist: "Hokusai, c. 1830",
+          moods: ["wind", "study", "focus", "morning"] },
+        { id: "kamata", title: "Plum Garden", note: "spring at Kamata",
+          file: "kamata", sat: .262, luma: .409, tone: "light", orient: "portrait",
+          weather: "petals", artist: "Hiroshige, 1857",
+          moods: ["spring", "gentle", "piano", "morning", "uplifting"] },
+        { id: "mishima", title: "Morning Mist", note: "Mishima, barely awake",
+          file: "mishima", sat: .224, luma: .429, tone: "light", orient: "landscape",
+          weather: "mist", artist: "Hiroshige, c. 1833",
+          moods: ["morning", "calm", "ambient", "study"] },
+        { id: "tama-moon", title: "Autumn Moon", note: "the Tama river, silvered",
+          file: "tama-moon", sat: .191, luma: .440, tone: "light", orient: "landscape",
+          weather: "moon", artist: "Hiroshige, c. 1838",
+          moods: ["night", "sleep", "dream", "jazz"] },
+        { id: "red-fuji", title: "Red Fuji", note: "south wind, clear morning",
+          file: "red-fuji", sat: .269, luma: .330, tone: "light", orient: "landscape",
+          weather: "none", artist: "Hokusai, c. 1830",
+          moods: ["morning", "bright", "uplifting", "classical"] },
+        { id: "asakusa-cat", title: "The Cat's Window", note: "Asakusa ricefields at dusk",
+          file: "asakusa-cat", sat: .203, luma: .346, tone: "light", orient: "portrait",
+          weather: "dusk", artist: "Hiroshige, 1857",
+          moods: ["dusk", "cozy", "home", "lofi", "evening"] },
+        { id: "mama-maples", title: "Maples at Mama", note: "red leaves over the water",
+          file: "mama-maples", sat: .171, luma: .402, tone: "light", orient: "portrait",
+          weather: "leaves", artist: "Hiroshige, 1857",
+          moods: ["autumn", "calm", "folk", "afternoon"] },
+        { id: "ryogoku", title: "Fireworks at Ryōgoku", note: "the night bridge crowds",
+          file: "ryogoku", sat: .163, luma: .228, tone: "dark", orient: "portrait",
+          weather: "embers", artist: "Hiroshige, 1858",
+          moods: ["night", "summer", "festival", "town"] },
+        { id: "miyanokoshi", title: "Moonlit Night", note: "Miyanokoshi under a full moon",
+          file: "miyanokoshi", sat: .170, luma: .344, tone: "light", orient: "landscape",
+          weather: "night", artist: "Hiroshige, c. 1835",
+          moods: ["night", "sleep", "quiet", "melancholy"] },
+        { id: "fireflies", title: "Catching Fireflies", note: "a summer night's hunt",
+          file: "fireflies", sat: .226, luma: .211, tone: "dark", orient: "portrait",
+          weather: "fireflies", artist: "Chōki, c. 1793",
+          moods: ["summer", "night", "gentle", "dream"] }
+      ]
+    },
+    ghibli: {
+      label: "Ghibli (personal)",
+      base: "assets/scenes/ghibli/",
+      ext: ".jpg", thumbExt: ".png",
+      scenes: [
+        { id: "ponyo-hill",    title: "House on the hill", note: "Green slope, wide blue morning",
+          file: "ponyo006",  sat: .43, luma: .43, tone: "light",
+          moods: ["morning", "calm", "study", "piano", "bright"] },
+        { id: "howl-sky",      title: "Sky bridge",        note: "Nothing but weather and air",
+          file: "howl050",   sat: .41, luma: .46, tone: "light",
+          moods: ["uplifting", "classical", "bright", "air"] },
+        { id: "howl-castle",   title: "The moving castle", note: "Long view over open country",
+          file: "howl049",   sat: .37, luma: .43, tone: "light",
+          moods: ["epic", "orchestral", "adventure"] },
+        { id: "howl-field",    title: "Scarecrow field",   note: "Wind, wheat and a big sky",
+          file: "howl035",   sat: .51, luma: .35, tone: "light",
+          moods: ["folk", "calm", "wind", "afternoon"] },
+        { id: "laputa-bloom",  title: "Flowering bank",    note: "Close green, close quiet",
+          file: "laputa024", sat: .48, luma: .35, tone: "light",
+          moods: ["gentle", "piano", "spring", "study"] },
+        { id: "ponyo-coast",   title: "The coast road",    note: "Sea light off the water",
+          file: "ponyo031",  sat: .46, luma: .22, tone: "dark",
+          moods: ["ambient", "waves", "sea", "calm"] },
+        { id: "majo-town",     title: "Over the town",     note: "Rooftops down to the harbour",
+          file: "majo038",   sat: .50, luma: .21, tone: "dark",
+          moods: ["jazz", "nostalgia", "town", "afternoon"] },
+        { id: "laputa-ruins",  title: "Overgrown ruins",   note: "Stone giving way to green",
+          file: "laputa039", sat: .51, luma: .20, tone: "dark",
+          moods: ["focus", "study", "quiet", "ambient"] },
+        { id: "majo-garden",   title: "The garden house",  note: "Somebody lives here",
+          file: "majo002",   sat: .55, luma: .18, tone: "dark",
+          moods: ["cozy", "lofi", "home", "evening"] },
+        { id: "totoro-field",  title: "Summer field",      note: "Hot grass and far trees",
+          file: "totoro040", sat: .55, luma: .18, tone: "dark",
+          moods: ["summer", "folk", "warm", "afternoon"] },
+        { id: "laputa-jungle", title: "Deep green",        note: "Light coming through leaves",
+          file: "laputa041", sat: .62, luma: .16, tone: "dark",
+          moods: ["forest", "focus", "green", "rain"] },
+        { id: "totoro-wood",   title: "The wood at dusk",  note: "The path home, nearly dark",
+          file: "totoro035", sat: .54, luma: .10, tone: "dark",
+          moods: ["forest", "night", "walk", "quiet"] },
+        { id: "ponyo-deep",    title: "Under the sea",     note: "Slow light, slower company",
+          file: "ponyo023",  sat: .50, luma: .27, tone: "dark",
+          moods: ["sleep", "dream", "ambient", "night", "sea"] },
+        { id: "howl-dusk",     title: "Hillside at dusk",  note: "The last of the light",
+          file: "howl032",   sat: .48, luma: .14, tone: "dark",
+          moods: ["dusk", "melancholy", "evening", "piano"] }
+      ]
+    }
+  };
+
+  // The pack has to be known before worlds[] is composed, which happens at
+  // parse time — so peek at the persisted blob rather than waiting for the
+  // full restore().
+  var activePack = "ukiyoe";
+  try {
+    var packPeek = JSON.parse(localStorage.getItem("dreamWorldsV4") || "{}");
+    if (PACKS[packPeek.pack]) activePack = packPeek.pack;
+  } catch (e) {}
+
+  var STILLS = PACKS[activePack].scenes;
+
   var FILMED = [
     { id: "rain-window", title: "Rain window", note: "A quiet city seen through rain",
-      video: "assets/rain-window.mp4", poster: "assets/rain-window-poster.jpg", ramp: "slate" },
+      video: "assets/rain-window.mp4", poster: "assets/rain-window-poster.jpg", ramp: "slate",
+      tone: "dark", moods: ["rain", "city", "melancholy", "lofi"] },
     { id: "pond-garden", title: "Pond garden", note: "Leaves, water, a patient afternoon",
-      video: "assets/garden-loop.mp4", poster: "assets/garden-loop-poster.jpg", ramp: "moss" },
+      video: "assets/garden-loop.mp4", poster: "assets/garden-loop-poster.jpg", ramp: "moss",
+      tone: "dark", moods: ["garden", "water", "calm", "focus"] },
     { id: "wide-awake", title: "Wide awake", note: "Open lake light for clear work",
-      video: "assets/lake-loop.mp4", poster: "assets/lake-loop-poster.jpg", ramp: "cool" }
+      video: "assets/lake-loop.mp4", poster: "assets/lake-loop-poster.jpg", ramp: "cool",
+      tone: "light", moods: ["lake", "bright", "clear", "study"] }
   ];
 
   // The pixel pass used to be applied to every channel unconditionally, so the
@@ -93,9 +243,21 @@
   // covered them. `pixel` is now per channel, and each filmed scene is offered
   // both ways rather than one look replacing the other.
   var worlds = [];
+  // Stills lead. The app used to open on a near-monochrome rainy city measured
+  // at 9.5% saturation, which is most of why it felt like a grey afternoon.
+  STILLS.forEach(function (s) {
+    var pk = PACKS[activePack];
+    worlds.push({ id: s.id, title: s.title, kind: "still", note: s.note,
+                  art: pk.base + s.file + pk.ext,
+                  poster: pk.base + "thumb-" + s.file + pk.thumbExt,
+                  moods: s.moods, tone: s.tone, orient: s.orient || "landscape",
+                  weather: s.weather || null, artist: s.artist || "",
+                  ramp: null, pixel: false });
+  });
   FILMED.forEach(function (s) {
     worlds.push({ id: s.id, title: s.title, kind: "local", note: s.note,
-                  video: s.video, poster: s.poster, ramp: null, pixel: false });
+                  video: s.video, poster: s.poster, ramp: null, pixel: false,
+                  tone: s.tone, moods: s.moods });
   });
   FILMED.forEach(function (s) {
     worlds.push({ id: s.id + "-pixel", title: s.title, kind: "local",
@@ -129,19 +291,86 @@
     return "night";
   }
 
+  /* ---------- display mode ----------
+     Night is the default and lives in :root. Day and dusk are authored
+     palettes rather than inversions — on a pale ground the amber has to lose
+     most of its lightness or it fails contrast outright. "auto" follows the
+     clock, which is what an ambience app should do on its own.            */
+
+  var MODES = ["auto", "night", "dusk", "day"];
+  var MODE_LABEL = { auto: "Auto", night: "Night", dusk: "Dusk", day: "Day" };
+  var MODE_THEME = { night: "#0A131E", dusk: "#EAD9BF", day: "#F5EDDD" };
+  var modeClockTimer = null;
+
+  function modeForClock() {
+    var p = partOfDay(new Date().getHours());
+    if (p === "day") return "day";
+    if (p === "dawn" || p === "dusk") return "dusk";
+    return "night";
+  }
+
+  // A bright scene needs dark chrome and a dark scene needs light chrome, or
+  // the faceplate sinks into the picture. Scene tone wins over the clock,
+  // because what you are looking at matters more than what time it is.
+  function modeForScene() {
+    var w = worlds[state.worldIndex];
+    if (!w || !w.tone) return modeForClock();
+    // Harmonize, don't oppose: the chrome is paper now, with its own plates,
+    // so a bright print gets washi and a night print gets indigo. The old
+    // inversion dated from when text floated bare on the picture.
+    return w.tone === "light" ? "day" : "night";
+  }
+
+  function resolvedMode() {
+    return state.mode === "auto" ? modeForScene() : state.mode;
+  }
+
+  function applyMode() {
+    var m = resolvedMode();
+    document.documentElement.setAttribute("data-mode", m);
+    document.documentElement.style.colorScheme = m === "day" ? "light" : "dark";
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", MODE_THEME[m] || MODE_THEME.night);
+    var btn = $("#modeButton");
+    if (btn) {
+      btn.setAttribute("aria-label", "Display mode: " + MODE_LABEL[state.mode] +
+        (state.mode === "auto" ? " (" + MODE_LABEL[m] + " now)" : ""));
+      // Only the clock-driven fallback needs a timer; scene-driven repaints
+      // happen on scene change.
+      var out = btn.querySelector(".mode-value");
+      if (out) out.textContent = state.mode === "auto" ? "Auto \u00b7 " + MODE_LABEL[m] : MODE_LABEL[state.mode];
+    }
+    // Only "auto" needs to keep watching the clock.
+    clearInterval(modeClockTimer);
+    if (state.mode === "auto") modeClockTimer = setInterval(function () {
+      if (document.documentElement.getAttribute("data-mode") !== modeForClock()) applyMode();
+    }, 60000);
+  }
+
+  function cycleMode() {
+    state.mode = MODES[(MODES.indexOf(state.mode) + 1) % MODES.length];
+    applyMode();
+    persist();
+    toast("Display mode: " + MODE_LABEL[state.mode] +
+      (state.mode === "auto" ? " \u2014 following the clock." : "."));
+  }
+
+  // `tint` is the token's own colour. Twelve identical slabs on a painting read
+  // as equipment; twelve coloured objects read as things you can pick up. The
+  // hues are held at a similar lightness so no single one shouts over the rest.
   var roomLayers = [
-    { id: "rain",    name: "Gentle rain",    note: "window",  icon: "i-cloud-rain" },
-    { id: "forest",  name: "Forest morning", note: "birds",   icon: "i-tree" },
-    { id: "cafe",    name: "Café murmur",    note: "distant", icon: "i-coffee" },
-    { id: "brown",   name: "Brown noise",    note: "deep",    icon: "i-wave-sine" },
-    { id: "soft",    name: "Soft air",       note: "tonal",   icon: "i-wind" },
-    { id: "white",   name: "White noise",    note: "clean",   icon: "i-radio" },
-    { id: "wind",    name: "Open window",    note: "gusts",   icon: "i-wind" },
-    { id: "ocean",   name: "Ocean tide",     note: "swell",   icon: "i-waves" },
-    { id: "stream",  name: "Small stream",   note: "water",   icon: "i-drop" },
-    { id: "fire",    name: "Fireplace",      note: "crackle", icon: "i-fire" },
-    { id: "night",   name: "Night garden",   note: "insects", icon: "i-moon-stars" },
-    { id: "thunder", name: "Distant thunder",note: "rumble",  icon: "i-cloud-lightning" }
+    { id: "rain",    name: "Gentle rain",    note: "window",  icon: "i-cloud-rain",      tint: "#6FB4F2" },
+    { id: "forest",  name: "Forest morning", note: "birds",   icon: "i-tree",            tint: "#6FD08C" },
+    { id: "cafe",    name: "Café murmur",    note: "distant", icon: "i-coffee",          tint: "#E0A167" },
+    { id: "brown",   name: "Brown noise",    note: "deep",    icon: "i-wave-sine",       tint: "#C98F63" },
+    { id: "soft",    name: "Soft air",       note: "tonal",   icon: "i-wind",            tint: "#8FD7D2" },
+    { id: "white",   name: "White noise",    note: "clean",   icon: "i-radio",           tint: "#BFCBD8" },
+    { id: "wind",    name: "Open window",    note: "gusts",   icon: "i-wind",            tint: "#7FD2C0" },
+    { id: "ocean",   name: "Ocean tide",     note: "swell",   icon: "i-waves",           tint: "#5FBBD8" },
+    { id: "stream",  name: "Small stream",   note: "water",   icon: "i-drop",            tint: "#79CFE8" },
+    { id: "fire",    name: "Fireplace",      note: "crackle", icon: "i-fire",            tint: "#F2925F" },
+    { id: "night",   name: "Night garden",   note: "insects", icon: "i-moon-stars",      tint: "#B99BEA" },
+    { id: "thunder", name: "Distant thunder",note: "rumble",  icon: "i-cloud-lightning", tint: "#8E9BE6" }
   ];
 
   var emptyRoom = {};
@@ -157,7 +386,8 @@
     { id: "deep-noise",        title: "Deep noise",        note: "brown · white · low thunder",   values: mix({ brown: 22, white: 8, thunder: 5 }) }
   ];
 
-  var WEATHERS = ["none", "rain", "snow", "fireflies"];
+  // Derived from WEATHER_FX further down, so the two can never drift apart.
+  var WEATHERS = ["none", "rain", "snow", "mist", "petals", "leaves", "fireflies", "embers"];
 
   /* ---------- state ---------- */
 
@@ -165,6 +395,10 @@
     worldIndex: 0, playing: false, musicLevel: 52, roomLevel: 62,
     values: mix(presets[0].values), muted: {}, activePreset: presets[0].id, savedRoom: null,
     weather: "none", weatherIntensity: 48, drift: false, driftTimer: null,
+    mode: "auto",              // auto | night | dusk | day
+    sceneLocked: false,        // a hand-picked scene wins over the music matcher
+    weatherLocked: false,      // a hand-picked effect wins over the room mix
+    sound: true,
     selectedMinutes: 25, focusEndsAt: null, focusTimer: null,
     surface: null,
     source: null,              // { kind:'video'|'playlist', id, label, station? }
@@ -195,19 +429,26 @@
   function writeState() {
     try {
       localStorage.setItem("dreamWorldsV4", JSON.stringify({
-        worldIndex: state.worldIndex, musicLevel: state.musicLevel,
+        worldIndex: state.pendingGallery != null ? state.pendingGallery : state.worldIndex,
+        musicLevel: state.musicLevel,
         roomLevel: state.roomLevel, values: state.values,
         muted: state.muted, activePreset: state.activePreset, savedRoom: state.savedRoom,
         weather: state.weather, weatherIntensity: state.weatherIntensity, drift: state.drift,
         source: state.source, savedSources: state.savedSources, trackIndex: state.trackIndex,
-        rotate: state.rotate, galleryIndex: state.galleryIndex
+        rotate: state.rotate, galleryIndex: state.galleryIndex,
+        worldId: (worlds[state.worldIndex] || {}).id,
+        pack: activePack,
+        mode: state.mode, sound: state.sound, sceneLocked: state.sceneLocked,
+        weatherLocked: state.weatherLocked
       }));
     } catch (e) {}
   }
+  var freshVisit = false;
+
   function restore() {
     var saved;
-    try { saved = JSON.parse(localStorage.getItem("dreamWorldsV4")); } catch (e) { return; }
-    if (!saved) return;
+    try { saved = JSON.parse(localStorage.getItem("dreamWorldsV4")); } catch (e) { freshVisit = true; return; }
+    if (!saved) { freshVisit = true; return; }
     state.worldIndex = Math.max(0, Math.min(worlds.length - 1, Number(saved.worldIndex) || 0));
     // Migration: one "master" used to drive music and room together, which is
     // precisely why the room could never be raised over the music. Older saves
@@ -232,11 +473,26 @@
       .filter(function (x) { return x && x.id && (x.kind === "video" || x.kind === "playlist"); })
       .slice(0, SAVED_SOURCE_MAX);
     state.rotate = ["time","interval","off"].indexOf(saved.rotate) >= 0 ? saved.rotate : "time";
+    if (saved.worldId) {
+      for (var wi = 0; wi < worlds.length; wi++) {
+        if (worlds[wi].id === saved.worldId) { state.worldIndex = wi; break; }
+      }
+    }
+    if (MODES.indexOf(saved.mode) >= 0) state.mode = saved.mode;
+    if (typeof saved.sound === "boolean") state.sound = saved.sound;
+    state.sceneLocked = Boolean(saved.sceneLocked);
+    state.weatherLocked = Boolean(saved.weatherLocked);
     state.galleryIndex = Math.max(0, Number(saved.galleryIndex) || 0);
     state.trackIndex = Math.max(0, Number(saved.trackIndex) || 0);
     // A saved "Your source" world is meaningless without a source.
     if (worlds[state.worldIndex].kind === "youtube" && !state.source) state.worldIndex = 0;
-    if (worlds[state.worldIndex].kind === "gallery") state.worldIndex = 0;  // re-enabled once the manifest loads
+    // The manifest loads async. Park on the first scene meanwhile, but remember
+    // the choice so loadGallery can put it back, and keep writing the remembered
+    // index — persisting the 0 is what used to erase the setting for good.
+    if (worlds[state.worldIndex].kind === "gallery") {
+      state.pendingGallery = state.worldIndex;
+      state.worldIndex = 0;
+    }
     if (worlds[state.worldIndex].blocked) state.worldIndex = 0;
   }
 
@@ -262,16 +518,24 @@
       (w.kind === "backdrop" ? ytPoster(w.videoId) : "") ||
       (state.source ? ytPoster(state.source.id) : "");
     $("#sceneTitle").textContent = w.title;
-    $("#sceneKind").textContent = w.kind === "youtube" ? "Tuned source"
+    // Say what the picture IS, not which branch of the renderer drew it.
+    $("#sceneKind").textContent = w.kind === "still" ? "Painting"
+      : w.kind === "youtube" ? "Your video"
       : w.kind === "gallery" ? "Pixel art"
-      : w.kind === "backdrop" ? "Video backdrop"
-      : w.pixel ? "Pixel art" : "Living loop";
-    $("#channelChip").textContent = "CH " + (state.worldIndex + 1 < 10 ? "0" : "") + (state.worldIndex + 1);
+      : w.kind === "backdrop" ? "Looping video"
+      : w.pixel ? "Pixel art" : "Filmed loop";
+    // Scenes are numbered, not "channels" — the mixer already owns that word for
+    // its twelve audio layers, and 28 of one next to 12 of the other read as a
+    // contradiction.
+    $("#channelChip").textContent = "NO. " + (state.worldIndex + 1 < 10 ? "0" : "") + (state.worldIndex + 1);
     $("#dockWorldTitle").textContent = w.title;
     $("#worldButton").setAttribute("aria-label", "Scene selector: " + w.title);
     if (poster) {
       $("#sceneThumb").style.backgroundImage = "url('" + poster + "')";
-      $("#scenePoster").style.backgroundImage = "url('" + poster + "')";
+      // The dock thumbnail wants the small file; the full-screen plate behind
+      // the scene must not, or a 300px thumbnail gets stretched over the whole
+      // display while the real image decodes.
+      $("#scenePoster").style.backgroundImage = "url('" + (w.art || poster) + "')";
     }
     world.classList.toggle("pixel", !!w.pixel);
     if (window.PixelScene) PixelScene.setRamp(w.pixel ? w.ramp : null);   // null => untouched
@@ -295,9 +559,13 @@
                    credit: s.credit || "" };
         });
         renderWorlds();
-        if (worlds[state.worldIndex].kind === "gallery") showGallery(false);
+        if (state.pendingGallery != null && state.gallery.length) {
+          var back = state.pendingGallery;
+          state.pendingGallery = null;
+          setWorld(back, false);
+        } else if (worlds[state.worldIndex].kind === "gallery") { showGallery(false); }
       })
-      .catch(function () { state.gallery = []; renderWorlds(); });
+      .catch(function () { state.gallery = []; state.pendingGallery = null; renderWorlds(); });
   }
 
   // Pick by part of day when possible, else just advance.
@@ -310,6 +578,92 @@
     }
     state.galleryIndex = (state.galleryIndex + 1) % state.gallery.length;
     return state.gallery[state.galleryIndex];
+  }
+
+  // A still is one image, so all the life has to come from the camera. The
+  // Ken Burns drift is CSS on the layer itself; the class alternates so a new
+  // still restarts the animation instead of inheriting the old one's position.
+  /* ---------- follow the music ----------
+     YouTube exposes no genre, so the only honest signal is the title the
+     player already hands back. Keyword hits are scored against the mood tags
+     on each scene. A scene you picked by hand locks the list until you clear
+     it — a feature that overrides a deliberate choice is a bug.        */
+
+  var MOOD_WORDS = {
+    rain: ["rain", "rainy", "storm", "thunder", "downpour"],
+    night: ["night", "midnight", "3am", "late", "nocturne", "dark"],
+    sleep: ["sleep", "sleeping", "insomnia", "deep sleep", "lullab"],
+    study: ["study", "studying", "focus", "concentrat", "work", "coding", "deep work"],
+    lofi: ["lofi", "lo-fi", "chill", "chillhop", "beats"],
+    jazz: ["jazz", "swing", "saxophone", "bossa"],
+    piano: ["piano", "keys", "nocturne", "chopin", "erik satie"],
+    classical: ["classical", "orchestra", "symphony", "strings", "violin"],
+    epic: ["epic", "cinematic", "soundtrack", "score", "trailer"],
+    forest: ["forest", "woods", "jungle", "birds", "nature", "tree"],
+    sea: ["ocean", "sea", "wave", "beach", "shore", "underwater"],
+    morning: ["morning", "sunrise", "dawn", "wake"],
+    evening: ["evening", "sunset", "dusk", "twilight"],
+    summer: ["summer", "warm", "sunny"],
+    winter: ["winter", "snow", "cold", "christmas"],
+    cozy: ["cozy", "cosy", "fireplace", "warm", "cabin", "home"],
+    calm: ["calm", "relax", "peace", "gentle", "quiet", "soft", "ambient"],
+    melancholy: ["melanchol", "sad", "lonely", "rainy day", "blue"],
+    town: ["city", "town", "street", "tokyo", "urban"],
+    uplifting: ["happy", "uplifting", "bright", "joy", "hopeful"]
+  };
+
+  function classifyTrack(title) {
+    var t = String(title || "").toLowerCase();
+    if (!t) return [];
+    var hits = [];
+    for (var mood in MOOD_WORDS) {
+      for (var i = 0; i < MOOD_WORDS[mood].length; i++) {
+        if (t.indexOf(MOOD_WORDS[mood][i]) >= 0) { hits.push(mood); break; }
+      }
+    }
+    return hits;
+  }
+
+  function sceneForMoods(moods) {
+    if (!moods.length) return -1;
+    var best = -1, bestScore = 0;
+    for (var i = 0; i < worlds.length; i++) {
+      var w = worlds[i];
+      if (!w.moods || !w.moods.length) continue;
+      var score = 0;
+      for (var j = 0; j < moods.length; j++) {
+        if (w.moods.indexOf(moods[j]) >= 0) score++;
+      }
+      if (score > bestScore) { bestScore = score; best = i; }
+    }
+    return bestScore >= 1 ? best : -1;
+  }
+
+  function followMusic(title) {
+    if (state.sceneLocked) return;
+    var moods = classifyTrack(title);
+    var i = sceneForMoods(moods);
+    if (i < 0 || i === state.worldIndex) return;
+    setWorld(i, false);
+    toast(worlds[i].title + " suits what is playing. Pick a scene yourself to keep it.");
+  }
+
+  function fitsMounted(w) {
+    // Asymmetric on purpose. A portrait print cover-cropped on a landscape
+    // screen loses its whole composition, so it gets mounted. A landscape
+    // print on a phone crops to its centre, which ukiyo-e landscapes carry
+    // well — the Great Wave reads better bled than boxed.
+    var landscapeScreen = window.innerWidth >= window.innerHeight;
+    return w.orient === "portrait" && landscapeScreen;
+  }
+
+  function showStill(w, animate) {
+    if (!window.PixelScene) return false;
+    PixelScene.setRamp(null);
+    PixelScene.showArt(w.art, w.title, animate === false ? 0 : 640);
+    world.classList.add("still-scene");
+    world.classList.toggle("mounted-print", fitsMounted(w));
+    return true;
   }
 
   function showGallery(animate) {
@@ -379,7 +733,7 @@
       return;
     }
     if (w.kind === "gallery" && !state.gallery.length) {
-      toast("Add pixel art to assets/wallpapers to use the gallery.");
+      toast("The pixel-art gallery is empty. Add your own art to fill it.");
       return;
     }
     if (w.kind === "backdrop" && w.blocked) {
@@ -387,10 +741,32 @@
       return;
     }
     if (index === state.worldIndex) { closeSurface(); return; }
+    // announce is false for automatic changes, so this only latches on a
+    // choice the user actually made.
+    if (announce) state.sceneLocked = true;
+    UISound.play("scene");
     state.worldIndex = index;
     paintWorld();
     clearTimeout(state.rotateTimer);
-    if (w.kind === "gallery") {
+    world.classList.toggle("still-scene", w.kind === "still");
+    // The print's own weather comes with it — Sudden Shower arrives raining —
+    // unless a hand-picked effect or a live room channel already owns the sky.
+    if (w.kind === "still" && w.weather && !state.weatherLocked && !roomWeather()) {
+      if (w.weather !== state.weather && FX_BY_ID[w.weather]) {
+        state.weatherIntensity = Math.max(state.weatherIntensity, 44);
+        var wSlider = $("#weatherIntensity");
+        if (wSlider) { wSlider.value = state.weatherIntensity; wSlider.style.setProperty("--fill", state.weatherIntensity + "%"); }
+        setWeather(w.weather, false);
+      }
+    }
+    if (state.mode === "auto") applyMode();
+    if (w.kind === "still") {
+      videos[liveVideo].pause();
+      videos[liveVideo].classList.remove("is-live");
+      $("#youtubeWrap").classList.remove("is-live");
+      hideBackdrop();
+      showStill(w, true);
+    } else if (w.kind === "gallery") {
       videos[liveVideo].pause();
       $("#youtubeWrap").classList.remove("is-live");
       hideBackdrop();
@@ -428,7 +804,7 @@
     // Derived, not written by hand: this label said "four channels" through
     // two commits that changed how many there are.
     var count = $("#worldPanelCount");
-    if (count) count.textContent = "Source · " + worlds.length + " channels";
+    if (count) count.textContent = "Scenes · " + worlds.length + " to choose from";
     var credits = $("#sceneCredits");
     if (credits) {
       var lines = state.gallery.map(function (g) { return g.credit; }).filter(Boolean);
@@ -449,7 +825,8 @@
         : (w.kind === "gallery" ? state.gallery.length + (state.gallery.length === 1 ? " scene" : " scenes")
         : (w.kind === "youtube" ? "tuned source"
         : (w.kind === "backdrop" ? "video backdrop"
-        : (w.pixel ? "pixel art" : "living loop"))));
+        : (w.kind === "still" ? "ghibli still"
+        : (w.pixel ? "pixel art" : "living loop")))));
       return '<button class="world-card" data-world="' + i + '" style="--i:' + i + '"' +
         ' aria-current="' + (i === state.worldIndex) + '"' + (unavailable ? " disabled" : "") + '>' +
         '<span class="world-card-screen" style="background-image:url(\'' + poster + '\')">' +
@@ -610,7 +987,15 @@
         if (state.playing) { try { e.target.playVideo(); } catch (err) {} }
       },
       onStateChange: function (e) {
+        // 0 ended · 1 playing · 2 paused · 3 buffering
+        if (e.data === 2 && state.playing) { state.playing = false; reflectPlaying(); stopScrub(); }
+        if (e.data === 0) {
+          if (state.source && state.source.kind === "playlist") { refreshCurrentTrackTitle(); }
+          else { state.playing = false; reflectPlaying(); stopScrub(); }
+        }
         if (e.data === 1) {
+          startScrub();
+          paintScrub();
           state.ytFailed = false;
           refreshCurrentTrackTitle();
           if (worlds[state.worldIndex].kind === "youtube") $("#youtubeWrap").classList.add("is-live");
@@ -687,6 +1072,8 @@
     if (bdPlayer) { try { bdPlayer.pauseVideo(); } catch (e) {} }
   }
 
+  var lastMatchedTitle = "";
+
   function refreshCurrentTrackTitle() {
     if (!ytPlayer || !state.tracks.length) return;
     try {
@@ -700,6 +1087,12 @@
       }
     } catch (e) {}
     paintTuner();
+    var cur = state.tracks[state.trackIndex];
+    var name = cur ? cur.title : (state.source ? state.source.label : "");
+    if (name && name !== lastMatchedTitle) { lastMatchedTitle = name; followMusic(name); }
+    // The tab title is the now-playing readout when the app is in a background
+    // tab, which is where it spends most of its life.
+    document.title = name ? name + " · UKIYO" : "UKIYO — a floating world machine";
   }
 
   function currentTrack() { return state.tracks[state.trackIndex] || null; }
@@ -707,8 +1100,8 @@
   function paintTuner() {
     var t = currentTrack();
     var hasSource = Boolean(state.source) && !state.ytFailed;
-    var label = !state.source ? "No source tuned"
-              : state.ytFailed ? "Room ambience only"
+    var label = !state.source ? "Tune a source →"
+              : state.ytFailed ? "Room only \u2014 retune"
               : (t ? t.title : state.source.label);
     $("#dockSongTitle").textContent = label;
     $("#musicButton").setAttribute("aria-label",
@@ -826,6 +1219,63 @@
 
   var SEEK_SECONDS = 30;
 
+  /* ---------- scrub bar ----------
+     getCurrentTime was only ever called inside seekBy, so there was no
+     position readout at all. Polling runs only while something is actually
+     playing and the tab is visible; a paused player in a hidden tab should
+     cost nothing. */
+
+  var scrubTimer = null, scrubbing = false;
+
+  function scrubEls() { return { wrap: $("#scrubWrap"), bar: $("#scrub"), out: $("#scrubTime") }; }
+
+  function paintScrub() {
+    var e = scrubEls();
+    if (!e.wrap) return;
+    var live = ytPlayer && state.ytReady && !state.ytFailed;
+    e.wrap.hidden = !live;
+    if (!live || scrubbing) return;
+    var at = 0, dur = 0;
+    try { at = Number(ytPlayer.getCurrentTime()) || 0; dur = Number(ytPlayer.getDuration()) || 0; } catch (err) { return; }
+    if (dur <= 0) return;
+    var p = Math.max(0, Math.min(1000, Math.round((at / dur) * 1000)));
+    e.bar.value = p;
+    e.bar.style.setProperty("--fill", (p / 10) + "%");
+    e.out.textContent = formatTime(Math.round(at)) + " / " + formatTime(Math.round(dur));
+  }
+
+  function startScrub() {
+    if (scrubTimer) return;
+    scrubTimer = setInterval(function () {
+      if (document.hidden || !state.playing) return;
+      paintScrub();
+    }, 400);
+  }
+  function stopScrub() { clearInterval(scrubTimer); scrubTimer = null; }
+
+  function bindScrub() {
+    var e = scrubEls();
+    if (!e.bar) return;
+    e.bar.addEventListener("pointerdown", function () { scrubbing = true; });
+    e.bar.addEventListener("input", function () {
+      var dur = 0;
+      try { dur = Number(ytPlayer.getDuration()) || 0; } catch (err) {}
+      e.bar.style.setProperty("--fill", (e.bar.value / 10) + "%");
+      if (dur > 0) e.out.textContent = formatTime(Math.round((e.bar.value / 1000) * dur)) + " / " + formatTime(Math.round(dur));
+    });
+    var commit = function () {
+      if (!scrubbing) return;
+      scrubbing = false;
+      try {
+        var dur = Number(ytPlayer.getDuration()) || 0;
+        if (dur > 0) ytPlayer.seekTo((e.bar.value / 1000) * dur, true);
+      } catch (err) {}
+      UISound.play("tick");
+    };
+    e.bar.addEventListener("change", commit);
+    window.addEventListener("pointerup", commit);
+  }
+
   // "track" when there is a playlist to step through, "seek" for a single
   // video — which is the common case, since the curated stations are one
   // long video each.
@@ -880,12 +1330,14 @@
   /* ---------- transport ---------- */
 
   function reflectPlaying() {
+    UISound.play(state.playing ? "on" : "off");
     world.classList.toggle("playing", state.playing);
     $("#playButton").setAttribute("aria-pressed", String(state.playing));
     $("#playButton").setAttribute("aria-label", state.playing ? "Pause" : "Play");
   }
 
   function playAll() {
+    startScrub();
     state.playing = true;
     reflectPlaying();
     AmbienceEngine.start().then(function () { AmbienceEngine.setMaster(state.roomLevel); pushMix(); });
@@ -899,6 +1351,7 @@
   }
 
   function pauseAll() {
+    stopScrub();
     state.playing = false;
     reflectPlaying();
     AmbienceEngine.stop();
@@ -939,6 +1392,12 @@
       AmbienceEngine.setMaster(state.roomLevel);
       pushMix();
       startMeters();
+      // Something is audible now, so the transport has to say so. It used to
+      // stay on "Play" while the room was running, which is the clearest
+      // place the app disagreed with itself.
+      state.playing = true;
+      reflectPlaying();
+      persist();
     }, function () { roomWaking = false; });
     toast(state.source ? "Room ambience is playing. The music is still paused."
                        : "Room ambience is playing.");
@@ -988,6 +1447,8 @@
     if (input) { input.value = v; input.style.setProperty("--fill", v + "%"); }
     if (out) out.textContent = state.muted[id] ? "muted" : v + "%";
     if (fromUser) renderPresets();
+    if (state.drift) swayResync();
+    if (fromUser) syncWeatherToRoom();
     persist();
   }
 
@@ -996,6 +1457,8 @@
     state.activePreset = null;
     wakeRoom();
     AmbienceEngine.setLayer(id, state.values[id], Boolean(state.muted[id]));
+    if (state.drift) swayResync();
+    syncWeatherToRoom();
     renderChannels(); renderPresets(); persist();
   }
 
@@ -1008,6 +1471,8 @@
     state.activePreset = p.id;
     wakeRoom();
     pushMix();
+    if (state.drift) swayResync();
+    syncWeatherToRoom();
     renderChannels(); renderPresets(); persist();
     if (announce !== false) toast(p.title + " changed the room. Your scene and music stayed put.");
   }
@@ -1034,8 +1499,51 @@
     state.muted = JSON.parse(JSON.stringify(state.savedRoom.muted || {}));
     state.activePreset = null;
     wakeRoom();
-    pushMix(); renderChannels(); renderPresets(); persist();
+    pushMix();
+    if (state.drift) swayResync();
+    renderChannels(); renderPresets(); persist();
     toast("Your saved mix is back. Scene and music unchanged.");
+  }
+
+  // Every live channel gets its own slow sine, each with a random period and
+  // phase, so the room breathes instead of stepping and no two channels ever
+  // line up. The moving value goes straight to the engine as a float: the
+  // user's set point in state.values never moves, so the fader, the readout
+  // and the saved mix still show what was actually set.
+  var SWAY_TICK_MS = 700;
+  var swayNodes = {};
+
+  function swayResync() {
+    if (!state.drift) { return; }
+    var next = {};
+    roomLayers.forEach(function (l) {
+      var v = state.values[l.id];
+      if (v <= 0 || state.muted[l.id]) return;
+      var was = swayNodes[l.id];
+      next[l.id] = {
+        base: v,
+        amp: Math.min(Math.max(3, v * 0.28), 100 - v, v),   // never clip either rail
+        period: was ? was.period : 34000 + Math.random() * 46000,
+        phase:  was ? was.phase  : Math.random() * Math.PI * 2
+      };
+    });
+    Object.keys(swayNodes).forEach(function (id) {
+      // Channels that just left the sway set go back to their exact set point.
+      if (!next[id]) AmbienceEngine.setLayer(id, state.values[id], Boolean(state.muted[id]));
+    });
+    swayNodes = next;
+    document.querySelectorAll("[data-channel]").forEach(function (el) {
+      el.classList.toggle("is-swaying", Boolean(swayNodes[el.dataset.channel]));
+    });
+  }
+
+  function swayTick() {
+    var now = Date.now();
+    Object.keys(swayNodes).forEach(function (id) {
+      var n = swayNodes[id];
+      var f = n.base + Math.sin((now / n.period) * Math.PI * 2 + n.phase) * n.amp;
+      AmbienceEngine.setLayer(id, Math.max(0, Math.min(100, f)), Boolean(state.muted[id]));
+    });
   }
 
   function toggleDrift(announce) {
@@ -1043,18 +1551,650 @@
     $("#driftButton").setAttribute("aria-checked", String(state.drift));
     clearInterval(state.driftTimer);
     if (state.drift) {
-      state.driftTimer = setInterval(function () {
-        roomLayers.forEach(function (l) {
-          var v = state.values[l.id];
-          if (v > 0 && !state.muted[l.id]) setLayerValue(l.id, v + (Math.random() * 4 - 2), false);
-        });
-      }, 28000);
+      swayResync();
+      state.driftTimer = setInterval(swayTick, SWAY_TICK_MS);
+    } else {
+      var ids = Object.keys(swayNodes);
+      swayNodes = {};
+      ids.forEach(function (id) {
+        AmbienceEngine.setLayer(id, state.values[id], Boolean(state.muted[id]));
+      });
+      document.querySelectorAll(".is-swaying").forEach(function (el) {
+        el.classList.remove("is-swaying");
+      });
     }
-    if (announce) toast(state.drift ? "Drift is on. Only room levels will move." : "Drift is off.");
+    UISound.play(state.drift ? "on" : "off");
+    if (announce) toast(state.drift
+      ? "Sway is on. Room levels rise and fall on their own. Your scene, music and weather never move."
+      : "Sway is off. Levels are back where you set them.");
     persist();
   }
 
+
+
+
+
+
+
+  /* ---------- the bonsai ----------
+     Grows with quiet minutes spent here. Never dies, never resets, never
+     guilts — the world changed a little, that is all. The stages are far
+     enough apart that a new leaf is an event.                              */
+
+  var BONSAI_STAGES = [0, 15, 60, 180, 600, 1500];   // minutes
+
+  function quietMinutes() {
+    return Number(localStorage.getItem("dwMinutes") || 0);
+  }
+
+  function bonsaiStage(mins) {
+    var st = 0;
+    for (var i = 0; i < BONSAI_STAGES.length; i++) if (mins >= BONSAI_STAGES[i]) st = i;
+    return st;
+  }
+
+  function paintBonsai() {
+    var el = $("#bonsai");
+    if (!el) return;
+    var mins = quietMinutes();
+    var st = bonsaiStage(mins);
+    el.dataset.stage = st;
+    el.setAttribute("aria-label", "Your bonsai — grown from " + mins + " quiet minutes");
+    var next = BONSAI_STAGES[st + 1];
+    el.title = next ? (next - mins) + " quiet minutes to the next leaf" : "fully grown";
+  }
+
+  function startBonsaiClock() {
+    setInterval(function () {
+      if (!state.playing || document.hidden) return;
+      try { localStorage.setItem("dwMinutes", String(quietMinutes() + 1)); } catch (e) {}
+      paintBonsai();
+    }, 60000);
+    paintBonsai();
+  }
+
+  /* ---------- rare moments ----------
+     Three unlisted visitors. No checklist, no announcement schedule — the
+     point is that one day the boat is there, and you tell somebody.
+
+     They ride the weather canvas's own loop, so an active moment keeps the
+     loop alive exactly the way sparks do.                                  */
+
+  var WATER_SCENES = { "great-wave": 1, "tama-moon": 1, "evening-snow": 1, "shin-ohashi": 1, "shono": 1 };
+  var moment = null;          // the active visitor, if any
+  var momentTimer = null;
+
+  function momentsSeen() {
+    try { return JSON.parse(localStorage.getItem("dwMoments") || "{}"); } catch (e) { return {}; }
+  }
+
+  function recordMoment(kind, label) {
+    var seen = momentsSeen();
+    var first = !seen[kind];
+    seen[kind] = Date.now();
+    try { localStorage.setItem("dwMoments", JSON.stringify(seen)); } catch (e) {}
+    if (first) toast("You saw " + label + ". Not everyone does.", 5200);
+    paintMomentShelf();
+  }
+
+  function paintMomentShelf() {
+    var el = $("#momentsValue");
+    if (!el) return;
+    var count = Object.keys(momentsSeen()).length;
+    el.textContent = count ? count + " of 3" : "none yet";
+  }
+
+  function tryStartMoment() {
+    if (moment || document.hidden || reduceMotion.matches) return;
+    var w = worlds[state.worldIndex];
+    var isNight = document.documentElement.getAttribute("data-mode") === "night";
+    var roll = Math.random();
+    if (WATER_SCENES[w.id] && roll < 0.12) {
+      moment = { kind: "boat", born: Date.now(), life: 38000 };
+    } else if (isNight && state.weather === "rain" && roll < 0.16) {
+      moment = { kind: "cat", born: Date.now(), life: 22000, flick: 0 };
+    } else if (isNight && state.weather === "none" && roll < 0.14) {
+      moment = { kind: "star", born: Date.now(), life: 1400,
+                 x: weather.w * (0.15 + Math.random() * 0.5), y: weather.h * (0.08 + Math.random() * 0.15) };
+    }
+    if (moment) startWeather();
+  }
+
+  function stepMoment(c, now) {
+    if (!moment) return;
+    var t = (now - moment.born) / moment.life;
+    if (t >= 1) {
+      recordMoment(moment.kind,
+        moment.kind === "boat" ? "the boat" : moment.kind === "cat" ? "the night cat" : "a falling star");
+      moment = null;
+      return;
+    }
+    if (moment.kind === "boat") {
+      // a small hull gliding the lower third, right to left
+      var bx = weather.w * (1.05 - t * 1.15);
+      var by = weather.h * 0.66 + Math.sin(now / 900) * 2.5;
+      c.fillStyle = "rgba(30,26,22,.78)";
+      c.fillRect(bx, by, 34, 5);                       // hull
+      c.fillRect(bx + 6, by - 3, 22, 3);               // gunwale
+      c.fillRect(bx + 15, by - 14, 2, 12);             // boatman
+      c.fillRect(bx + 12, by - 16, 8, 2);              // hat
+      c.fillRect(bx + 17, by - 10, 10, 1);             // oar
+    } else if (moment.kind === "cat") {
+      // a silhouette at the lower-left corner of the picture, tail flicking
+      var cx0 = weather.w * 0.06, cy0 = weather.h - 168;
+      c.fillStyle = "rgba(18,16,14,.85)";
+      c.fillRect(cx0 + 4, cy0 + 10, 22, 12);           // body
+      c.fillRect(cx0 + 20, cy0 + 2, 10, 10);           // head
+      c.fillRect(cx0 + 20, cy0 - 2, 3, 4);             // ear
+      c.fillRect(cx0 + 27, cy0 - 2, 3, 4);             // ear
+      var flick = Math.sin(now / 700) > 0.6 ? -6 : 0;  // the tail has opinions
+      c.fillRect(cx0 - 4, cy0 + 8 + flick, 8, 3);
+    } else if (moment.kind === "star") {
+      var sx = moment.x + t * 130, sy = moment.y + t * 46;
+      c.strokeStyle = "rgba(255,240,200," + (0.85 * (1 - t)) + ")";
+      c.lineWidth = 1.6;
+      c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx - 26, sy - 9); c.stroke();
+    }
+  }
+
+  /* ---------- share: rooms as postcards ----------
+     Two artifacts, zero backend.
+
+     A room URL carries the whole arrangement — print, sounds, weather, shade —
+     in the hash, so every shared link opens the sender's exact room. And a
+     postcard renders the moment to a PNG: the print, the weather mid-fall, a
+     cartouche with the room's name, the seal. The research was unambiguous
+     that "look what I made" artifacts are what actually travel; this is ours. */
+
+  function encodeRoom(name) {
+    var w = worlds[state.worldIndex];
+    var p = new URLSearchParams();
+    p.set("w", w.id);
+    var sounds = [];
+    roomLayers.forEach(function (l) {
+      var v = state.values[l.id] || 0;
+      if (v > 0 && !state.muted[l.id]) sounds.push(l.id + "." + v);
+    });
+    if (sounds.length) p.set("s", sounds.join("_"));
+    if (state.weather !== "none") p.set("x", state.weather + "." + state.weatherIntensity);
+    if (shade.v > 0.02) p.set("sh", Math.round(shade.v * 100));
+    if (name) p.set("n", name);
+    return location.origin + location.pathname + "#" + p.toString().replace(/%2E/g, ".");
+  }
+
+  function decodeRoomHash() {
+    if (!location.hash || location.hash.length < 3) return null;
+    try {
+      var p = new URLSearchParams(location.hash.slice(1));
+      if (!p.get("w")) return null;
+      return p;
+    } catch (e) { return null; }
+  }
+
+  // Applied after restore(), before power-on, so a shared link wins the boot.
+  function applySharedRoom(p) {
+    var id = p.get("w");
+    for (var i = 0; i < worlds.length; i++) {
+      if (worlds[i].id === id) { state.worldIndex = i; break; }
+    }
+    var s = p.get("s");
+    if (s) {
+      roomLayers.forEach(function (l) { state.values[l.id] = 0; });
+      s.split("_").forEach(function (pair) {
+        var kv = pair.split(".");
+        if (state.values.hasOwnProperty(kv[0])) {
+          state.values[kv[0]] = Math.max(0, Math.min(100, Number(kv[1]) || 0));
+        }
+      });
+      state.activePreset = null;
+    }
+    var x = p.get("x");
+    if (x) {
+      var xkv = x.split(".");
+      if (FX_BY_ID[xkv[0]]) {
+        state.weather = xkv[0];
+        state.weatherIntensity = Math.max(10, Math.min(100, Number(xkv[1]) || 48));
+        state.weatherLocked = true;   // the sender chose this sky on purpose
+      }
+    }
+    var sh = Number(p.get("sh"));
+    if (sh > 0) setTimeout(function () { paintShade(sh / 100); }, 50);
+    var name = p.get("n");
+    toast(name ? "A room from a friend: “" + name + "”" : "A room from a friend.", 4200);
+    // The link has been delivered; a reload should be the visitor's own state.
+    try { history.replaceState(null, "", location.pathname); } catch (e) {}
+  }
+
+  /* ---------- the postcard ---------- */
+
+  function poeticName() {
+    var w = worlds[state.worldIndex];
+    var h = new Date().getHours();
+    var tw = h < 5 ? "before dawn" : h < 11 ? "in the morning" : h < 15 ? "at midday"
+           : h < 18 ? "in the afternoon" : h < 22 ? "in the evening" : "late at night";
+    return w.title + ", " + tw;
+  }
+
+  function soundsSummary() {
+    var live = [];
+    roomLayers.forEach(function (l) {
+      var v = state.values[l.id] || 0;
+      if (v > 0 && !state.muted[l.id]) live.push(l.name.toLowerCase());
+    });
+    if (!live.length) return "silence";
+    if (live.length > 3) return live.slice(0, 3).join(" · ") + " +" + (live.length - 3);
+    return live.join(" · ");
+  }
+
+  function drawSeal(c, x, y, size) {
+    // The 16-grid hanko, drawn as rects so the canvas needs no SVG rasterising.
+    var u = size / 16;
+    c.fillStyle = "#C73E2E";
+    c.fillRect(x, y, size, size);
+    c.fillStyle = "#F7EFE0";
+    [[2,2,5,2],[2,4,2,3],[9,2,5,2],[12,4,2,3],[4,6,3,1],[9,6,3,1],[6,6,1,1],
+     [10,8,2,3],[4,7,1,4],[6,9,2,2],[2,9,2,3],[4,12,3,2],[12,9,2,5],[9,12,3,2]
+    ].forEach(function (r) { c.fillRect(x + r[0]*u, y + r[1]*u, r[2]*u, r[3]*u); });
+  }
+
+  function renderPostcard(name, done) {
+    var w = worlds[state.worldIndex];
+    var W = 1200, H = 630;
+    var cv = document.createElement("canvas");
+    cv.width = W; cv.height = H;
+    var c = cv.getContext("2d");
+
+    var img = new Image();
+    img.onload = function () {
+      // washi ground
+      c.fillStyle = "#F2E8D5";
+      c.fillRect(0, 0, W, H);
+
+      // the print: landscape prints bleed across; portrait prints mount left
+      var portrait = img.naturalHeight > img.naturalWidth;
+      var px, py, pw, ph;
+      if (portrait) {
+        ph = H - 64; pw = ph * (img.naturalWidth / img.naturalHeight);
+        px = 48; py = 32;
+      } else {
+        pw = W - 400; ph = pw * (img.naturalHeight / img.naturalWidth);
+        if (ph > H - 64) { ph = H - 64; pw = ph * (img.naturalWidth / img.naturalHeight); }
+        px = 48; py = (H - ph) / 2;
+      }
+      // paper shadow, then the print, then a sumi hairline
+      c.save();
+      c.shadowColor = "rgba(60,45,30,.35)"; c.shadowBlur = 24; c.shadowOffsetY = 8;
+      c.fillStyle = "#fff"; c.fillRect(px, py, pw, ph);
+      c.restore();
+      c.drawImage(img, px, py, pw, ph);
+      c.strokeStyle = "rgba(40,30,20,.55)"; c.lineWidth = 1.5;
+      c.strokeRect(px + .75, py + .75, pw - 1.5, ph - 1.5);
+
+      // the weather, mid-fall, clipped to the print
+      var wc = $("#weatherCanvas");
+      if (wc && wc.width > 0) {
+        c.save();
+        c.beginPath(); c.rect(px, py, pw, ph); c.clip();
+        c.globalAlpha = .92;
+        c.drawImage(wc, px, py, pw, ph);
+        c.restore();
+      }
+
+      // cartouche column
+      var cx = px + pw + 44;
+      var cw = W - cx - 48;
+      if (cw > 180) {
+        drawSeal(c, cx, 48, 44);
+        c.fillStyle = "#3A322A";
+        c.font = "600 30px 'Silkscreen', monospace";
+        c.fillText("UKIYO", cx + 58, 82);
+
+        c.font = "700 34px 'Barlow Condensed', sans-serif";
+        wrapText(c, "“" + name + "”", cx, 160, cw, 40);
+
+        c.font = "16px 'IBM Plex Mono', monospace";
+        c.fillStyle = "#6E5F52";
+        wrapText(c, w.title + " · " + (w.artist || ""), cx, 240, cw, 24);
+        wrapText(c, "sounds: " + soundsSummary(), cx, 300, cw, 24);
+        var wx = state.weather !== "none" ? FX_BY_ID[state.weather].label.toLowerCase() : "clear";
+        c.fillText("sky: " + wx, cx, 360);
+        c.fillText(new Date().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }), cx, 390);
+
+        c.fillStyle = "#B83526";
+        c.font = "15px 'IBM Plex Mono', monospace";
+        c.fillText("a floating world machine", cx, H - 64);
+      }
+      done(cv);
+    };
+    img.onerror = function () { toast("The postcard could not be made."); };
+    img.src = w.art || w.poster;
+  }
+
+  function wrapText(c, text, x, y, maxW, lh) {
+    var words = String(text).split(" "), line = "";
+    words.forEach(function (word) {
+      var probe = line ? line + " " + word : word;
+      if (c.measureText(probe).width > maxW && line) {
+        c.fillText(line, x, y); y += lh; line = word;
+      } else line = probe;
+    });
+    if (line) c.fillText(line, x, y);
+    return y;
+  }
+
+  function sharePostcard() {
+    var name = poeticName();
+    UISound.play("scene");
+    renderPostcard(name, function (cv) {
+      cv.toBlob(function (blob) {
+        if (!blob) return;
+        var file = new File([blob], "ukiyo-postcard.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: "UKIYO", text: name }).catch(function () {});
+        } else {
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "ukiyo-postcard.png";
+          a.click();
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+          toast("Postcard saved. “" + name + "”");
+        }
+      }, "image/png");
+    });
+  }
+
+  function copyRoomLink() {
+    var name = poeticName();
+    var url = encodeRoom(name);
+    var doneMsg = "Room link copied. Anyone who opens it gets this exact room.";
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { toast(doneMsg, 4200); },
+        function () { window.prompt("Copy the room link:", url); });
+    } else {
+      window.prompt("Copy the room link:", url);
+    }
+    UISound.play("on");
+  }
+
+  /* ---------- the window shade ----------
+     Pulling it binds the scene's brightness AND the chrome's palette to the
+     gesture, updating on every pointermove. Released past halfway it commits to
+     night; below, it springs back to day. That continuous binding is the whole
+     reason this is a shade and not a menu row. */
+
+  var shade = { v: 0, dragging: false, startY: 0, startV: 0, h: 1 };
+
+  function paintShade(v) {
+    shade.v = Math.max(0, Math.min(1, v));
+    world.style.setProperty("--shade", shade.v.toFixed(3));
+    // Crossfade the faceplate through dusk on the way down, so the chrome
+    // travels with the light instead of snapping at the end.
+    // Open shade = daylight; drawn = night. This was inverted.
+    var m = shade.v < 0.25 ? "day" : shade.v < 0.7 ? "dusk" : "night";
+    if (state.mode === "auto" && document.documentElement.getAttribute("data-mode") !== m) {
+      document.documentElement.setAttribute("data-mode", m);
+    }
+  }
+
+  function bindShade() {
+    var grip = $("#shadeGrip");
+    if (!grip) return;
+    paintShade(0);
+
+    function down(e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      grip.setPointerCapture(e.pointerId);
+      shade.dragging = true;
+      shade.startY = e.clientY;
+      shade.startV = shade.v;
+      shade.h = Math.max(1, world.getBoundingClientRect().height);
+      $("#shade").style.transition = "none";
+      UISound.play("press");
+      e.preventDefault();
+    }
+    function move(e) {
+      if (!shade.dragging) return;
+      paintShade(shade.startV + (e.clientY - shade.startY) / shade.h);
+    }
+    function up(e) {
+      if (!shade.dragging) return;
+      shade.dragging = false;
+      try { grip.releasePointerCapture(e.pointerId); } catch (err) {}
+      // Past halfway it commits; below, it springs back. Same rule as the
+      // reference: a shade you let go of does not hover.
+      var to = shade.v >= 0.5 ? 1 : 0;
+      animateShade(to);
+      UISound.play(to ? "off" : "on");
+    }
+
+    function animateShade(to) {
+      if (reduceMotion.matches) { paintShade(to); return; }
+      var from = shade.v, t0 = performance.now(), MS = 420, settled = false;
+      (function step(now) {
+        var p = Math.min(1, (now - t0) / MS);
+        // easeOutQuint, the same shape as --ease-out
+        var e = 1 - Math.pow(1 - p, 5);
+        paintShade(from + (to - from) * e);
+        if (p < 1) requestAnimationFrame(step);
+        else settled = true;
+      })(t0);
+      // rAF is throttled to nothing in background tabs — where an ambience app
+      // spends its life — so the destination is guaranteed on a timer. Same
+      // lesson as the token drag: never let a frame callback own a final state.
+      setTimeout(function () { if (!settled) paintShade(to); }, MS + 80);
+    }
+
+    grip.addEventListener("pointerdown", down);
+    grip.addEventListener("pointermove", move);
+    grip.addEventListener("pointerup", up);
+    grip.addEventListener("pointercancel", up);
+    // Keyboard: the shade must be reachable without a pointer (SC 2.5.7).
+    grip.addEventListener("keydown", function (e) {
+      var step = 0.1, to = null;
+      if (e.key === "ArrowDown") to = shade.v + step;
+      else if (e.key === "ArrowUp") to = shade.v - step;
+      else if (e.key === "Home") to = 0;
+      else if (e.key === "End") to = 1;
+      else if (e.key === "Enter" || e.key === " ") to = shade.v >= 0.5 ? 0 : 1;
+      if (to === null) return;
+      e.preventDefault();
+      animateShade(Math.max(0, Math.min(1, to)));
+    });
+  }
+
+  /* ---------- sound tokens ----------
+     The twelve room layers as objects on the scene.
+
+       vertical position   -> level   (higher is louder)
+       horizontal position -> pan     (left is left)
+
+     Both apply on every pointermove, not on release. That continuous binding is
+     the whole point: the room has to answer your hand while it is moving, the
+     way the reference clip binds a page's lightness to a shade being pulled.
+
+     state.values stays the authority. A token writes into it and the mixer
+     faders read from it, so the two are the same control seen twice — and the
+     faders remain the non-drag path that SC 2.5.7 requires.                  */
+
+  var TOKEN_PAD = 56;              // keep tokens clear of the readout and dock
+  var tokens = {};                 // id -> { el, grab, x, y }
+  var tokenIdleTimer = null;
+
+  function tokenBounds() {
+    var r = world.getBoundingClientRect();
+    return { minX: TOKEN_PAD, maxX: Math.max(TOKEN_PAD, r.width - TOKEN_PAD),
+             minY: TOKEN_PAD + 40, maxY: Math.max(TOKEN_PAD, r.height - 150) };
+  }
+
+  // Position <-> value. Level is inverted because up should mean more.
+  function tokenToValues(x, y) {
+    var b = tokenBounds();
+    var spanY = Math.max(1, b.maxY - b.minY), spanX = Math.max(1, b.maxX - b.minX);
+    var level = Math.round(100 * (1 - (y - b.minY) / spanY));
+    var pan = ((x - b.minX) / spanX) * 2 - 1;
+    return { level: Math.max(0, Math.min(100, level)), pan: Math.max(-1, Math.min(1, pan)) };
+  }
+  function valuesToToken(level, pan, index) {
+    var b = tokenBounds();
+    var y = b.minY + (1 - level / 100) * (b.maxY - b.minY);
+    // A silent channel has no meaningful pan, so its x would be identical for
+    // every one of them. Park them along the foot of the scene instead, spread
+    // by index: a tray made out of position rather than out of more markup.
+    if (level <= 0 && typeof index === "number") {
+      var n = Math.max(1, roomLayers.length);
+      var slot = (index + 0.5) / n;
+      return { x: b.minX + slot * (b.maxX - b.minX), y: b.maxY };
+    }
+    return { x: b.minX + ((pan + 1) / 2) * (b.maxX - b.minX), y: y };
+  }
+
+  function panWord(pan) {
+    if (pan < -0.12) return "left " + Math.round(-pan * 100) + "%";
+    if (pan > 0.12) return "right " + Math.round(pan * 100) + "%";
+    return "centre";
+  }
+
+  // While it is held, the token shows what it currently is — the way the
+  // reference's card swaps its content for its drop target mid-drag.
+  function paintToken(id) {
+    var t = tokens[id];
+    if (!t) return;
+    var v = state.values[id] || 0;
+    var muted = Boolean(state.muted[id]);
+    var pan = AmbienceEngine.getPan ? AmbienceEngine.getPan(id) : 0;
+    t.el.classList.toggle("is-off", v <= 0 || muted);
+    t.el.querySelector(".token-val").textContent =
+      muted ? "muted" : (v <= 0 ? "off" : v + "% · " + panWord(pan));
+    t.el.setAttribute("aria-label", t.name + ", " + (muted ? "muted" : v + " percent, " + panWord(pan)));
+  }
+
+  function applyTokenPosition(id, x, y) {
+    var v = tokenToValues(x, y);
+    tokens[id].x = x; tokens[id].y = y;
+    if (AmbienceEngine.setPan) AmbienceEngine.setPan(id, v.pan);
+    setLayerValue(id, v.level, true);
+    paintToken(id);
+  }
+
+  function wakeTokens() {
+    var host = $("#tokenLayer");
+    if (!host) return;
+    host.classList.remove("is-idle");
+    clearTimeout(tokenIdleTimer);
+    // Fade back to an outline so the painting is clean when you are only looking.
+    tokenIdleTimer = setTimeout(function () { host.classList.add("is-idle"); }, 4000);
+  }
+
+  function renderTokens() {
+    var host = $("#tokenLayer");
+    if (!host) return;
+    host.innerHTML = "";
+    tokens = {};
+    host.removeAttribute("aria-hidden");
+    host.setAttribute("role", "group");
+    host.setAttribute("aria-label", "Sound placement");
+
+    roomLayers.forEach(function (l, i) {
+      var el = document.createElement("button");
+      el.type = "button";
+      el.className = "token";
+      el.dataset.token = l.id;
+      el.style.setProperty("--tint", l.tint || "var(--amber)");
+      el.innerHTML =
+        '<svg class="icon" aria-hidden="true"><use href="#' + l.icon + '"></use></svg>' +
+        '<span class="token-copy"><strong>' + l.name + '</strong>' +
+        '<span class="token-val"></span></span>';
+
+      var pos = valuesToToken(state.values[l.id] || 0, 0, i);
+      var grab = Grabbable.make(el, {
+        tilt: Grabbable.tiltFor(i),
+        bounds: tokenBounds,
+        onGrab: function () { wakeTokens(); UISound.play("press"); el.classList.add("is-live-drag"); },
+        onMove: function (s) { applyTokenPosition(l.id, s.x, s.y); wakeTokens(); },
+        onDrop: function (s) {
+          el.classList.remove("is-live-drag");
+          applyTokenPosition(l.id, s.x, s.y);
+          // paper lands on paper: a ring of ink and a soft thump
+          var hex = (l.tint || "#888888").replace("#", "");
+          var rgb = parseInt(hex.slice(0,2),16) + "," + parseInt(hex.slice(2,4),16) + "," + parseInt(hex.slice(4,6),16);
+          inkRipple(s.x + 22, s.y + 22, rgb);
+          UISound.play("thump");
+          persist();
+        }
+      });
+      // Register before the first moveTo: moveTo calls onMove, and onMove writes
+      // through tokens[id]. The other order threw on the first token and left
+      // the boot sequence hanging at 0%.
+      tokens[l.id] = { el: el, grab: grab, x: pos.x, y: pos.y, name: l.name };
+      grab.moveTo(pos.x, pos.y, false);
+
+      // Keyboard path. Arrows move the token exactly as a pointer would, so the
+      // gesture is not the only way to reach a value.
+      el.addEventListener("keydown", function (e) {
+        var step = e.shiftKey ? 24 : 8, t = tokens[l.id], moved = true;
+        if (e.key === "ArrowUp") t.y -= step;
+        else if (e.key === "ArrowDown") t.y += step;
+        else if (e.key === "ArrowLeft") t.x -= step;
+        else if (e.key === "ArrowRight") t.x += step;
+        else moved = false;
+        if (!moved) return;
+        e.preventDefault();
+        var b = tokenBounds();
+        t.x = Math.max(b.minX, Math.min(b.maxX, t.x));
+        t.y = Math.max(b.minY, Math.min(b.maxY, t.y));
+        t.grab.moveTo(t.x, t.y, true);
+        applyTokenPosition(l.id, t.x, t.y);
+        wakeTokens();
+      });
+      el.addEventListener("focus", wakeTokens);
+
+      host.appendChild(el);
+      paintToken(l.id);
+    });
+    wakeTokens();
+  }
+
+  // Re-seat every token when the window changes shape, or they drift off-screen.
+  function reseatTokens() {
+    Object.keys(tokens).forEach(function (id) {
+      var pan = AmbienceEngine.getPan ? AmbienceEngine.getPan(id) : 0;
+      var p = valuesToToken(state.values[id] || 0, pan, roomLayers.map(function (l) { return l.id; }).indexOf(id));
+      tokens[id].x = p.x; tokens[id].y = p.y;
+      tokens[id].grab.moveTo(p.x, p.y, false);
+      paintToken(id);
+    });
+  }
+
   /* ---------- LED meters — one shared 10fps loop, not 12 analysers ---------- */
+
+  /* ---------- dock VU ----------
+     What you are doing to the room, visible without opening the mixer. Reads
+     the same analyser output the channel meters do, summed. The peak cap falls
+     at a fixed rate rather than tracking the signal, which is what separates
+     an instrument from a bar chart.                                        */
+
+  var vuPeak = 0;
+
+  function paintVU() {
+    var host = $("#vu");
+    if (!host) return;
+    var sum = 0;
+    for (var i = 0; i < roomLayers.length; i++) sum += AmbienceEngine.getLevel(roomLayers[i].id) || 0;
+    // A typical preset runs three or four channels, so the divisor is set
+    // against that rather than against all twelve at once — otherwise the
+    // meter never leaves the first two bars and tells you nothing.
+    var level = Math.max(0, Math.min(1, sum / 1.5));
+    vuPeak = Math.max(level, vuPeak - 0.018);      // slow fall, fixed rate
+
+    var bars = host.getElementsByTagName("span");
+    var lit = Math.round(level * bars.length);
+    for (var b = 0; b < bars.length; b++) {
+      bars[b].className = b < lit ? "is-lit" : "";
+    }
+    var cap = host.querySelector(".vu-peak");
+    if (cap) cap.style.left = (vuPeak * 100) + "%";
+    host.classList.toggle("is-live", level > 0.01);
+  }
 
   function startMeters() {
     if (meterTimer) return;
@@ -1064,6 +2204,7 @@
         if (!el) continue;
         el.style.setProperty("--lvl", Math.round(AmbienceEngine.getLevel(roomLayers[i].id) * 100) + "%");
       }
+      paintVU();
     }, 100);
   }
   function stopMeters() {
@@ -1072,17 +2213,364 @@
       var el = document.getElementById("meter-" + l.id);
       if (el) el.style.setProperty("--lvl", "0%");
     });
+    vuPeak = 0;
+    paintVU();
   }
 
   /* ---------- weather — the loop only exists while it is switched on ----------
      The old build cleared a 2560x1440 canvas every frame forever, because the
-     "none" check happened after the clear and "none" is the default.        */
+     "none" check happened after the clear and "none" is the default.
 
-  var weather = { canvas: null, ctx: null, particles: [], frame: null, w: 0, h: 0, resizeQueued: false };
+     Effects live in one registry. Adding one is a single object; the chips,
+     the labels and the persistence all read from this list. It used to be an
+     if/else chain repeated in three functions.
+
+     Intensity drives five axes at once — count, speed, size, alpha and wind.
+     It used to change the particle count and nothing else, which is why the
+     slider did almost nothing: rain at 100 lit 0.21% of the screen.          */
+
+  var weather = { canvas: null, ctx: null, particles: [], frame: null, w: 0, h: 0,
+                  resizeQueued: false, glow: {} };
 
   function weatherActive() { return state.weather !== "none" && !reduceMotion.matches; }
 
+  /* ---------- poke the scene ----------
+     Touch the picture and it answers. This is the one place in the app where
+     the thing you press is the thing that moves — everywhere else you press a
+     control and something else changes. Sparks borrow the current weather's
+     colour so a rainy scene splashes and a lit one throws embers.        */
+
+  var sparks = [];
+  var ripples = [];
+
+  function inkRipple(x, y, tint) {
+    ripples.push({ x: x, y: y, r: 6, life: 1, tint: tint || "120,120,140" });
+    startWeather();
+  }
+
+  function stepRipples(c) {
+    for (var i = ripples.length - 1; i >= 0; i--) {
+      var p = ripples[i];
+      p.r += 2.6; p.life -= 0.035;
+      if (p.life <= 0) { ripples.splice(i, 1); continue; }
+      c.strokeStyle = "rgba(" + p.tint + "," + (p.life * 0.5) + ")";
+      c.lineWidth = 1.6;
+      c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.283); c.stroke();
+      // a second, older ring gives it the spreading-ink read
+      c.strokeStyle = "rgba(" + p.tint + "," + (p.life * 0.22) + ")";
+      c.beginPath(); c.arc(p.x, p.y, p.r * 1.6, 0, 6.283); c.stroke();
+    }
+  }
+  var SPARK_TINT = { rain: "204,226,245", snow: "245,248,255", mist: "226,238,247",
+                     petals: "247,186,196", leaves: "216,158,74",
+                     fireflies: "255,206,102", embers: "255,148,58",
+                     none: "255,232,168" };
+
+  var pokedThisSession = false;
+  function pokeScene(x, y) {
+    if (reduceMotion.matches) return;
+    // the first touch of a visit answers louder, so the secret teaches itself
+    var generous = !pokedThisSession;
+    pokedThisSession = true;
+    if (!weather.canvas) { weather.canvas = $("#weatherCanvas"); weather.ctx = weather.canvas.getContext("2d"); }
+    if (!weather.canvas.width) sizeWeather();
+    var tint = SPARK_TINT[state.weather] || SPARK_TINT.none;
+    var n = (generous ? 30 : 14) + Math.round(Math.random() * 8);
+    for (var i = 0; i < n; i++) {
+      var a = Math.random() * Math.PI * 2;
+      var speed = 1.2 + Math.random() * 4.2;
+      sparks.push({
+        x: x, y: y,
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed - 1.1,          // a little lift, so it reads as a splash
+        r: 1 + Math.random() * 2.4,
+        life: 1, decay: 0.012 + Math.random() * 0.016,
+        tint: tint
+      });
+    }
+    if (sparks.length > 320) sparks.splice(0, sparks.length - 320);
+    startWeather();
+    UISound.play("tick");
+  }
+
+  function stepSparks(c) {
+    for (var i = sparks.length - 1; i >= 0; i--) {
+      var p = sparks[i];
+      p.x += p.vx; p.y += p.vy;
+      p.vy += 0.13;                 // gravity
+      p.vx *= 0.985;                // drag
+      p.life -= p.decay;
+      if (p.life <= 0 || p.y > weather.h + 30) { sparks.splice(i, 1); continue; }
+      c.globalAlpha = Math.max(0, p.life);
+      c.fillStyle = "rgb(" + p.tint + ")";
+      c.beginPath();
+      c.arc(p.x, p.y, p.r * p.life, 0, 6.283);
+      c.fill();
+    }
+    c.globalAlpha = 1;
+  }
+
+  // intensity 10..100 -> 0..1
+  function wt() { return Math.max(0, Math.min(1, (state.weatherIntensity - 10) / 90)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+
+  // Density is quoted against a 1440x900 reference so a phone is not blizzarded
+  // and a 4K display is not left empty.
+  function areaScale() {
+    return Math.max(.55, Math.min(1.7, Math.sqrt((weather.w * weather.h) / 1296000)));
+  }
+
+  // shadowBlur re-rasterises per draw call and was the most expensive thing in
+  // the old loop. One cached radial sprite per colour is far cheaper, so the
+  // glow effects can afford many more particles.
+  function glowSprite(rgb) {
+    if (weather.glow[rgb]) return weather.glow[rgb];
+    var s = document.createElement("canvas");
+    s.width = s.height = 32;
+    var g = s.getContext("2d");
+    var rad = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+    rad.addColorStop(0,   "rgba(" + rgb + ",1)");
+    rad.addColorStop(.28, "rgba(" + rgb + ",.55)");
+    rad.addColorStop(1,   "rgba(" + rgb + ",0)");
+    g.fillStyle = rad; g.fillRect(0, 0, 32, 32);
+    weather.glow[rgb] = s;
+    return s;
+  }
+
+  function drawGlow(c, rgb, x, y, r, a) {
+    c.globalAlpha = a;
+    c.drawImage(glowSprite(rgb), x - r * 3, y - r * 3, r * 6, r * 6);
+    c.globalAlpha = 1;
+  }
+
+  // Petals and leaves are the same motion with different weight and colour, so
+  // they share a factory. That sharing is the point of having a registry.
+  function driftFall(cfg) {
+    return {
+      count: function (t) { return Math.round(lerp(cfg.nMin, cfg.nMax, t)); },
+      make: function (t, anywhere) {
+        return { x: Math.random() * weather.w,
+                 y: anywhere ? Math.random() * weather.h : -20,
+                 v: lerp(cfg.vMin, cfg.vMax, t) * rnd(.6, 1.4),
+                 r: lerp(cfg.rMin, cfg.rMax, t) * rnd(.6, 1.3),
+                 sway: lerp(cfg.swayMin, cfg.swayMax, t) * rnd(.5, 1.3),
+                 spin: lerp(cfg.spinMin, cfg.spinMax, t) * (Math.random() < .5 ? -1 : 1),
+                 ang: Math.random() * 6.283,
+                 ph: Math.random() * 6.283,
+                 a: lerp(cfg.aMin, cfg.aMax, t) * rnd(.7, 1.15) };
+      },
+      step: function (p, t, now) {
+        p.y += p.v;
+        p.ang += p.spin;
+        p.x += Math.sin(now / 1900 + p.ph) * (p.sway / 55);
+        return p.y < weather.h + 30;
+      },
+      draw: function (c, p) {
+        c.save();
+        c.translate(p.x, p.y);
+        c.rotate(p.ang);
+        c.fillStyle = "rgba(" + cfg.rgb + "," + Math.min(1, p.a) + ")";
+        // A squashed ellipse tumbling on its own axis reads as a leaf far more
+        // cheaply than an authored sprite, and it never has to be loaded.
+        c.beginPath();
+        c.ellipse(0, 0, p.r, p.r * cfg.squash, 0, 0, 6.283);
+        c.fill();
+        c.restore();
+      }
+    };
+  }
+
+  var WEATHER_FX = [
+    { id: "none", label: "Off", icon: "i-x" },
+
+    { id: "rain", label: "Rain", icon: "i-cloud-rain",
+      count: function (t) { return Math.round(lerp(40, 420, t * t * .55 + t * .45)); },
+      make: function (t, anywhere) {
+        return { x: Math.random() * weather.w,
+                 y: anywhere ? Math.random() * weather.h : rnd(-140, -10),
+                 v: lerp(6, 19, t) * rnd(.75, 1.35),
+                 len: lerp(10, 40, t) * rnd(.65, 1.4),
+                 w: lerp(.8, 1.7, t),
+                 a: lerp(.12, .42, t) * rnd(.65, 1.25) };
+      },
+      step: function (p, t) { p.y += p.v; p.x -= lerp(.4, 3.4, t); return p.y < weather.h + 50; },
+      draw: function (c, p, t) {
+        c.strokeStyle = "rgba(214,232,246," + Math.min(1, p.a) + ")";
+        c.lineWidth = p.w;
+        c.beginPath();
+        c.moveTo(p.x, p.y);
+        c.lineTo(p.x - lerp(1.5, 8, t), p.y + p.len);
+        c.stroke();
+      } },
+
+    { id: "snow", label: "Snow", icon: "i-snowflake",
+      count: function (t) { return Math.round(lerp(30, 260, t)); },
+      make: function (t, anywhere) {
+        return { x: Math.random() * weather.w,
+                 y: anywhere ? Math.random() * weather.h : -16,
+                 v: lerp(.35, 2.6, t) * rnd(.55, 1.5),
+                 r: lerp(.9, 3.6, t) * rnd(.5, 1.3),
+                 sway: lerp(6, 38, t), ph: Math.random() * 6.283,
+                 a: lerp(.22, .7, t) * rnd(.6, 1.2) };
+      },
+      step: function (p, t, now) {
+        p.y += p.v;
+        p.x += Math.sin(now / 2200 + p.ph) * (p.sway / 60) - lerp(0, 1.7, t);
+        return p.y < weather.h + 16;
+      },
+      draw: function (c, p) {
+        c.fillStyle = "rgba(245,248,255," + Math.min(1, p.a) + ")";
+        c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.283); c.fill();
+      } },
+
+    { id: "mist", label: "Mist", icon: "i-wind",
+      // Bands rather than points — same loop, a different primitive.
+      count: function (t) { return Math.round(lerp(3, 7, t)); },
+      make: function (t, anywhere) {
+        var h = lerp(80, 210, t) * rnd(.7, 1.5);
+        return { x: anywhere ? Math.random() * weather.w : -weather.w * .7,
+                 y: Math.random() * weather.h, h: h,
+                 bw: weather.w * rnd(.8, 1.7),
+                 v: lerp(.08, .42, t) * rnd(.5, 1.5),
+                 a: lerp(.06, .26, t) };
+      },
+      step: function (p) { p.x += p.v; return p.x < weather.w * 1.5; },
+      draw: function (c, p) {
+        var g = c.createLinearGradient(0, p.y, 0, p.y + p.h);
+        g.addColorStop(0, "rgba(226,238,247,0)");
+        g.addColorStop(.5, "rgba(226,238,247," + p.a + ")");
+        g.addColorStop(1, "rgba(226,238,247,0)");
+        c.fillStyle = g;
+        c.fillRect(p.x - p.bw / 2, p.y, p.bw, p.h);
+      } },
+
+    { id: "petals", label: "Petals", icon: "i-drop",
+      fx: driftFall({ rgb: "247,186,196", squash: .55,
+                      nMin: 14, nMax: 120, vMin: .5, vMax: 2.4, rMin: 2.4, rMax: 6.5,
+                      swayMin: 14, swayMax: 46, spinMin: .02, spinMax: .1,
+                      aMin: .34, aMax: .72 }) },
+
+    { id: "leaves", label: "Leaves", icon: "i-tree",
+      fx: driftFall({ rgb: "216,158,74", squash: .42,
+                      nMin: 10, nMax: 80, vMin: .4, vMax: 1.8, rMin: 3.4, rMax: 10,
+                      swayMin: 18, swayMax: 58, spinMin: .01, spinMax: .06,
+                      aMin: .36, aMax: .78 }) },
+
+    { id: "fireflies", label: "Fireflies", icon: "i-sparkle", blend: "lighter",
+      count: function (t) { return Math.round(lerp(14, 80, t)); },
+      make: function (t, anywhere) {
+        return { x: Math.random() * weather.w,
+                 y: anywhere ? Math.random() * weather.h : weather.h + 12,
+                 v: lerp(.12, .55, t) * rnd(.5, 1.5),
+                 r: lerp(1.3, 2.8, t) * rnd(.7, 1.3),
+                 wander: lerp(.35, 1.2, t),
+                 ph: Math.random() * 6.283,
+                 // Fading fully to zero and back is what sells them; always-on
+                 // dots read as dust.
+                 lifePh: Math.random() * 6.283,
+                 lifeP: rnd(2200, 5200),
+                 a: lerp(.3, .7, t) };
+      },
+      step: function (p, t, now) {
+        p.y -= p.v;
+        p.x += Math.sin(now / 1400 + p.ph) * p.wander;
+        return p.y > -14;
+      },
+      draw: function (c, p, t, now) {
+        var env = (Math.sin((now / p.lifeP) * 6.283 + p.lifePh) + 1) / 2;
+        drawGlow(c, "255,206,102", p.x, p.y, p.r, p.a * env * env);
+      } },
+
+    { id: "embers", label: "Embers", icon: "i-fire", blend: "lighter",
+      count: function (t) { return Math.round(lerp(18, 130, t)); },
+      make: function (t, anywhere) {
+        return { x: Math.random() * weather.w,
+                 y: anywhere ? Math.random() * weather.h : weather.h + 12,
+                 v: lerp(.5, 2.1, t) * rnd(.5, 1.6),
+                 r: lerp(.9, 2.4, t) * rnd(.6, 1.4),
+                 wander: lerp(.45, 1.6, t),
+                 ph: Math.random() * 6.283,
+                 born: Date.now(),
+                 life: lerp(6200, 3200, t) * rnd(.7, 1.3),
+                 a: lerp(.32, .8, t) };
+      },
+      step: function (p, t, now) {
+        p.y -= p.v;
+        p.x += Math.sin(now / 900 + p.ph) * p.wander;
+        return p.y > -14 && (now - p.born) < p.life;
+      },
+      draw: function (c, p, t, now) {
+        var age = (now - p.born) / p.life;
+        drawGlow(c, "255,148,58", p.x, p.y, p.r, p.a * (1 - age) * (1 - age));
+      } }
+  ];
+
+  // Effects declared with `fx:` get their four functions from the shared factory.
+  WEATHER_FX.forEach(function (f) {
+    if (f.fx) { f.count = f.fx.count; f.make = f.fx.make; f.step = f.fx.step; f.draw = f.fx.draw; }
+  });
+
+  var FX_BY_ID = {};
+  WEATHER_FX.forEach(function (f) { FX_BY_ID[f.id] = f; });
+  var WEATHER_COLS = 4;
+
+  function fx() { return FX_BY_ID[state.weather] || null; }
+
+  /* ---------- the room drives the scene ----------
+     Turning the rain up should put rain on the window. The three layers were
+     built to stay independent, and they still are — the scene, the music and
+     the mix never disturb each other. But independence was reading as
+     disconnection, because nothing you did in one place was visible anywhere
+     else.
+
+     So: the loudest weather-shaped channel in the mix chooses the effect, and
+     its fader position sets the intensity. Choosing a weather chip by hand
+     takes the wheel back until you hand it over again.                     */
+
+  var ROOM_WEATHER = {
+    rain: "rain", thunder: "rain", stream: "rain",
+    fire: "embers", night: "fireflies",
+    wind: "mist", soft: "mist", ocean: "mist",
+    forest: "leaves"
+  };
+
+  function roomWeather() {
+    var bestId = null, best = 0;
+    for (var id in ROOM_WEATHER) {
+      var v = state.values[id] || 0;
+      // A preset that leaves soft air at 10 should not put mist on the screen;
+      // this is the level at which a channel is deliberately up.
+      if (state.muted[id] || v < 22) continue;
+      if (v > best) { best = v; bestId = id; }
+    }
+    return bestId ? { effect: ROOM_WEATHER[bestId], level: best, from: bestId } : null;
+  }
+
+  function syncWeatherToRoom() {
+    if (state.weatherLocked) return;
+    var pick = roomWeather();
+    var wantFx = pick ? pick.effect : "none";
+    // Map a 0-100 fader onto the slider's own 10-100 range.
+    var wantIntensity = pick ? Math.round(10 + (pick.level / 100) * 90) : state.weatherIntensity;
+
+    if (pick && wantIntensity !== state.weatherIntensity) {
+      state.weatherIntensity = wantIntensity;
+      var slider = $("#weatherIntensity");
+      if (slider) { slider.value = wantIntensity; slider.style.setProperty("--fill", wantIntensity + "%"); }
+      seedParticles();
+    }
+    if (wantFx !== state.weather) setWeather(wantFx, false);
+    var out = $("#weatherValue");
+    if (out && !state.weatherLocked) {
+      out.textContent = pick ? FX_BY_ID[wantFx].label + " · from the room" : "Off";
+    }
+  }
+
   function sizeWeather() {
+    if (typeof reseatTokens === "function") reseatTokens();
+    var wNow = worlds[state.worldIndex];
+    if (wNow && wNow.kind === "still") world.classList.toggle("mounted-print", fitsMounted(wNow));
     if (!weather.canvas) return;
     var ratio = Math.min(1.5, window.devicePixelRatio || 1);
     weather.w = window.innerWidth; weather.h = window.innerHeight;
@@ -1095,60 +2583,41 @@
   }
 
   function seedParticles() {
-    if (!weatherActive()) { weather.particles = []; return; }
-    var n = Math.round((state.weatherIntensity / 100) * (state.weather === "rain" ? 110 : 56));
+    var f = fx();
+    if (!weatherActive() || !f || !f.count) { weather.particles = []; return; }
+    var t = wt(), n = Math.round(f.count(t) * areaScale());
     weather.particles = [];
-    for (var i = 0; i < n; i++) weather.particles.push(makeParticle(true));
-  }
-
-  function makeParticle(anywhere) {
-    var x = Math.random() * weather.w;
-    if (state.weather === "rain") {
-      return { x: x, y: anywhere ? Math.random() * weather.h : -20,
-               speed: 8 + Math.random() * 8, len: 8 + Math.random() * 18, alpha: .12 + Math.random() * .24 };
-    }
-    if (state.weather === "snow") {
-      return { x: x, y: anywhere ? Math.random() * weather.h : -12,
-               speed: .35 + Math.random() * .85, r: 1 + Math.random() * 2.4,
-               drift: Math.random() * 1.4 - .7, alpha: .2 + Math.random() * .5 };
-    }
-    return { x: x, y: anywhere ? Math.random() * weather.h : weather.h + 10,
-             speed: .12 + Math.random() * .34, r: 1.2 + Math.random() * 2,
-             drift: Math.random() * 1.2 - .6, phase: Math.random() * Math.PI * 2 };
+    for (var i = 0; i < n; i++) weather.particles.push(f.make(t, true));
   }
 
   function drawWeather() {
-    if (!weatherActive()) { stopWeather(); return; }
-    var c = weather.ctx, now = Date.now();
+    var f = fx();
+    // Sparks keep the loop alive on their own, so poking works with weather off.
+    if ((!weatherActive() || !f) && !sparks.length && !ripples.length && !moment) { stopWeather(); return; }
+    var c = weather.ctx, now = Date.now(), t = wt();
     c.clearRect(0, 0, weather.w, weather.h);
+    if (!weatherActive() || !f) {
+      stepSparks(c);
+      stepRipples(c);
+      stepMoment(c, now);
+      weather.frame = requestAnimationFrame(drawWeather);
+      return;
+    }
+    c.globalCompositeOperation = f.blend || "source-over";
     for (var i = 0; i < weather.particles.length; i++) {
       var p = weather.particles[i];
-      if (state.weather === "rain") {
-        c.strokeStyle = "rgba(237,230,214," + p.alpha + ")";
-        c.lineWidth = .7;
-        c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x - 2, p.y + p.len); c.stroke();
-        p.y += p.speed; p.x -= .5;
-        if (p.y > weather.h + 30) weather.particles[i] = makeParticle(false);
-      } else if (state.weather === "snow") {
-        c.fillStyle = "rgba(245,240,228," + p.alpha + ")";
-        c.beginPath(); c.arc(p.x, p.y, p.r, 0, Math.PI * 2); c.fill();
-        p.y += p.speed; p.x += p.drift;
-        if (p.y > weather.h + 10) weather.particles[i] = makeParticle(false);
-      } else {
-        var glow = .25 + (Math.sin(now / 700 + p.phase) + 1) * .2;
-        c.shadowBlur = 9; c.shadowColor = "rgba(240,169,60,.75)";
-        c.fillStyle = "rgba(240,169,60," + glow + ")";
-        c.beginPath(); c.arc(p.x, p.y, p.r, 0, Math.PI * 2); c.fill();
-        c.shadowBlur = 0;
-        p.y -= p.speed; p.x += Math.sin(now / 1000 + p.phase) * p.drift;
-        if (p.y < -10) weather.particles[i] = makeParticle(false);
-      }
+      if (f.step(p, t, now) === false) { p = weather.particles[i] = f.make(t, false); }
+      f.draw(c, p, t, now);
     }
+    c.globalCompositeOperation = "source-over";
+    stepSparks(c);
+    stepRipples(c);
+    stepMoment(c, now);
     weather.frame = requestAnimationFrame(drawWeather);
   }
 
   function startWeather() {
-    if (!weatherActive() || weather.frame !== null) return;
+    if ((!weatherActive() && !sparks.length && !ripples.length && !moment) || weather.frame !== null) return;
     if (!weather.canvas) { weather.canvas = $("#weatherCanvas"); weather.ctx = weather.canvas.getContext("2d"); }
     sizeWeather();
     weather.frame = requestAnimationFrame(drawWeather);
@@ -1160,20 +2629,56 @@
     // Release the backing store so an idle canvas costs nothing.
     if (weather.canvas) { weather.canvas.width = 0; weather.canvas.height = 0; }
     weather.particles = [];
+    sparks = [];
   }
 
-  function setWeather(type, announce) {
-    state.weather = WEATHERS.indexOf(type) >= 0 ? type : "none";
+  // The chips are built from the registry so a new effect never needs markup.
+  function renderWeatherOptions() {
+    var host = $("#weatherOptions");
+    if (!host) return;
+    var rows = Math.ceil(WEATHER_FX.length / WEATHER_COLS);
+    host.style.setProperty("--seg-n", WEATHER_COLS);
+    host.style.setProperty("--seg-rows", rows);
+    var cell = function (f, lit) {
+      var inner = '<svg class="icon" aria-hidden="true"><use href="#' + f.icon + '"></use></svg>' +
+                  '<span>' + f.label + '</span>';
+      return lit ? '<span>' + inner + '</span>'
+                 : '<button type="button" data-weather="' + f.id + '" aria-pressed="false">' + inner + '</button>';
+    };
+    host.classList.add("seg-grid");
+    host.innerHTML =
+      '<div class="seg-row" role="group" aria-label="Weather">' +
+        WEATHER_FX.map(function (f) { return cell(f, false); }).join("") +
+      '</div>' +
+      '<div class="seg-row seg-lit" aria-hidden="true">' +
+        WEATHER_FX.map(function (f) { return cell(f, true); }).join("") +
+      '</div>';
+  }
+
+  // `byUser` latches the lock, makes a sound and says so. Automatic changes
+  // driven by the room mix pass false and stay silent.
+  function setWeather(type, byUser) {
+    if (byUser) {
+      state.weatherLocked = true;
+      UISound.play(state.weather === type ? "tick" : (type === "none" ? "off" : "on"));
+    }
+    state.weather = FX_BY_ID[type] ? type : "none";
     var i = WEATHERS.indexOf(state.weather);
-    $("#weatherOptions").style.setProperty("--seg-i", i);
-    $("#weatherValue").textContent = state.weather === "none"
-      ? "Off" : state.weather.charAt(0).toUpperCase() + state.weather.slice(1);
+    var host = $("#weatherOptions");
+    if (host) {
+      host.style.setProperty("--seg-i", i % WEATHER_COLS);
+      host.style.setProperty("--seg-r", Math.floor(i / WEATHER_COLS));
+    }
+    $("#weatherValue").textContent = FX_BY_ID[state.weather].label;
     $$("[data-weather]").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b.dataset.weather === state.weather));
     });
+    seedParticles();
     if (weatherActive()) startWeather(); else stopWeather();
     persist();
-    if (announce) toast(state.weather === "none" ? "Weather off." : "Weather: " + state.weather + ".");
+    if (byUser) toast(state.weather === "none"
+      ? "Weather off. The room mix will not change it back until you clear this."
+      : FX_BY_ID[state.weather].label + " over the scene. Yours until you pick another.");
   }
 
   /* ---------- focus / sleep timer ---------- */
@@ -1190,11 +2695,12 @@
     clearInterval(state.focusTimer);
     state.focusTimer = setInterval(tickFocus, 1000);
     $("#focusStatus").classList.add("is-on");
+    $("#focusStatus").inert = false;
     $("#focusStatusLabel").textContent = state.selectedMinutes + " min";
     tickFocus();
     closeSurface();
     if (!state.playing) playAll();
-    toast("Session started. The room will fade out when time is up.");
+    toast("Focus timer running. The room fades out when it ends.");
   }
 
   function endFocus(completed) {
@@ -1202,11 +2708,12 @@
     state.focusTimer = null;
     state.focusEndsAt = null;
     $("#focusStatus").classList.remove("is-on");
-    if (!completed) { toast("Session stopped. Your room is still here."); return; }
+    $("#focusStatus").inert = true;
+    if (!completed) { toast("Focus timer stopped. Your room is still here."); return; }
 
     // The old build scheduled a 5s ramp and then cancelled it immediately with
     // pauseAll(). Here the ramp is allowed to finish before anything stops.
-    toast("Session complete. Look away for one quiet minute.", 6000);
+    toast("Time. Look away for one quiet minute \u2014 press Focus to run another.", 6000);
     if (ytPlayer && state.ytReady) {
       var vol = Math.round(state.musicLevel * 0.8);
       var fade = setInterval(function () {
@@ -1242,8 +2749,11 @@
   // held open while a panel is open, while focus is inside it, and mid-drag —
   // a control that slides away under a keyboard user or a held fader is worse
   // than one that never moves.
-  var DOCK_IDLE_MS = 4000;
-  var dockIdleTimer = null, dockHeld = false;
+  var DOCK_IDLE_MS = 6000;
+  // The first withdrawal happens before the user has touched anything, so it
+  // has to leave time to actually read the controls. Later ones are quicker.
+  var DOCK_FIRST_IDLE_MS = 14000;
+  var dockIdleTimer = null, dockHeld = false, dockUsed = false;
 
   function dockHeldOpen() {
     var more = $("#moreMenu");
@@ -1258,7 +2768,7 @@
     dockIdleTimer = setTimeout(function () {
       if (dockHeldOpen()) { wakeDock(); return; }   // re-arm, never hide it
       world.classList.add("dock-idle");
-    }, DOCK_IDLE_MS);
+    }, dockUsed ? DOCK_IDLE_MS : DOCK_FIRST_IDLE_MS);
   }
 
   function bindDockIdle() {
@@ -1268,9 +2778,10 @@
     dock.addEventListener("focusin", wakeDock);
     dock.addEventListener("focusout", wakeDock);
     // A fader drag leaves the dock's box; hold it open until the pointer is up.
-    dock.addEventListener("pointerdown", function () { dockHeld = true; wakeDock(); });
+    dock.addEventListener("pointerdown", function () { dockHeld = true; dockUsed = true; wakeDock(); });
     window.addEventListener("pointerup", function () { dockHeld = false; wakeDock(); });
     window.addEventListener("keydown", wakeDock);
+    window.addEventListener("pointermove", wakeTokens, { passive: true });
     window.addEventListener("pointermove", function (e) {
       if (e.clientY > window.innerHeight - 140) wakeDock();
     }, { passive: true });
@@ -1278,6 +2789,7 @@
   }
 
   function openSurface(id, trigger) {
+    UISound.play("open");
     if (state.surface === id) { closeSurface(); return; }
     closeSurface(false);
     closeMore();
@@ -1289,6 +2801,14 @@
     el.removeAttribute("inert");
     el.removeAttribute("aria-hidden");
     state.surface = id;
+    // The focus popover used to align to the dock's right edge, which is the
+    // More key — two controls away from the Focus key that opens it. Measure the
+    // real trigger instead, so it still points at the right thing after the dock
+    // sheds labels at 1180px.
+    if (id === "focusPopover" && trigger) {
+      var t = trigger.getBoundingClientRect();
+      el.style.setProperty("--anchor-right", Math.max(12, window.innerWidth - t.right) + "px");
+    }
     world.classList.add("surface-open");
     $("#panelBackdrop").classList.add("is-on");
     syncExpanded();
@@ -1312,6 +2832,7 @@
   }
 
   function closeSurface(restoreFocus) {
+    if (state.surface) UISound.play("close");
     var had = state.surface;
     Object.keys(SURFACES).forEach(function (id) {
       var el = surfaceEl(id);
@@ -1372,6 +2893,9 @@
     var quiet = typeof force === "boolean" ? force : !world.classList.contains("quiet");
     closeSurface(); closeMore();
     world.classList.toggle("quiet", quiet);
+    // opacity:0 hides it from the eye but not from the keyboard. Without this
+    // the return button is a permanent tab stop on a page that never showed it.
+    $("#quietReturn").inert = !quiet;
     if (quiet) $("#quietReturn").focus();
   }
 
@@ -1393,6 +2917,100 @@
     });
     $("#musicVolume").style.setProperty("--fill", state.musicLevel + "%");
     $("#roomVolume").style.setProperty("--fill", state.roomLevel + "%");
+  }
+
+  /* ---------- boot ----------
+     Runs in front of powerOn(). It exists because audio cannot start without a
+     user gesture, so the choice is between a boot screen and a "click to
+     enable sound" toast. This is the same click, spent better — and it is
+     where the chime lives. Any key or click ends it early.              */
+
+  /* ---------- today's pairing ----------
+     One date-seeded room that everyone gets in common — the calm version of a
+     daily puzzle. Never nagging: it greets a fresh visitor, appears as one
+     line on the boot screen, and pressing T during boot applies it. */
+
+  function seasonWeather() {
+    var m = new Date().getMonth();          // northern-season bias, kept simple
+    if (m >= 2 && m <= 4) return "petals";
+    if (m >= 5 && m <= 7) return "fireflies";
+    if (m >= 8 && m <= 9) return "leaves";
+    if (m >= 10 || m <= 1) return "snow";
+    return "rain";
+  }
+
+  function todaysPairing() {
+    var d = new Date();
+    var seed = d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate();
+    var stillWorlds = [];
+    for (var i = 0; i < worlds.length; i++) if (worlds[i].kind === "still") stillWorlds.push(i);
+    var wi = stillWorlds[seed % stillWorlds.length];
+    var w = worlds[wi];
+    var preset = presets[seed % presets.length];
+    // the print's own sky first; the season's sky on the clear ones
+    var wx = (w.weather && w.weather !== "none" && FX_BY_ID[w.weather]) ? w.weather : seasonWeather();
+    return { index: wi, world: w, preset: preset, weather: wx };
+  }
+
+  function applyToday(announce) {
+    var t = todaysPairing();
+    applyPreset(t.preset.id, false);
+    state.weatherLocked = false;
+    setWorld(t.index, false);
+    if (!roomWeather()) {
+      state.weatherIntensity = Math.max(state.weatherIntensity, 46);
+      setWeather(t.weather, false);
+    }
+    if (announce) toast("Today: " + t.world.title + " \u00b7 " + t.preset.title.toLowerCase() + ".", 4200);
+  }
+
+  var BOOT_LINES = [
+    "MEMORY OK", "SCENE BUS READY", "THE FLOATING WORLD", "TWELVE SOUNDS", "READY"
+  ];
+
+  function runBoot(done) {
+    var el = $("#bootScreen");
+    if (!el || reduceMotion.matches) { if (el) el.remove(); done(); return; }
+
+    var started = Date.now(), TOTAL = 2200, ended = false;
+    var fill = $("#bootFill"), pct = $("#bootPct"), status = $("#bootStatus");
+
+    // the daily line: one shared object, offered, never pushed
+    var today = todaysPairing();
+    var todayEl = $("#bootToday");
+    if (todayEl) todayEl.textContent =
+      "today \u00b7 " + today.world.title.toLowerCase() +
+      " \u00b7 " + today.preset.title.toLowerCase() + " \u2014 press T";
+
+    function end(e) {
+      if (ended) return;
+      ended = true;
+      window.removeEventListener("keydown", end, true);
+      window.removeEventListener("pointerdown", end, true);
+      if (e && e.key && String(e.key).toLowerCase() === "t") {
+        setTimeout(function () { applyToday(true); }, 350);
+      }
+      // The gesture that skipped the boot is the gesture that unlocks audio.
+      UISound.unlock();
+      UISound.play("boot");
+      el.classList.add("is-done");
+      setTimeout(function () { if (el.parentNode) el.remove(); }, 420);
+      done();
+    }
+
+    (function tick() {
+      if (ended) return;
+      var t = Math.min(1, (Date.now() - started) / TOTAL);
+      var p = Math.round(t * 100);
+      if (fill) fill.style.width = p + "%";
+      if (pct) pct.textContent = p + "%";
+      if (status) status.textContent = BOOT_LINES[Math.min(BOOT_LINES.length - 1, Math.floor(t * BOOT_LINES.length))];
+      if (t >= 1) { end(); return; }
+      requestAnimationFrame(tick);
+    })();
+
+    window.addEventListener("keydown", end, true);
+    window.addEventListener("pointerdown", end, true);
   }
 
   function powerOn() {
@@ -1474,7 +3092,9 @@
     });
     $("#weatherOptions").addEventListener("click", function (e) {
       var b = e.target.closest("[data-weather]");
-      if (b) setWeather(b.dataset.weather, false);
+      // true = this came from a person, which is what latches the lock and
+      // stops syncWeatherToRoom overwriting the choice on the next fader move.
+      if (b) setWeather(b.dataset.weather, true);
     });
     $("#weatherIntensity").addEventListener("input", function (e) {
       state.weatherIntensity = Number(e.target.value);
@@ -1487,14 +3107,14 @@
     // between them could never change — which read as "the mixer does nothing".
     $("#musicVolume").addEventListener("input", function (e) {
       state.musicLevel = Number(e.target.value);
-      $("#musicOutput").textContent = state.musicLevel;
+      $("#musicOutput").textContent = state.musicLevel + "%";
       e.target.style.setProperty("--fill", state.musicLevel + "%");
       if (ytPlayer && state.ytReady) { try { ytPlayer.setVolume(Math.round(state.musicLevel * 0.8)); } catch (err) {} }
       persist();
     });
     $("#roomVolume").addEventListener("input", function (e) {
       state.roomLevel = Number(e.target.value);
-      $("#roomOutput").textContent = state.roomLevel;
+      $("#roomOutput").textContent = state.roomLevel + "%";
       e.target.style.setProperty("--fill", state.roomLevel + "%");
       AmbienceEngine.setMaster(state.roomLevel);
       // A fader that moves must make sound, even before the first Play.
@@ -1563,6 +3183,64 @@
     $("#stopFocusButton").addEventListener("click", function () { endFocus(false); });
 
     $("#moreButton").addEventListener("click", toggleMore);
+    // Interface sound. Delegated from the document so every control — including
+    // ones rendered later, like the weather chips and the channel grid — is
+    // covered without being wired up individually. pointerdown, not click: a
+    // sound that arrives on release reads as lag.
+    document.addEventListener("pointerdown", function (e) {
+      UISound.unlock();
+      var el = e.target.closest("button, [role=switch], .seg-row > *, input[type=range]");
+      if (!el || el.disabled) return;
+      if (el.matches("input[type=range]")) { UISound.play("tick"); return; }
+      if (el.id === "playButton") return;                 // handled with the state flip
+      if (el.matches("[data-mute]")) { UISound.play("mute"); return; }
+      UISound.play("press");
+    }, true);
+    // Keyboard activation never produces pointerdown.
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      var el = document.activeElement;
+      if (el && el.matches && el.matches("button, [role=switch]")) { UISound.unlock(); UISound.play("press"); }
+    }, true);
+
+    $("#modeButton").addEventListener("click", cycleMode);
+    $("#postcardButton").addEventListener("click", function () { closeMore(); sharePostcard(); });
+    $("#bonsai").addEventListener("click", function () {
+      var mins = quietMinutes();
+      var st = bonsaiStage(mins);
+      toast(st >= 5 ? "The bonsai is fully grown. " + mins + " quiet minutes."
+        : mins ? "Grown from " + mins + " quiet minutes here. It never wilts."
+        : "A seed. It grows while sound is playing — slowly, like a real one.", 5200);
+    });
+    $("#momentsButton").addEventListener("click", function () {
+      var seen = momentsSeen();
+      var names = { boat: "the boat", cat: "the night cat", star: "a falling star" };
+      var got = Object.keys(seen).map(function (k) { return names[k]; }).filter(Boolean);
+      toast(got.length ? "Seen so far: " + got.join(", ") + "." :
+        "Nothing yet. Some things only come out at certain hours, in certain weather.", 5200);
+    });
+    $("#roomLinkButton").addEventListener("click", function () { closeMore(); copyRoomLink(); });
+    var packLabel = $("#packValue");
+    if (packLabel) packLabel.textContent = activePack === "ukiyoe" ? "Floating world" : "Ghibli";
+    $("#packButton").addEventListener("click", function () {
+      var next = activePack === "ukiyoe" ? "ghibli" : "ukiyoe";
+      try {
+        var blob = JSON.parse(localStorage.getItem("dreamWorldsV4") || "{}");
+        blob.pack = next;
+        // A saved scene from the other pack cannot exist in this one.
+        delete blob.worldId; blob.worldIndex = 0;
+        localStorage.setItem("dreamWorldsV4", JSON.stringify(blob));
+      } catch (e) {}
+      location.reload();
+    });
+    $("#soundButton").addEventListener("click", function () {
+      state.sound = !state.sound;
+      UISound.setEnabled(state.sound);
+      $("#soundButton").setAttribute("aria-checked", String(state.sound));
+      $("#soundValue").textContent = state.sound ? "On" : "Off";
+      if (state.sound) { UISound.unlock(); UISound.play("on"); }
+      persist();
+    });
     $("#quietButton").addEventListener("click", function () { toggleQuiet(true); });
     $("#quietReturn").addEventListener("click", function () { toggleQuiet(false); });
     $("#fullscreenButton").addEventListener("click", toggleFullscreen);
@@ -1643,6 +3321,21 @@
 
   function init() {
     restore();
+    // A shared room in the hash wins the boot — applied before anything paints,
+    // so the ordinary init pipeline renders the sender's arrangement.
+    var sharedRoom = decodeRoomHash();
+    if (sharedRoom) applySharedRoom(sharedRoom);
+    else if (freshVisit) {
+      // A first visit opens on today's pairing with the shade matching the
+      // visitor's actual clock: arrive at night, the floating world is dark.
+      var t0 = todaysPairing();
+      state.worldIndex = t0.index;
+      state.values = mix(t0.preset.values);
+      state.activePreset = t0.preset.id;
+      var hr = new Date().getHours();
+      var sv = (hr >= 21 || hr < 5) ? 0.85 : (hr >= 17) ? 0.45 : 0;
+      if (sv) setTimeout(function () { paintShade(sv); }, 80);
+    }
 
     // Panels ship with [hidden] so there is no flash before JS; swap that for
     // inert + aria-hidden so they can animate but stay out of the a11y tree.
@@ -1670,6 +3363,9 @@
       world.classList.toggle("pixel", !!w.pixel);
       if (w.pixel) PixelScene.showVideo(); else PixelScene.hideCanvas();
     }
+    // useArt has only just been handed the layers, so a still world could not
+    // have been painted before this point.
+    if (w.kind === "still") showStill(w, false);
     if (w.kind === "backdrop") setBackdrop(w);
     if (w.kind === "local") {
       videos[0].setAttribute("src", w.video);
@@ -1686,10 +3382,10 @@
 
     $("#musicVolume").value = state.musicLevel;
     $("#musicVolume").style.setProperty("--fill", state.musicLevel + "%");
-    $("#musicOutput").textContent = state.musicLevel;
+    $("#musicOutput").textContent = state.musicLevel + "%";
     $("#roomVolume").value = state.roomLevel;
     $("#roomVolume").style.setProperty("--fill", state.roomLevel + "%");
-    $("#roomOutput").textContent = state.roomLevel;
+    $("#roomOutput").textContent = state.roomLevel + "%";
     $("#weatherIntensity").value = state.weatherIntensity;
     $("#weatherIntensity").style.setProperty("--fill", state.weatherIntensity + "%");
     $("#durationGrid").style.setProperty("--seg-i", 0);
@@ -1701,13 +3397,62 @@
       $("#savedRoomButton").disabled = false;
       $("#savedRoomHint").textContent = "Ready whenever you return";
     }
+    applyMode();
+    UISound.setEnabled(state.sound);
+    if ($("#soundButton")) {
+      $("#soundButton").setAttribute("aria-checked", String(state.sound));
+      $("#soundValue").textContent = state.sound ? "On" : "Off";
+    }
+    bindShade();
+    renderTokens();
+    renderWeatherOptions();
     setWeather(state.weather, false);
+    syncWeatherToRoom();
     // Restore drift silently — the old build toasted at users on every load.
     if (state.drift) { state.drift = false; toggleDrift(false); }
 
     bind();
     bindDockIdle();
-    powerOn();
+    bindScrub();
+
+    // Poking the scene. Bound on the scene layer rather than the document so a
+    // press on the dock or inside a panel is never mistaken for one.
+    world.addEventListener("pointerdown", function (e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      if (e.target.closest(".control-dock, .panel, .more-menu, .toast, .readout, .focus-popover")) return;
+      pokeScene(e.clientX, e.clientY);
+    });
+    // The console is part of the toy. A deliberate public surface — also how
+    // the test harness reaches the room codec without prying the IIFE open.
+    window.UKIYO = {
+      room: function (name) { return encodeRoom(name || poeticName()); },
+      postcard: sharePostcard,
+      // Renders the postcard and hands back a data URL — used to mint og.png,
+      // and handy in the console.
+      og: function (name) {
+        return new Promise(function (res) {
+          renderPostcard(name || poeticName(), function (cv) {
+            res(cv.toDataURL("image/png"));
+          });
+        });
+      },
+      pack: activePack
+    };
+    try {
+      console.log(
+        "%c 印 %c UKIYO %c a floating world machine ",
+        "background:#C73E2E;color:#F7EFE0;font-weight:bold;padding:2px 4px;border-radius:2px",
+        "background:#0A131E;color:#FFC24A;padding:2px 6px",
+        "color:#6E5F52;padding:2px 0");
+      console.log("try UKIYO.room() for a link to this exact room, or UKIYO.postcard()");
+    } catch (e) {}
+
+    startBonsaiClock();
+    momentTimer = setInterval(tryStartMoment, 60000);
+    setTimeout(tryStartMoment, 25000);   // one early roll, so a long first visit can be lucky
+    paintMomentShelf();
+
+    runBoot(powerOn);
 
     if (state.source) loadYouTubeApi();
     loadGallery();

@@ -5,11 +5,24 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23191713'/%3E%3Ccircle cx='8' cy='8' r='3.5' fill='%23e8a33d'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0E0D0B">
-  <meta name="description" content="A tabletop ambience machine: a living scene, your own music source, and a twelve-channel room mixer.">
-  <title>Dream Worlds</title>
+  <meta property="og:title" content="UKIYO — a floating world machine">
+  <meta property="og:description" content="Drag sounds onto a 160-year-old painting and hear them rain. Hiroshige's floating world with live weather and a twelve-sound room.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="UKIYO — a floating world machine">
+  <meta name="twitter:description" content="Drag sounds onto a 160-year-old painting and hear them rain.">
+  <meta name="twitter:image" content="og.jpg">
+  <meta name="description" content="Drag sounds onto a 160-year-old painting and hear them rain. Hiroshige's floating world with live weather, a twelve-sound room, and your own music.">
+  <title>UKIYO — a floating world machine</title>
   <link rel="preload" href="assets/fonts/plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/barlow-cond-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/styles.css?v=24">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Silkscreen is a true 8px-grid bitmap face: it is only sharp at whole
+       multiples of 8, which is why it is used at 16 and 32 and nowhere else. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap">
+  <link rel="stylesheet" href="assets/styles.css?v=65">
 </head>
 <body>
   <!-- Per-channel palette ramps. feColorMatrix flattens to luminance,
@@ -49,7 +62,20 @@
       </feComponentTransfer>
     </filter>
   </svg>
-<svg class="sprite" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden"><symbol id="i-arrow-counter-clockwise" viewBox="0 0 256 256"><path d="M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z"/></symbol><symbol id="i-arrow-square-out" viewBox="0 0 256 256"><path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/></symbol><symbol id="i-bookmark-simple" viewBox="0 0 256 256"><path d="M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Zm0,177.57-51.77-32.35a8,8,0,0,0-8.48,0L72,209.57V48H184Z"/></symbol><symbol id="i-caret-up" viewBox="0 0 256 256"><path d="M213.66,165.66a8,8,0,0,1-11.32,0L128,91.31,53.66,165.66a8,8,0,0,1-11.32-11.32l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,213.66,165.66Z"/></symbol><symbol id="i-cloud-lightning" viewBox="0 0 256 256"><path d="M156,16A76.2,76.2,0,0,0,84.92,64.76,53.26,53.26,0,0,0,76,64a52,52,0,0,0,0,104h37.87L97.14,195.88A8,8,0,0,0,104,208h25.87l-16.73,27.88a8,8,0,0,0,13.72,8.24l24-40A8,8,0,0,0,144,192H118.13l14.4-24H156a76,76,0,0,0,0-152Zm0,136H76a36,36,0,0,1,0-72,38.11,38.11,0,0,1,4.78.31q-.56,3.57-.77,7.23a8,8,0,0,0,16,.92A60.06,60.06,0,1,1,156,152Z"/></symbol><symbol id="i-cloud-rain" viewBox="0 0 256 256"><path d="M158.66,196.44l-32,48a8,8,0,1,1-13.32-8.88l32-48a8,8,0,0,1,13.32,8.88ZM232,92a76.08,76.08,0,0,1-76,76H132.28l-29.62,44.44a8,8,0,1,1-13.32-8.88L113.05,168H76A52,52,0,0,1,76,64a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,92Zm-16,0A60.06,60.06,0,0,0,96,88.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,80a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,92Z"/></symbol><symbol id="i-coffee" viewBox="0 0 256 256"><path d="M80,56V24a8,8,0,0,1,16,0V56a8,8,0,0,1-16,0Zm40,8a8,8,0,0,0,8-8V24a8,8,0,0,0-16,0V56A8,8,0,0,0,120,64Zm32,0a8,8,0,0,0,8-8V24a8,8,0,0,0-16,0V56A8,8,0,0,0,152,64Zm96,56v8a40,40,0,0,1-37.51,39.91,96.59,96.59,0,0,1-27,40.09H208a8,8,0,0,1,0,16H32a8,8,0,0,1,0-16H56.54A96.3,96.3,0,0,1,24,136V88a8,8,0,0,1,8-8H208A40,40,0,0,1,248,120ZM200,96H40v40a80.27,80.27,0,0,0,45.12,72h69.76A80.27,80.27,0,0,0,200,136Zm32,24a24,24,0,0,0-16-22.62V136a95.78,95.78,0,0,1-1.2,15A24,24,0,0,0,232,128Z"/></symbol><symbol id="i-corners-out" viewBox="0 0 256 256"><path d="M216,48V88a8,8,0,0,1-16,0V56H168a8,8,0,0,1,0-16h40A8,8,0,0,1,216,48ZM88,200H56V168a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H88a8,8,0,0,0,0-16Zm120-40a8,8,0,0,0-8,8v32H168a8,8,0,0,0,0,16h40a8,8,0,0,0,8-8V168A8,8,0,0,0,208,160ZM88,40H48a8,8,0,0,0-8,8V88a8,8,0,0,0,16,0V56H88a8,8,0,0,0,0-16Z"/></symbol><symbol id="i-dots-three" viewBox="0 0 256 256"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Z"/></symbol><symbol id="i-drop" viewBox="0 0 256 256"><path d="M174,47.75a254.19,254.19,0,0,0-41.45-38.3,8,8,0,0,0-9.18,0A254.19,254.19,0,0,0,82,47.75C54.51,79.32,40,112.6,40,144a88,88,0,0,0,176,0C216,112.6,201.49,79.32,174,47.75ZM128,216a72.08,72.08,0,0,1-72-72c0-57.23,55.47-105,72-118,16.53,13,72,60.75,72,118A72.08,72.08,0,0,1,128,216Zm55.89-62.66a57.6,57.6,0,0,1-46.56,46.55A8.75,8.75,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z"/></symbol><symbol id="i-eye-slash" viewBox="0 0 256 256"><path d="M53.92,34.62A8,8,0,1,0,42.08,45.38L61.32,66.55C25,88.84,9.38,123.2,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208a127.11,127.11,0,0,0,52.07-10.83l22,24.21a8,8,0,1,0,11.84-10.76Zm47.33,75.84,41.67,45.85a32,32,0,0,1-41.67-45.85ZM128,192c-30.78,0-57.67-11.19-79.93-33.25A133.16,133.16,0,0,1,25,128c4.69-8.79,19.66-33.39,47.35-49.38l18,19.75a48,48,0,0,0,63.66,70l14.73,16.2A112,112,0,0,1,128,192Zm6-95.43a8,8,0,0,1,3-15.72,48.16,48.16,0,0,1,38.77,42.64,8,8,0,0,1-7.22,8.71,6.39,6.39,0,0,1-.75,0,8,8,0,0,1-8-7.26A32.09,32.09,0,0,0,134,96.57Zm113.28,34.69c-.42.94-10.55,23.37-33.36,43.8a8,8,0,1,1-10.67-11.92A132.77,132.77,0,0,0,231.05,128a133.15,133.15,0,0,0-23.12-30.77C185.67,75.19,158.78,64,128,64a118.37,118.37,0,0,0-19.36,1.57A8,8,0,1,1,106,49.79,134,134,0,0,1,128,48c34.88,0,66.57,13.26,91.66,38.35,18.83,18.83,27.3,37.62,27.65,38.41A8,8,0,0,1,247.31,131.26Z"/></symbol><symbol id="i-fire" viewBox="0 0 256 256"><path d="M183.89,153.34a57.6,57.6,0,0,1-46.56,46.55A8.75,8.75,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68ZM216,144a88,88,0,0,1-176,0c0-27.92,11-56.47,32.66-84.85a8,8,0,0,1,11.93-.89l24.12,23.41,22-60.41a8,8,0,0,1,12.63-3.41C165.21,36,216,84.55,216,144Zm-16,0c0-46.09-35.79-85.92-58.21-106.33L119.52,98.74a8,8,0,0,1-13.09,3L80.06,76.16C64.09,99.21,56,122,56,144a72,72,0,0,0,144,0Z"/></symbol><symbol id="i-hourglass-simple" viewBox="0 0 256 256"><path d="M211.18,196.56,139.57,128l71.61-68.56a1.59,1.59,0,0,1,.13-.13A16,16,0,0,0,200,32H56A16,16,0,0,0,44.7,59.31l.12.13L116.43,128,44.82,196.56l-.12.13A16,16,0,0,0,56,224H200a16,16,0,0,0,11.32-27.31A1.59,1.59,0,0,1,211.18,196.56ZM56,48h0v0Zm144,0-72,68.92L56,48ZM56,208l72-68.92L200,208Z"/></symbol><symbol id="i-info" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol><symbol id="i-list" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></symbol><symbol id="i-moon-stars" viewBox="0 0 256 256"><path d="M240,96a8,8,0,0,1-8,8H216v16a8,8,0,0,1-16,0V104H184a8,8,0,0,1,0-16h16V72a8,8,0,0,1,16,0V88h16A8,8,0,0,1,240,96ZM144,56h8v8a8,8,0,0,0,16,0V56h8a8,8,0,0,0,0-16h-8V32a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16Zm72.77,97a8,8,0,0,1,1.43,8A96,96,0,1,1,95.07,37.8a8,8,0,0,1,10.6,9.06A88.07,88.07,0,0,0,209.14,150.33,8,8,0,0,1,216.77,153Zm-19.39,14.88c-1.79.09-3.59.14-5.38.14A104.11,104.11,0,0,1,88,64c0-1.79,0-3.59.14-5.38A80,80,0,1,0,197.38,167.86Z"/></symbol><symbol id="i-pause" viewBox="0 0 256 256"><path d="M200,32H160a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16h40a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm0,176H160V48h40ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Zm0,176H56V48H96Z"/></symbol><symbol id="i-play" viewBox="0 0 256 256"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></symbol><symbol id="i-radio" viewBox="0 0 256 256"><path d="M104,168a8,8,0,0,1-8,8H64a8,8,0,0,1,0-16H96A8,8,0,0,1,104,168Zm-8-40H64a8,8,0,0,0,0,16H96a8,8,0,0,0,0-16Zm0-32H64a8,8,0,0,0,0,16H96a8,8,0,0,0,0-16ZM232,80V192a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V72a8,8,0,0,1,5.7-7.66l160-48a8,8,0,0,1,4.6,15.33L86.51,64H216A16,16,0,0,1,232,80ZM216,192V80H40V192H216Zm-16-56a40,40,0,1,1-40-40A40,40,0,0,1,200,136Zm-16,0a24,24,0,1,0-24,24A24,24,0,0,0,184,136Z"/></symbol><symbol id="i-shuffle" viewBox="0 0 256 256"><path d="M237.66,178.34a8,8,0,0,1,0,11.32l-24,24a8,8,0,0,1-11.32-11.32L212.69,192H200.94a72.12,72.12,0,0,1-58.59-30.15l-41.72-58.4A56.1,56.1,0,0,0,55.06,80H32a8,8,0,0,1,0-16H55.06a72.12,72.12,0,0,1,58.59,30.15l41.72,58.4A56.1,56.1,0,0,0,200.94,176h11.75l-10.35-10.34a8,8,0,0,1,11.32-11.32ZM143,107a8,8,0,0,0,11.16-1.86l1.2-1.67A56.1,56.1,0,0,1,200.94,80h11.75L202.34,90.34a8,8,0,0,0,11.32,11.32l24-24a8,8,0,0,0,0-11.32l-24-24a8,8,0,0,0-11.32,11.32L212.69,64H200.94a72.12,72.12,0,0,0-58.59,30.15l-1.2,1.67A8,8,0,0,0,143,107Zm-30,42a8,8,0,0,0-11.16,1.86l-1.2,1.67A56.1,56.1,0,0,1,55.06,176H32a8,8,0,0,0,0,16H55.06a72.12,72.12,0,0,0,58.59-30.15l1.2-1.67A8,8,0,0,0,113,149Z"/></symbol><symbol id="i-skip-back" viewBox="0 0 256 256"><path d="M199.81,34a16,16,0,0,0-16.24.43L64,109.23V40a8,8,0,0,0-16,0V216a8,8,0,0,0,16,0V146.77l119.57,74.78A15.95,15.95,0,0,0,208,208.12V47.88A15.86,15.86,0,0,0,199.81,34ZM192,208,64.16,128,192,48.07Z"/></symbol><symbol id="i-skip-forward" viewBox="0 0 256 256"><path d="M200,32a8,8,0,0,0-8,8v69.23L72.43,34.45A15.95,15.95,0,0,0,48,47.88V208.12a16,16,0,0,0,24.43,13.43L192,146.77V216a8,8,0,0,0,16,0V40A8,8,0,0,0,200,32ZM64,207.93V48.05l127.84,80Z"/></symbol><symbol id="i-sliders-horizontal" viewBox="0 0 256 256"><path d="M40,88H73a32,32,0,0,0,62,0h81a8,8,0,0,0,0-16H135a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16Zm64-24A16,16,0,1,1,88,80,16,16,0,0,1,104,64ZM216,168H199a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16h97a32,32,0,0,0,62,0h17a8,8,0,0,0,0-16Zm-48,24a16,16,0,1,1,16-16A16,16,0,0,1,168,192Z"/></symbol><symbol id="i-sparkle" viewBox="0 0 256 256"><path d="M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z"/></symbol><symbol id="i-speaker-high" viewBox="0 0 256 256"><path d="M155.51,24.81a8,8,0,0,0-8.42.88L77.25,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H77.25l69.84,54.31A8,8,0,0,0,160,224V32A8,8,0,0,0,155.51,24.81ZM32,96H72v64H32ZM144,207.64,88,164.09V91.91l56-43.55Zm54-106.08a40,40,0,0,1,0,52.88,8,8,0,0,1-12-10.58,24,24,0,0,0,0-31.72,8,8,0,0,1,12-10.58ZM248,128a79.9,79.9,0,0,1-20.37,53.34,8,8,0,0,1-11.92-10.67,64,64,0,0,0,0-85.33,8,8,0,1,1,11.92-10.67A79.83,79.83,0,0,1,248,128Z"/></symbol><symbol id="i-speaker-simple-low" viewBox="0 0 256 256"><path d="M163.51,24.81a8,8,0,0,0-8.42.88L85.25,80H40A16,16,0,0,0,24,96v64a16,16,0,0,0,16,16H85.25l69.84,54.31A8,8,0,0,0,168,224V32A8,8,0,0,0,163.51,24.81ZM152,207.64,92.91,161.69A7.94,7.94,0,0,0,88,160H40V96H88a7.94,7.94,0,0,0,4.91-1.69L152,48.36ZM208,104v48a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"/></symbol><symbol id="i-speaker-slash" viewBox="0 0 256 256"><path d="M53.92,34.62A8,8,0,1,0,42.08,45.38L73.55,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H77.25l69.84,54.31A8,8,0,0,0,160,224V175.09l42.08,46.29a8,8,0,1,0,11.84-10.76ZM32,96H72v64H32ZM144,207.64,88,164.09V95.89l56,61.6Zm42-63.77a24,24,0,0,0,0-31.72,8,8,0,1,1,12-10.57,40,40,0,0,1,0,52.88,8,8,0,0,1-12-10.59Zm-80.16-76a8,8,0,0,1,1.4-11.23l39.85-31A8,8,0,0,1,160,32v74.83a8,8,0,0,1-16,0V48.36l-26.94,21A8,8,0,0,1,105.84,67.91ZM248,128a79.9,79.9,0,0,1-20.37,53.34,8,8,0,0,1-11.92-10.67,64,64,0,0,0,0-85.33,8,8,0,1,1,11.92-10.67A79.83,79.83,0,0,1,248,128Z"/></symbol><symbol id="i-tree" viewBox="0 0 256 256"><path d="M198.1,62.59a76,76,0,0,0-140.2,0A71.71,71.71,0,0,0,16,127.8C15.9,166,48,199,86.14,200A72.09,72.09,0,0,0,120,192.47V232a8,8,0,0,0,16,0V192.47A72.17,72.17,0,0,0,168,200l1.82,0C208,199,240.11,166,240,127.8A71.71,71.71,0,0,0,198.1,62.59ZM169.45,184a56.08,56.08,0,0,1-33.45-10v-41l43.58-21.78a8,8,0,1,0-7.16-14.32L136,115.06V88a8,8,0,0,0-16,0v51.06L83.58,120.84a8,8,0,1,0-7.16,14.32L120,156.94v17a56,56,0,0,1-33.45,10C56.9,183.23,31.92,157.52,32,127.84A55.77,55.77,0,0,1,67.11,76a8,8,0,0,0,4.53-4.67,60,60,0,0,1,112.72,0A8,8,0,0,0,188.89,76,55.79,55.79,0,0,1,224,127.84C224.08,157.52,199.1,183.23,169.45,184Z"/></symbol><symbol id="i-wave-sine" viewBox="0 0 256 256"><path d="M239.24,131.4c-22,46.8-41.4,68.6-61.2,68.6-25.1,0-40.73-33.32-57.28-68.6C107.7,103.56,92.9,72,78,72c-16.4,0-36.31,37.21-46.72,59.4a8,8,0,0,1-14.48-6.8C38.71,77.8,58.16,56,78,56c25.1,0,40.73,33.32,57.28,68.6C148.3,152.44,163.1,184,178,184c16.4,0,36.31-37.21,46.72-59.4a8,8,0,0,1,14.48,6.8Z"/></symbol><symbol id="i-waves" viewBox="0 0 256 256"><path d="M222.16,177.25a8,8,0,0,1-1,11.25c-17.36,14.39-32.86,19.5-47,19.5-18.58,0-34.82-8.82-49.93-17-25.35-13.76-47.24-25.64-79.07.74a8,8,0,1,1-10.22-12.31c40.17-33.28,70.32-16.92,96.93-2.48,25.35,13.75,47.24,25.63,79.07-.74A8,8,0,0,1,222.16,177.25Zm-11.27-57c-31.83,26.38-53.72,14.5-79.07.74-26.61-14.43-56.76-30.79-96.93,2.49a8,8,0,0,0,10.22,12.31c31.83-26.38,53.72-14.5,79.07-.74,15.11,8.19,31.35,17,49.93,17,14.14,0,29.64-5.11,47-19.5a8,8,0,1,0-10.22-12.31ZM45.11,79.8c31.83-26.37,53.72-14.49,79.07-.74,15.11,8.2,31.35,17,49.93,17,14.14,0,29.64-5.12,47-19.5a8,8,0,1,0-10.22-12.31c-31.83,26.38-53.72,14.5-79.07.74C105.21,50.58,75.06,34.22,34.89,67.5A8,8,0,1,0,45.11,79.8Z"/></symbol><symbol id="i-wind" viewBox="0 0 256 256"><path d="M184,184a32,32,0,0,1-32,32c-13.7,0-26.95-8.93-31.5-21.22a8,8,0,0,1,15-5.56C137.74,195.27,145,200,152,200a16,16,0,0,0,0-32H40a8,8,0,0,1,0-16H152A32,32,0,0,1,184,184Zm-64-80a32,32,0,0,0,0-64c-13.7,0-26.95,8.93-31.5,21.22a8,8,0,0,0,15,5.56C105.74,60.73,113,56,120,56a16,16,0,0,1,0,32H24a8,8,0,0,0,0,16Zm88-32c-13.7,0-26.95,8.93-31.5,21.22a8,8,0,0,0,15,5.56C193.74,92.73,201,88,208,88a16,16,0,0,1,0,32H32a8,8,0,0,0,0,16H208a32,32,0,0,0,0-64Z"/></symbol><symbol id="i-x" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></symbol></svg>
+<svg class="sprite" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden"><symbol id="i-play" viewBox="0 0 16 16"><path d="M1 1h2v1h-2zM2 2h3v12h-3zM5 3h2v10h-2zM7 4h2v8h-2zM9 5h2v6h-2zM11 6h2v4h-2zM13 7h2v2h-2zM1 14h2v1h-2z"/></symbol><symbol id="i-pause" viewBox="0 0 16 16"><path d="M2 1h3v13h-3zM10 1h3v13h-3z"/></symbol><symbol id="i-skip-back" viewBox="0 0 16 16"><path d="M2 2h2v12h-2zM11 2h1v12h-1zM10 3h1v10h-1zM9 4h1v8h-1zM8 5h1v6h-1zM7 6h1v4h-1zM6 7h1v2h-1z"/></symbol><symbol id="i-skip-forward" viewBox="0 0 16 16"><path d="M4 2h1v12h-1zM12 2h2v12h-2zM5 3h1v10h-1zM6 4h1v8h-1zM7 5h1v6h-1zM8 6h1v4h-1zM9 7h1v2h-1z"/></symbol><symbol id="i-x" viewBox="0 0 16 16"><path d="M1 1h2v1h-2zM13 1h2v1h-2zM2 2h2v1h-2zM12 2h2v1h-2zM3 3h2v1h-2zM11 3h2v1h-2zM4 4h2v1h-2zM10 4h2v1h-2zM5 5h2v1h-2zM9 5h2v1h-2zM6 6h4v1h-4zM7 7h2v3h-2zM6 9h1v2h-1zM9 9h1v2h-1zM5 10h1v2h-1zM10 10h1v2h-1zM4 11h1v2h-1zM11 11h1v2h-1zM3 12h1v2h-1zM12 12h1v2h-1zM2 13h1v2h-1zM13 13h1v2h-1zM1 14h1v1h-1zM14 14h1v1h-1z"/></symbol><symbol id="i-caret-up" viewBox="0 0 16 16"><path d="M7 4h2v9h-2zM6 5h1v5h-1zM9 5h1v5h-1zM5 6h1v4h-1zM10 6h1v4h-1zM4 7h1v3h-1zM11 7h1v3h-1zM3 8h1v2h-1zM12 8h1v2h-1zM2 9h1v2h-1zM13 9h1v2h-1zM1 10h1v1h-1zM14 10h1v1h-1zM0 11h1v1h-1zM15 11h1v1h-1z"/></symbol><symbol id="i-dots-three" viewBox="0 0 16 16"><path d="M2 7h2v2h-2zM6 7h2v2h-2zM10 7h2v2h-2z"/></symbol><symbol id="i-sliders-horizontal" viewBox="0 0 16 16"><path d="M2 2h5v5h-5zM0 4h2v1h-2zM7 4h4v1h-4zM7 9h5v5h-5zM0 11h7v1h-7zM12 11h3v1h-3z"/></symbol><symbol id="i-hourglass-simple" viewBox="0 0 16 16"><path d="M2 1h12v1h-12zM2 2h1v2h-1zM13 2h1v13h-1zM3 3h9v1h-9zM3 4h8v1h-8zM4 5h6v1h-6zM5 6h4v1h-4zM6 7h2v6h-2zM5 9h1v4h-1zM8 9h1v4h-1zM4 10h1v3h-1zM9 10h1v3h-1zM3 11h1v2h-1zM10 11h1v2h-1zM2 12h1v3h-1zM11 12h1v1h-1zM3 14h10v1h-10z"/></symbol><symbol id="i-corners-out" viewBox="0 0 16 16"><path d="M1 1h7v1h-7zM10 1h5v1h-5zM1 2h1v5h-1zM8 2h1v2h-1zM14 2h1v2h-1zM1 9h1v5h-1zM8 11h1v2h-1zM14 11h1v3h-1zM2 13h6v1h-6zM10 13h4v1h-4z"/></symbol><symbol id="i-eye-slash" viewBox="0 0 16 16"><path d="M0 2h1v1h-1zM3 3h4v1h-4zM9 3h1v1h-1zM1 4h2v1h-2zM7 4h2v1h-2zM11 4h1v1h-1zM0 5h2v1h-2zM4 5h2v3h-2zM8 5h2v1h-2zM12 5h1v1h-1zM0 6h1v2h-1zM3 6h1v1h-1zM6 6h1v1h-1zM9 6h1v2h-1zM13 6h1v1h-1zM1 7h1v2h-1zM8 7h1v2h-1zM14 7h1v1h-1zM2 8h1v1h-1zM7 8h1v1h-1zM15 8h1v1h-1zM3 9h4v1h-4zM15 12h1v1h-1zM14 13h1v1h-1z"/></symbol><symbol id="i-speaker-high" viewBox="0 0 16 16"><path d="M10 1h2v1h-2zM6 2h2v11h-2zM11 2h2v1h-2zM5 3h1v9h-1zM12 3h2v1h-2zM4 4h1v7h-1zM9 4h2v1h-2zM13 4h2v7h-2zM2 5h2v5h-2zM10 5h1v1h-1zM9 6h1v3h-1zM11 6h1v3h-1zM10 9h1v2h-1zM9 10h1v1h-1zM12 11h2v1h-2zM11 12h2v1h-2zM10 13h2v1h-2z"/></symbol><symbol id="i-speaker-simple-low" viewBox="0 0 16 16"><path d="M6 2h2v11h-2zM5 3h1v9h-1zM11 3h2v1h-2zM4 4h1v7h-1zM10 4h1v1h-1zM13 4h1v1h-1zM2 5h2v5h-2zM9 5h1v5h-1zM14 5h1v5h-1zM10 10h1v1h-1zM13 10h1v1h-1zM11 11h2v1h-2z"/></symbol><symbol id="i-speaker-slash" viewBox="0 0 16 16"><path d="M6 2h2v11h-2zM13 2h1v2h-1zM5 3h1v9h-1zM12 3h1v2h-1zM4 4h1v7h-1zM11 4h1v2h-1zM14 4h1v3h-1zM2 5h2v5h-2zM10 5h1v2h-1zM9 6h1v1h-1zM13 6h1v2h-1zM12 7h1v2h-1zM11 8h1v2h-1zM10 9h1v2h-1zM9 10h1v2h-1z"/></symbol><symbol id="i-list" viewBox="0 0 16 16"><path d="M2 2h2v2h-2zM6 2h8v2h-8zM2 5h2v2h-2zM6 5h8v2h-8zM2 8h2v2h-2zM6 8h8v2h-8zM2 11h2v2h-2zM6 11h8v2h-8z"/></symbol><symbol id="i-radio" viewBox="0 0 16 16"><path d="M2 2h12v1h-12zM2 3h1v10h-1zM13 3h1v10h-1zM6 5h4v1h-4zM5 6h2v1h-2zM9 6h2v1h-2zM5 7h1v2h-1zM10 7h1v2h-1zM6 8h1v2h-1zM9 8h1v2h-1zM7 9h2v1h-2zM4 11h2v2h-2zM10 11h2v2h-2zM3 12h1v1h-1zM6 12h4v1h-4zM12 12h1v1h-1z"/></symbol><symbol id="i-shuffle" viewBox="0 0 16 16"><path d="M9 2h4v1h-4zM2 3h3v1h-3zM12 3h2v1h-2zM5 4h2v1h-2zM13 4h2v2h-2zM6 5h2v1h-2zM10 5h3v1h-3zM6 8h2v1h-2zM10 8h5v1h-5zM5 9h2v1h-2zM13 9h2v1h-2zM2 10h3v1h-3zM12 10h2v1h-2zM9 11h4v1h-4z"/></symbol><symbol id="i-cloud-rain" viewBox="0 0 16 16"><path d="M6 1h4v1h-4zM4 2h2v1h-2zM10 2h2v1h-2zM3 3h1v2h-1zM12 3h1v1h-1zM1 4h2v1h-2zM14 4h1v1h-1zM0 5h2v1h-2zM15 5h1v2h-1zM0 6h1v1h-1zM1 7h14v1h-14zM2 9h1v2h-1zM6 9h1v2h-1zM10 9h1v2h-1zM14 9h1v2h-1zM3 12h1v2h-1zM7 12h1v2h-1zM11 12h1v2h-1z"/></symbol><symbol id="i-cloud-lightning" viewBox="0 0 16 16"><path d="M6 1h4v1h-4zM4 2h2v1h-2zM10 2h2v1h-2zM3 3h1v2h-1zM12 3h1v1h-1zM1 4h2v1h-2zM14 4h1v1h-1zM0 5h2v1h-2zM15 5h1v2h-1zM0 6h1v1h-1zM1 7h14v1h-14zM7 9h3v1h-3zM6 10h3v2h-3zM5 11h1v1h-1zM9 11h2v1h-2zM7 12h3v1h-3zM6 13h2v1h-2z"/></symbol><symbol id="i-bonsai-0" viewBox="0 0 16 16"><path d="M7 9h2v3h-2zM5 12h6v2h-6zM7 7h2v1h-2z"/></symbol><symbol id="i-bonsai-1" viewBox="0 0 16 16"><path d="M7 6h2v6h-2zM5 4h3v3h-3zM9 5h3v2h-3zM5 12h6v2h-6zM4 14h8v1h-8z"/></symbol><symbol id="i-bonsai-2" viewBox="0 0 16 16"><path d="M7 7h2v5h-2zM5 8h2v1h-2zM3 6h4v3h-4zM9 3h5v3h-5zM8 5h2v2h-2zM2 3h3v2h-3zM5 12h6v2h-6zM3 14h10v1h-10z"/></symbol><symbol id="i-seal" viewBox="0 0 16 16"><path d="M2 2h5v2h-3v3h-2zM9 2h5v5h-2v-3h-3zM4 6h3v1h2v-1h3v2h-2v3h2v2h-3v-2h-2v2h-3v-2h2v-3h-2zM2 9h2v3h3v2h-5zM12 9h2v5h-5v-2h3z"/></symbol><symbol id="i-snowflake" viewBox="0 0 16 16"><path d="M7 1h2v14h-2zM4 2h1v1h-1zM11 2h1v1h-1zM5 3h1v1h-1zM10 3h1v1h-1zM2 4h1v1h-1zM6 4h1v8h-1zM9 4h1v8h-1zM13 4h1v1h-1zM3 5h2v1h-2zM11 5h2v1h-2zM4 6h2v4h-2zM10 6h1v4h-1zM2 7h2v2h-2zM11 7h4v2h-4zM3 10h2v1h-2zM11 10h2v1h-2zM2 11h1v1h-1zM13 11h1v1h-1zM5 12h1v1h-1zM10 12h1v1h-1zM4 13h1v1h-1zM11 13h1v1h-1z"/></symbol><symbol id="i-wind" viewBox="0 0 16 16"><path d="M11 2h2v1h-2zM2 3h9v1h-9zM13 3h1v2h-1zM11 4h1v1h-1zM2 6h11v1h-11zM11 7h2v1h-2zM7 9h5v1h-5zM13 9h1v1h-1zM12 10h1v2h-1zM14 10h1v2h-1zM7 12h5v1h-5zM13 12h1v1h-1z"/></symbol><symbol id="i-drop" viewBox="0 0 16 16"><path d="M7 1h2v13h-2zM6 3h1v11h-1zM9 3h1v11h-1zM5 4h1v9h-1zM10 4h1v9h-1zM4 5h1v7h-1zM11 5h1v7h-1zM3 6h1v5h-1zM12 6h1v5h-1zM2 7h1v3h-1zM13 7h1v3h-1z"/></symbol><symbol id="i-waves" viewBox="0 0 16 16"><path d="M2 3h2v1h-2zM9 3h2v1h-2zM1 4h1v1h-1zM4 4h2v1h-2zM8 4h1v1h-1zM11 4h2v1h-2zM15 4h1v1h-1zM6 5h2v1h-2zM13 5h2v1h-2zM2 7h2v1h-2zM9 7h2v1h-2zM1 8h1v1h-1zM4 8h2v1h-2zM8 8h1v1h-1zM11 8h2v1h-2zM15 8h1v1h-1zM6 9h2v1h-2zM13 9h2v1h-2zM2 11h2v1h-2zM9 11h2v1h-2zM1 12h1v1h-1zM4 12h2v1h-2zM8 12h1v1h-1zM11 12h2v1h-2zM15 12h1v1h-1zM6 13h2v1h-2zM13 13h2v1h-2z"/></symbol><symbol id="i-wave-sine" viewBox="0 0 16 16"><path d="M3 4h2v1h-2zM2 5h1v1h-1zM5 5h1v1h-1zM13 5h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM12 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM7 7h1v1h-1zM11 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM9 9h1v1h-1z"/></symbol><symbol id="i-tree" viewBox="0 0 16 16"><path d="M7 1h2v13h-2zM6 2h1v9h-1zM9 2h1v9h-1zM5 3h1v8h-1zM10 3h1v8h-1zM4 4h1v3h-1zM11 4h1v3h-1zM3 5h1v2h-1zM12 5h1v2h-1zM2 6h1v1h-1zM13 6h1v1h-1zM4 8h1v3h-1zM11 8h1v3h-1zM3 9h1v2h-1zM12 9h1v2h-1zM2 10h1v1h-1zM13 10h1v1h-1zM5 13h2v1h-2zM9 13h2v1h-2z"/></symbol><symbol id="i-fire" viewBox="0 0 16 16"><path d="M7 1h2v2h-2zM6 2h1v2h-1zM5 3h1v2h-1zM8 3h2v1h-2zM4 4h1v2h-1zM9 4h2v1h-2zM3 5h1v2h-1zM10 5h2v1h-2zM2 6h1v4h-1zM7 6h1v8h-1zM11 6h2v1h-2zM6 7h1v7h-1zM8 7h1v7h-1zM12 7h1v3h-1zM5 8h1v5h-1zM9 8h1v5h-1zM3 9h1v2h-1zM11 9h1v2h-1zM4 10h1v2h-1zM10 10h1v2h-1z"/></symbol><symbol id="i-sparkle" viewBox="0 0 16 16"><path d="M7 1h1v14h-1zM8 2h1v13h-1zM6 3h1v11h-1zM9 3h1v11h-1zM2 4h1v2h-1zM13 4h1v2h-1zM3 5h1v2h-1zM12 5h1v2h-1zM4 6h1v5h-1zM11 6h1v1h-1zM5 7h1v3h-1zM10 7h1v3h-1zM2 8h2v1h-2zM11 8h4v1h-4zM3 10h1v2h-1zM11 10h2v1h-2zM2 11h1v2h-1zM12 11h2v1h-2zM13 12h1v1h-1z"/></symbol><symbol id="i-moon-stars" viewBox="0 0 16 16"><path d="M10 1h1v3h-1zM8 2h2v1h-2zM11 2h2v1h-2zM2 3h1v3h-1zM1 4h1v1h-1zM3 4h1v1h-1zM7 5h4v1h-4zM5 6h2v1h-2zM11 6h1v1h-1zM4 7h2v1h-2zM12 7h1v4h-1zM4 8h1v3h-1zM5 10h1v2h-1zM6 11h1v2h-1zM11 11h1v1h-1zM7 12h4v1h-4z"/></symbol><symbol id="i-coffee" viewBox="0 0 16 16"><path d="M3 2h1v2h-1zM6 2h1v2h-1zM9 2h1v2h-1zM1 5h12v1h-12zM1 6h1v5h-1zM12 6h1v5h-1zM14 6h2v1h-2zM14 7h1v3h-1zM15 9h1v1h-1zM2 11h1v1h-1zM11 11h1v1h-1zM3 12h8v1h-8z"/></symbol><symbol id="i-bookmark-simple" viewBox="0 0 16 16"><path d="M4 1h8v1h-8zM4 2h1v13h-1zM11 2h1v13h-1zM7 10h2v2h-2zM6 11h1v2h-1zM9 11h1v2h-1zM5 12h1v2h-1zM10 12h1v2h-1z"/></symbol><symbol id="i-info" viewBox="0 0 16 16"><path d="M5 1h6v1h-6zM3 2h2v1h-2zM11 2h2v1h-2zM2 3h1v1h-1zM13 3h1v1h-1zM1 4h1v1h-1zM7 4h2v2h-2zM14 4h1v1h-1zM0 5h1v5h-1zM15 5h1v5h-1zM6 7h3v1h-3zM7 8h2v4h-2zM1 10h1v1h-1zM14 10h1v1h-1zM2 11h1v1h-1zM6 11h1v1h-1zM9 11h1v1h-1zM13 11h1v1h-1zM3 12h2v1h-2zM11 12h2v1h-2zM5 13h6v1h-6z"/></symbol><symbol id="i-arrow-square-out" viewBox="0 0 16 16"><path d="M1 2h10v1h-10zM1 3h1v9h-1zM10 3h1v5h-1zM13 4h3v1h-3zM15 5h1v1h-1zM14 6h1v1h-1zM13 7h1v1h-1zM12 8h1v1h-1zM11 9h1v1h-1zM13 9h1v1h-1zM10 10h1v2h-1zM14 10h1v1h-1zM2 11h8v1h-8z"/></symbol><symbol id="i-arrow-counter-clockwise" viewBox="0 0 16 16"><path d="M4 2h5v1h-5zM3 3h1v1h-1zM9 3h2v1h-2zM2 4h1v1h-1zM11 4h1v1h-1zM1 5h1v1h-1zM12 5h1v1h-1zM0 6h1v3h-1zM13 6h1v3h-1zM1 9h1v1h-1zM12 9h1v1h-1zM2 10h1v1h-1zM11 10h1v1h-1zM3 11h2v1h-2zM9 11h2v1h-2z"/></symbol></svg>
+  <!-- The browser will not start audio without a user gesture, so a gate has to
+       exist either way. Better a boot screen than a "click to enable sound"
+       toast: it is the same click, and it belongs to the machine. -->
+  <div class="boot" id="bootScreen" role="status" aria-label="Starting up">
+    <div class="boot-inner">
+      <p class="boot-mark">UKIYO</p>
+      <div class="boot-bar"><span id="bootFill"></span></div>
+      <p class="boot-line"><span id="bootStatus">MEMORY OK</span><span id="bootPct">0%</span></p>
+      <p class="boot-sub">the floating world · 浮世</p>
+      <p class="boot-today" id="bootToday"></p>
+      <p class="boot-skip">PRESS ANY KEY TO START</p>
+    </div>
+  </div>
   <a class="skip-link" href="#controlDock">Skip to player controls</a>
 
   <noscript>
@@ -78,20 +104,38 @@
       <div class="scene-veil"></div>
     </div>
 
+    <!-- The twelve room layers, as objects on the scene. Height sets the level,
+         horizontal position sets the stereo pan, so you place a sound in the
+         room you are looking at rather than mixing it on a desk. The mixer
+         panel remains the keyboard and pointer-free path to the same values. -->
+    <!-- The blind. Every scene in this app is a window, so the light control is
+         a shade you pull rather than a row in a menu. Dragging it binds the
+         scene's brightness and the chrome's palette to your hand, frame by
+         frame; let go past halfway and it commits to night. -->
+    <div class="shade" id="shade">
+      <div class="shade-panel"></div>
+      <button type="button" class="shade-grip" id="shadeGrip"
+              aria-label="Window shade: drag down for night, up for day">
+        <span class="shade-grip-bar" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="tokens" id="tokenLayer" aria-hidden="true"></div>
+
     <header class="readout" id="readout">
       <div class="readout-meta">
-        <span class="readout-lamp" aria-hidden="true"></span>
-        <span class="readout-ch" id="channelChip">CH 01</span>
-        <span id="sceneKind">Living loop</span>
+        <span class="seal" aria-hidden="true"><svg class="icon"><use href="#i-seal"/></svg></span>
+        <span class="readout-ch" id="channelChip">NO. 01</span>
+        <span id="sceneKind">Painting</span>
       </div>
       <h1 class="readout-title" id="sceneTitle">Rain window</h1>
     </header>
 
-    <div class="focus-status" id="focusStatus">
+    <div class="focus-status" id="focusStatus" inert>
       <svg class="icon" aria-hidden="true"><use href="#i-hourglass-simple"/></svg>
       <span class="micro" id="focusStatusLabel">Focus</span>
       <strong id="focusCountdown">25:00</strong>
-      <button class="hw hw-icon" id="stopFocusButton" aria-label="Stop focus session" style="min-height:32px;width:32px">
+      <button class="hw hw-icon" id="stopFocusButton" aria-label="Stop focus timer" style="min-height:32px;width:32px">
         <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
       </button>
     </div>
@@ -100,7 +144,7 @@
       <svg class="icon" aria-hidden="true"><use href="#i-sparkle"/></svg><span id="toastText"></span>
     </div>
 
-    <button class="quiet-return" id="quietReturn">
+    <button class="quiet-return" id="quietReturn" inert>
       <svg class="icon" aria-hidden="true"><use href="#i-caret-up"/></svg>Show controls
     </button>
 
@@ -112,7 +156,7 @@
         <div>
           <span class="micro" id="worldPanelCount">Source</span>
           <h2 id="worldPanelTitle" tabindex="-1">Scene selector</h2>
-          <p>Pick a channel. Your music and room stay exactly as they are.</p>
+          <p>Pick a window to look through. Your music and sounds keep playing. The painting likes being touched.</p>
         </div>
         <div class="panel-head-actions">
           <button class="hw hw-icon" data-close-panel aria-label="Close scene selector">
@@ -132,7 +176,7 @@
         <div>
           <span class="micro">Tuner · your source</span>
           <h2 id="musicPanelTitle" tabindex="-1">Music source</h2>
-          <p id="musicPanelDescription">Tune in any YouTube video or playlist. Your scene and room stay put.</p>
+          <p id="musicPanelDescription">Paste anything from YouTube. Your view and your sounds keep going.</p>
         </div>
         <div class="panel-head-actions">
           <button class="hw hw-sm" id="changeSourceButton" aria-label="Change source">
@@ -194,9 +238,9 @@
     <section class="panel" id="roomPanel" aria-labelledby="roomPanelTitle" hidden>
       <header class="panel-head">
         <div>
-          <span class="micro">Twelve channels</span>
+          <span class="micro">Twelve sounds</span>
           <h2 id="roomPanelTitle" tabindex="-1">Mixer</h2>
-          <p>Blend field recordings and generated layers. The scene and music stay put.</p>
+          <p>Pick up a sound and put it somewhere. Higher is louder, left is left.</p>
         </div>
         <div class="panel-head-actions">
           <button class="hw hw-sm" id="saveRoomButton">
@@ -227,31 +271,22 @@
           <div class="room-master">
             <span class="room-master-copy">
               <strong>Room level</strong>
-              <small>All twelve channels, against the music</small>
+              <small>everything at once, against the music</small>
             </span>
             <input id="roomVolume" type="range" min="0" max="100" value="52"
                    aria-label="Room level" style="--fill:52%">
-            <output id="roomOutput" aria-live="off">52</output>
+            <output id="roomOutput" aria-live="off">52%</output>
           </div>
           <div class="channel-grid stagger" id="channelGrid"></div>
           <div class="room-options">
             <div class="option">
               <div class="option-head">
-                <span><strong>Weather</strong><small>A visual layer over this scene</small></span>
+                <span><strong>Weather</strong><small>what falls past the window</small></span>
                 <output id="weatherValue" aria-live="off">Off</output>
               </div>
               <div class="segmented-wrap">
-                <div class="segmented" id="weatherOptions" style="--seg-n:4;--seg-i:0">
-                  <div class="seg-row" role="group" aria-label="Weather">
-                    <button data-weather="none">Off</button>
-                    <button data-weather="rain">Rain</button>
-                    <button data-weather="snow">Snow</button>
-                    <button data-weather="fireflies">Fireflies</button>
-                  </div>
-                  <div class="seg-row seg-lit" aria-hidden="true">
-                    <span>Off</span><span>Rain</span><span>Snow</span><span>Fireflies</span>
-                  </div>
-                </div>
+                <!-- Built from the WEATHER_FX registry by renderWeatherOptions(). -->
+                <div class="segmented" id="weatherOptions" style="--seg-n:4;--seg-i:0;--seg-rows:2;--seg-r:0"></div>
               </div>
               <label class="option-range">
                 <span>Intensity</span>
@@ -260,10 +295,10 @@
             </div>
             <div class="option">
               <div class="option-head">
-                <span><strong>Drift</strong><small>Slow, tiny level changes</small></span>
-                <button class="switch" id="driftButton" role="switch" aria-label="Toggle drift" aria-checked="false"><span></span></button>
+                <span><strong>Sway</strong><small>lets the room breathe on its own</small></span>
+                <button class="switch" id="driftButton" role="switch" aria-label="Toggle sway" aria-checked="false"><span></span></button>
               </div>
-              <p>Moves room levels only. Never your scene, music or weather.</p>
+              <p>Only the sounds move. Your view, music and weather stay exactly where you put them.</p>
             </div>
           </div>
         </div>
@@ -274,10 +309,10 @@
     <section class="focus-popover" id="focusPopover" aria-labelledby="focusPopoverTitle" hidden>
       <div class="focus-top">
         <div>
-          <span class="micro">Sleep timer</span>
-          <h2 id="focusPopoverTitle" tabindex="-1">Focus window</h2>
+          <span class="micro">Focus timer</span>
+          <h2 id="focusPopoverTitle" tabindex="-1">Focus timer</h2>
         </div>
-        <button class="hw hw-icon" id="closeFocusButton" aria-label="Close focus settings" style="min-height:36px;width:36px">
+        <button class="hw hw-icon" id="closeFocusButton" aria-label="Close focus timer" style="min-height:36px;width:36px">
           <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
         </button>
       </div>
@@ -296,7 +331,7 @@
         </div>
       </div>
       <button class="primary-key" id="startFocusButton">
-        <svg class="icon" aria-hidden="true"><use href="#i-hourglass-simple"/></svg>Begin session
+        <svg class="icon" aria-hidden="true"><use href="#i-hourglass-simple"/></svg>Start focus
       </button>
     </section>
 
@@ -326,27 +361,47 @@
 
       <button class="now-key" id="musicButton" aria-controls="musicPanel" aria-expanded="false">
         <span class="now-copy">
-          <small>On air</small>
-          <strong class="dotmatrix" id="dockSongTitle">No source tuned</strong>
+          <small>Playing</small>
+          <strong class="dotmatrix" id="dockSongTitle">Tune a source →</strong>
+            <!-- Below 540px the prev/next keys are hidden, so this is the only
+                 way to move through a track on a phone. -->
+            <span class="scrub" id="scrubWrap" hidden>
+              <input id="scrub" type="range" min="0" max="1000" value="0" step="1"
+                     aria-label="Seek through the track">
+              <output id="scrubTime">0:00 / 0:00</output>
+            </span>
         </span>
         <svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>
       </button>
 
+      <!-- Twelve bars of real output, with a peak cap that falls at a fixed rate.
+           A meter that only rises reads as a bar chart; the falling cap is what
+           makes it read as an instrument. -->
+      <div class="vu" id="vu" aria-hidden="true" title="Room output">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <i class="vu-peak"></i>
+      </div>
       <div class="volume-key">
         <svg class="icon" aria-hidden="true"><use href="#i-speaker-high"/></svg>
         <input id="musicVolume" type="range" min="0" max="100" value="52" aria-label="Music volume">
-        <output id="musicOutput" aria-live="off">52</output>
+        <output id="musicOutput" aria-live="off">52%</output>
       </div>
 
       <div class="dock-divider" aria-hidden="true"></div>
 
-      <button class="hw room-key" id="roomButton" aria-controls="roomPanel" aria-expanded="false" aria-label="Open mixer">
+      <button class="hw room-key" id="roomButton" aria-controls="roomPanel" aria-expanded="false" aria-label="Room mixer">
         <svg class="icon" aria-hidden="true"><use href="#i-sliders-horizontal"/></svg><span>Room</span>
       </button>
-      <button class="hw focus-key" id="focusButton" aria-controls="focusPopover" aria-expanded="false" aria-label="Open sleep timer">
+      <button class="hw focus-key" id="focusButton" aria-controls="focusPopover" aria-expanded="false" aria-label="Focus timer">
         <svg class="icon" aria-hidden="true"><use href="#i-hourglass-simple"/></svg><span>Focus</span>
       </button>
 
+      <button class="bonsai" id="bonsai" type="button" aria-label="Your bonsai">
+        <svg class="icon b0" aria-hidden="true"><use href="#i-bonsai-0"/></svg>
+        <svg class="icon b1" aria-hidden="true"><use href="#i-bonsai-1"/></svg>
+        <svg class="icon b2" aria-hidden="true"><use href="#i-bonsai-2"/></svg>
+      </button>
       <div class="more-wrap">
         <button class="hw hw-icon" id="moreButton" aria-label="More controls" aria-expanded="false">
           <svg class="icon" aria-hidden="true"><use href="#i-dots-three"/></svg>
@@ -354,13 +409,21 @@
         <div class="more-menu" id="moreMenu" hidden>
           <button id="quietButton"><span><svg class="icon" aria-hidden="true"><use href="#i-eye-slash"/></svg>Quiet mode</span><kbd>Q</kbd></button>
           <button id="fullscreenButton"><span><svg class="icon" aria-hidden="true"><use href="#i-corners-out"/></svg>Full screen</span><kbd>F</kbd></button>
+          <button id="modeButton"><span><svg class="icon" aria-hidden="true"><use href="#i-moon-stars"/></svg>Display</span><span class="mode-value">Auto</span></button>
+          <button id="soundButton" role="switch" aria-checked="true"><span><svg class="icon" aria-hidden="true"><use href="#i-speaker-high"/></svg>Interface sound</span><span class="mode-value" id="soundValue">On</span></button>
+          <button id="postcardButton"><span><svg class="icon" aria-hidden="true"><use href="#i-seal"/></svg>Save a postcard</span></button>
+          <button id="roomLinkButton"><span><svg class="icon" aria-hidden="true"><use href="#i-arrow-square-out"/></svg>Copy room link</span></button>
+          <button id="momentsButton"><span><svg class="icon" aria-hidden="true"><use href="#i-moon-stars"/></svg>Moments seen</span><span class="mode-value" id="momentsValue">none yet</span></button>
+          <button id="packButton"><span><svg class="icon" aria-hidden="true"><use href="#i-bookmark-simple"/></svg>Art library</span><span class="mode-value" id="packValue">Floating world</span></button>
         </div>
       </div>
     </nav>
   </main>
 
-  <script src="assets/audio-engine.js?v=24"></script>
-  <script src="assets/scene.js?v=24"></script>
-  <script src="assets/app.js?v=24"></script>
+  <script src="assets/audio-engine.js?v=65"></script>
+  <script src="assets/ui-sound.js?v=65"></script>
+  <script src="assets/grabbable.js?v=65"></script>
+  <script src="assets/scene.js?v=65"></script>
+  <script src="assets/app.js?v=65"></script>
 </body>
 </html>

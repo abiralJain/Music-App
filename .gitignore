@@ -5,3 +5,8 @@ output/
 # Untouched source media, kept on disk for re-encoding. 61MB — not worth
 # versioning; the shipped assets in assets/ are derived from these.
 assets/original/
+
+# The Ghibli pack is a personal-use option (see its CREDITS.txt). This repo is
+# public, so those stills must never be pushed — the pack lives only on the
+# machines of people who add it themselves. The shipped pack is ukiyoe/.
+assets/scenes/ghibli/

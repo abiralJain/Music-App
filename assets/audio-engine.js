@@ -197,6 +197,11 @@ window.AmbienceEngine = (function () {
     // The meters used to be computed from the fader position, so a channel
     // that produced nothing still animated its bar and looked alive. That is
     // what let a silent mixer pass as a working one. Read the real signal.
+    // Stereo placement. A token dragged left should be heard on the left;
+    // without this, position could only ever mean volume.
+    var panner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    if (panner) panner.pan.value = 0;
+
     var analyser = ctx.createAnalyser();
     analyser.fftSize = 256;
     analyser.smoothingTimeConstant = 0.6;
@@ -207,10 +212,13 @@ window.AmbienceEngine = (function () {
       value: 0, muted: false, built: false, disposed: false,
       lfo: null, lfoDepth: 0, lfoRate: 0, lfoPhase: Math.random() * Math.PI * 2,
       nextEvent: 0, element: null, heads: [], chainIn: null,
-      analyser: analyser, meterBuf: new Uint8Array(analyser.fftSize), failed: false
+      analyser: analyser, meterBuf: new Uint8Array(analyser.fftSize), failed: false,
+      panner: panner, pan: 0
     };
 
-    depthGain.connect(layerGain).connect(bus);
+    // depthGain -> layerGain -> [panner] -> bus
+    if (panner) depthGain.connect(layerGain).connect(panner).connect(bus);
+    else depthGain.connect(layerGain).connect(bus);
 
     if (spec.kind === "file") {
       var el = new Audio();
@@ -476,7 +484,7 @@ window.AmbienceEngine = (function () {
     // nothing is synthesised for a channel the user never touches.
     setLayer: function (id, value, muted) {
       if (!SPEC[id]) return;
-      var v = Math.max(0, Math.min(100, Math.round(value)));
+      var v = Math.max(0, Math.min(100, Number(value) || 0));
       var node = layers[id];
       if (!node && v <= 0) return;          // nothing to do yet
       node = node || ensureLayer(id);
@@ -485,6 +493,18 @@ window.AmbienceEngine = (function () {
       if (typeof muted === "boolean") node.muted = muted;
       applyLayer(id, false);
     },
+
+    // -1 hard left, 0 centre, +1 hard right. Ramped rather than set, because a
+    // step in pan is as audible as a step in gain.
+    setPan: function (id, pan) {
+      var node = layers[id];
+      if (!node || !node.panner || !ctx) return;
+      var p = Math.max(-1, Math.min(1, Number(pan) || 0));
+      node.pan = p;
+      node.panner.pan.setTargetAtTime(p, ctx.currentTime, 0.05);
+    },
+
+    getPan: function (id) { return layers[id] ? layers[id].pan : 0; },
 
     setMaster: function (v) {
       master = Math.max(0, Math.min(100, v)) / 100;
@@ -505,7 +525,7 @@ window.AmbienceEngine = (function () {
       for (var i = 0; i < n; i++) { var d = (buf[i] - 128) / 128; sum += d * d; }
       // Ambience sits at a low RMS by nature; scale so a channel at 100%
       // reads near the top of the bar without pinning it.
-      return Math.max(0, Math.min(1, Math.sqrt(sum / n) * 3.2));
+      return Math.max(0, Math.min(1, Math.pow(Math.sqrt(sum / n) * 6, 0.62)));
     },
 
     // True once a file layer's media failed to load (a codec the browser
