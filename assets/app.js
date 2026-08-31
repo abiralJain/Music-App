@@ -264,6 +264,20 @@
                   note: s.note + " · pixel art",
                   video: s.video, poster: s.poster, ramp: s.ramp, pixel: true });
   });
+  // The film reel. Thirty-odd local loops arrive as ONE world, not thirty
+  // cards: the clips live in LOOPS and the slideshow world mirrors whichever
+  // clip is up, mutating in place the way `blocked` already does. Loaded
+  // synchronously ahead of this file (loops.js / loops.local.js) so worlds[]
+  // is still composed at parse time. No clips => the card is disabled, which
+  // is the shipped state of a public clone.
+  // Deliberately no moods: the music matcher must never land you mid-reel.
+  var LOOPS = (window.DW_LOOPS && window.DW_LOOPS.clips) || [];
+  var LOOP_BASE = (window.DW_LOOPS && window.DW_LOOPS.base) || "assets/loops/";
+  worlds.push({ id: "film-slideshow", title: "Slideshow", kind: "local",
+                slideshow: true,
+                note: "every film, one after another",
+                video: null, poster: null, fit: null, bytes: 0,
+                tone: "light", moods: null, ramp: null, pixel: false });
   BACKDROPS.forEach(function (b) {
     worlds.push({ id: b.id, title: b.title, kind: "backdrop", note: b.note,
                   videoId: b.videoId, video: null, poster: null,
@@ -362,7 +376,7 @@
     { id: "rain",    name: "Gentle rain",    note: "window",  icon: "i-cloud-rain",      tint: "#6FB4F2" },
     { id: "forest",  name: "Forest morning", note: "birds",   icon: "i-tree",            tint: "#6FD08C" },
     { id: "cafe",    name: "Café murmur",    note: "distant", icon: "i-coffee",          tint: "#E0A167" },
-    { id: "brown",   name: "Brown noise",    note: "deep",    icon: "i-wave-sine",       tint: "#C98F63" },
+    { id: "brown",   name: "Brown noise",    note: "deep",    icon: "i-wave-sine",       tint: "#D09D77" },
     { id: "soft",    name: "Soft air",       note: "tonal",   icon: "i-wind",            tint: "#8FD7D2" },
     { id: "white",   name: "White noise",    note: "clean",   icon: "i-radio",           tint: "#BFCBD8" },
     { id: "wind",    name: "Open window",    note: "gusts",   icon: "i-wind",            tint: "#7FD2C0" },
@@ -370,7 +384,7 @@
     { id: "stream",  name: "Small stream",   note: "water",   icon: "i-drop",            tint: "#79CFE8" },
     { id: "fire",    name: "Fireplace",      note: "crackle", icon: "i-fire",            tint: "#F2925F" },
     { id: "night",   name: "Night garden",   note: "insects", icon: "i-moon-stars",      tint: "#B99BEA" },
-    { id: "thunder", name: "Distant thunder",note: "rumble",  icon: "i-cloud-lightning", tint: "#8E9BE6" }
+    { id: "thunder", name: "Distant thunder",note: "rumble",  icon: "i-cloud-lightning", tint: "#98A4E8" }
   ];
 
   var emptyRoom = {};
@@ -404,7 +418,7 @@
     source: null,              // { kind:'video'|'playlist', id, label, station? }
     savedSources: [],          // [{ kind, id, label, savedAt }] — the user's own
     stationIndex: -1,
-    gallery: [], galleryIndex: 0, rotate: "time", rotateTimer: null,
+    gallery: [], galleryIndex: 0, slideIndex: 0, rotate: "time", rotateTimer: null,
     tracks: [], trackIndex: 0,
     ytApiLoading: false, ytReady: false, ytFailed: false
   };
@@ -436,6 +450,7 @@
         weather: state.weather, weatherIntensity: state.weatherIntensity, drift: state.drift,
         source: state.source, savedSources: state.savedSources, trackIndex: state.trackIndex,
         rotate: state.rotate, galleryIndex: state.galleryIndex,
+        slideIndex: state.slideIndex,
         worldId: (worlds[state.worldIndex] || {}).id,
         pack: activePack,
         mode: state.mode, sound: state.sound, sceneLocked: state.sceneLocked,
@@ -483,6 +498,7 @@
     state.sceneLocked = Boolean(saved.sceneLocked);
     state.weatherLocked = Boolean(saved.weatherLocked);
     state.galleryIndex = Math.max(0, Number(saved.galleryIndex) || 0);
+    state.slideIndex = Math.max(0, Number(saved.slideIndex) || 0);
     state.trackIndex = Math.max(0, Number(saved.trackIndex) || 0);
     // A saved "Your source" world is meaningless without a source.
     if (worlds[state.worldIndex].kind === "youtube" && !state.source) state.worldIndex = 0;
@@ -494,6 +510,21 @@
       state.worldIndex = 0;
     }
     if (worlds[state.worldIndex].blocked) state.worldIndex = 0;
+    // A saved slideshow with the films since removed falls back to the start.
+    if (worlds[state.worldIndex].slideshow && !(window.DW_LOOPS && window.DW_LOOPS.clips.length)) {
+      state.worldIndex = 0;
+    }
+  }
+
+  // Fresh visitors open on the film reel — the scene that moves on its own.
+  // Anyone who has been here keeps whatever they chose.
+  function defaultWorldIndex() {
+    for (var i = 0; i < worlds.length; i++) {
+      if (worlds[i].slideshow) {
+        return (window.DW_LOOPS && window.DW_LOOPS.clips.length) ? i : 0;
+      }
+    }
+    return 0;
   }
 
   /* ---------- toast ---------- */
@@ -641,6 +672,10 @@
 
   function followMusic(title) {
     if (state.sceneLocked) return;
+    // The film reel holds its ground: it is the default scene precisely
+    // because it moves on its own, and a track title must not yank the user
+    // out of it — only picking a scene by hand does that.
+    if (worlds[state.worldIndex] && worlds[state.worldIndex].slideshow) return;
     var moods = classifyTrack(title);
     var i = sceneForMoods(moods);
     if (i < 0 || i === state.worldIndex) return;
@@ -655,6 +690,23 @@
     // well — the Great Wave reads better bled than boxed.
     var landscapeScreen = window.innerWidth >= window.innerHeight;
     return w.orient === "portrait" && landscapeScreen;
+  }
+
+  // Three screen SHAPES, not three devices: a rotated tablet is a wide screen
+  // and should be framed like one. Matches the buckets tools/loops.py derives
+  // fit values for.
+  function screenBucket() {
+    var a = window.innerWidth / window.innerHeight;
+    return a >= 1.2 ? "wide" : a >= 0.85 ? "tall" : "phone";
+  }
+
+  // Per-element, never on the stage: during the 640ms fade the outgoing clip
+  // must keep its own framing.
+  function applyFit(el, w) {
+    if (!el) return;
+    var f = w && w.fit && w.fit[screenBucket()];
+    el.style.setProperty("--fit-zoom", f ? f[0] : 1.01);
+    el.style.setProperty("--fit-pos", f ? f[1] : "center");
   }
 
   function showStill(w, animate) {
@@ -678,18 +730,82 @@
     return true;
   }
 
+  /* ---------- the film slideshow ----------
+     One world, every clip. Advances go straight to showLocalWorld the way
+     gallery advances go to showGallery — never back through setWorld, so the
+     weather layer, the lock and the toast all stay untouched per slide. */
+
+  // A clip dwells for at least a minute; short loops repeat inside their
+  // dwell via the loop attribute, which the user has said is fine.
+  var FILM_MS = 60 * 1000;
+
+  function currentClip() { return LOOPS[state.slideIndex % LOOPS.length]; }
+
+  // What the readout should call the scene: on the reel that is the clip's
+  // own name, everywhere else the world's.
+  function displayTitle() {
+    var w = worlds[state.worldIndex];
+    return (w && w.slideshow && LOOPS.length) ? currentClip().title : (w ? w.title : "");
+  }
+
+  function showFilmSlide(animate) {
+    if (!LOOPS.length) return false;
+    var sw = worlds[state.worldIndex];
+    if (!sw || !sw.slideshow) return false;
+    var clip = currentClip();
+    // The slideshow world mirrors whichever clip is up, so the dock thumb,
+    // the postcard and the fit plumbing all read one shape of world.
+    sw.video = LOOP_BASE + clip.file;
+    sw.poster = LOOP_BASE + clip.poster;
+    sw.fit = clip.fit || null;
+    sw.bytes = clip.bytes || 0;
+    sw.tone = clip.tone || "light";
+    showLocalWorld(sw, animate !== false && !reduceMotion.matches);
+    $("#sceneTitle").textContent = clip.title;
+    $("#sceneKind").textContent = "Film · slideshow";
+    $("#sceneThumb").style.backgroundImage = "url('" + sw.poster + "')";
+    $("#scenePoster").style.backgroundImage = "url('" + sw.poster + "')";
+    // The chrome harmonizes with the clip: its tone flips day/night in auto,
+    // its dominant colour becomes the placard's accent rule. Never text ink.
+    if (clip.accent) document.documentElement.style.setProperty("--scene-accent", clip.accent);
+    if (state.mode === "auto") applyMode();
+    scheduleRotate();
+    return true;
+  }
+
+  function advanceFilm() {
+    if (!LOOPS.length) return;
+    state.slideIndex = (state.slideIndex + 1) % LOOPS.length;
+    persist();
+    showFilmSlide(true);
+  }
+
+  function rotateSpec() {
+    var w = worlds[state.worldIndex];
+    if (!w) return null;
+    if (w.kind === "gallery") return { ms: ROTATE_MS, n: state.gallery.length, go: showGallery };
+    if (w.slideshow) {
+      // Let a long clip finish at least one pass before moving on.
+      var dwell = Math.max(FILM_MS, (currentClip() && currentClip().dur || 0) * 1000 + 4000);
+      return { ms: dwell, n: LOOPS.length, go: advanceFilm };
+    }
+    return null;
+  }
+
   function scheduleRotate() {
     clearTimeout(state.rotateTimer);
-    if (worlds[state.worldIndex].kind !== "gallery") return;
-    if (state.rotate === "off" || state.gallery.length < 2) return;
+    var spec = rotateSpec();
+    if (!spec || state.rotate === "off" || spec.n < 2) return;
+    if (document.hidden) return;   // rearmed by visibilitychange on return
     // Under reduced motion the scene still changes, it just does not fade.
-    state.rotateTimer = setTimeout(function () { showGallery(true); }, ROTATE_MS);
+    state.rotateTimer = setTimeout(function () { spec.go(true); }, spec.ms);
   }
 
   function showLocalWorld(w, animate) {
     var next = (liveVideo + 1) % 2;
     var incoming = videos[next], outgoing = videos[liveVideo];
     $("#youtubeWrap").classList.remove("is-live");
+    applyFit(incoming, w);
 
     function reveal() {
       incoming.classList.add("is-live");
@@ -708,11 +824,16 @@
       }
       setTimeout(function () {
         if (!state.playing || outgoing !== videos[liveVideo]) outgoing.pause();
+        warmNextFilm();
       }, animate && !reduceMotion.matches ? 700 : 40);
     }
 
     if (incoming.getAttribute("src") === w.video && incoming.readyState >= 2) { reveal(); return; }
+    // The poster is the real no-black-frame guarantee: iOS treats preload as
+    // advisory, so every warm path below it can silently no-op.
+    if (w.poster) incoming.setAttribute("poster", w.poster);
     incoming.setAttribute("src", w.video);
+    if (window.PixelScene && PixelScene.unprime) PixelScene.unprime(incoming);
     incoming.load();
     // Wait for a real frame before fading, so a world change never shows black.
     var done = false;
@@ -723,6 +844,30 @@
       toast("That scene could not load. Staying where you are.");
     }, { once: true });
     setTimeout(ready, 2500);   // never hang on a slow network
+  }
+
+  // Deterministic prefetch: on the reel the next clip is always known, so the
+  // idle element buffers it while the current one plays and the crossfade is
+  // always warm. Fires only after the outgoing fade has fully settled.
+  function warmNextFilm() {
+    var w = worlds[state.worldIndex];
+    if (!w || !w.slideshow || LOOPS.length < 2) return;
+    if (document.hidden) return;
+    var c = navigator.connection;
+    if (c && (c.saveData || c.effectiveType === "2g" || c.effectiveType === "slow-2g")) return;
+    var nextClip = LOOPS[(state.slideIndex + 1) % LOOPS.length];
+    var idle = videos[(liveVideo + 1) % 2];
+    if (idle.classList.contains("is-live")) return;
+    var src = LOOP_BASE + nextClip.file;
+    if (idle.getAttribute("src") === src) return;
+    // Local files are cheap; remote ones over ~2.5MB only warm their metadata.
+    idle.preload = (!nextClip.bytes || nextClip.bytes < 2500000 ||
+                    location.protocol === "file:" || location.hostname === "localhost")
+      ? "auto" : "metadata";
+    idle.setAttribute("poster", LOOP_BASE + nextClip.poster);
+    idle.setAttribute("src", src);
+    if (window.PixelScene && PixelScene.unprime) PixelScene.unprime(idle);
+    idle.load();
   }
 
   function setWorld(index, announce) {
@@ -740,6 +885,10 @@
       toast("That backdrop is no longer embeddable. Pick another scene.");
       return;
     }
+    if (w.slideshow && !LOOPS.length) {
+      toast("No films added yet. See assets/loops/README.md to add your own.");
+      return;
+    }
     if (index === state.worldIndex) { closeSurface(); return; }
     // announce is false for automatic changes, so this only latches on a
     // choice the user actually made.
@@ -749,6 +898,12 @@
     paintWorld();
     clearTimeout(state.rotateTimer);
     world.classList.toggle("still-scene", w.kind === "still");
+    // Nothing removed this on leaving a portrait print, so the washi mat
+    // followed you into every other scene.
+    world.classList.toggle("mounted-print", w.kind === "still" && fitsMounted(w));
+    // The placard's accent rule belongs to the film reel; everything else
+    // gets the house amber back.
+    if (!w.slideshow) document.documentElement.style.removeProperty("--scene-accent");
     // The print's own weather comes with it — Sudden Shower arrives raining —
     // unless a hand-picked effect or a live room channel already owns the sky.
     if (w.kind === "still" && w.weather && !state.weatherLocked && !roomWeather()) {
@@ -793,7 +948,7 @@
       if (window.PixelScene) {
         if (w.pixel) PixelScene.showVideo(); else PixelScene.hideCanvas();
       }
-      showLocalWorld(w, true);
+      if (w.slideshow) showFilmSlide(true); else showLocalWorld(w, true);
     }
     persist();
     closeSurface();
@@ -814,19 +969,23 @@
     $("#worldGrid").innerHTML = worlds.map(function (w, i) {
       var unavailable = (w.kind === "youtube" && (!state.source || state.ytFailed)) ||
                         (w.kind === "gallery" && !state.gallery.length) ||
+                        (w.slideshow && !LOOPS.length) ||
                         (w.kind === "backdrop" && w.blocked);
       var poster = w.poster ||
+                   (w.slideshow && LOOPS.length ? LOOP_BASE + LOOPS[state.slideIndex % LOOPS.length].poster : "") ||
                    (w.kind === "backdrop" ? ytPoster(w.videoId) : "") ||
                    (w.kind === "gallery" && state.gallery.length ? state.gallery[0].src : "") ||
                    (w.kind === "youtube" && state.source ? ytPoster(state.source.id) : "");
       var kind = unavailable
         ? (w.kind === "gallery" ? "no art added"
-        : (w.kind === "backdrop" ? "embedding blocked" : "unavailable"))
+        : (w.slideshow ? "no films added"
+        : (w.kind === "backdrop" ? "embedding blocked" : "unavailable")))
+        : (w.slideshow ? LOOPS.length + (LOOPS.length === 1 ? " film" : " films")
         : (w.kind === "gallery" ? state.gallery.length + (state.gallery.length === 1 ? " scene" : " scenes")
         : (w.kind === "youtube" ? "tuned source"
         : (w.kind === "backdrop" ? "video backdrop"
-        : (w.kind === "still" ? "ghibli still"
-        : (w.pixel ? "pixel art" : "living loop")))));
+        : (w.kind === "still" ? "painting"
+        : (w.pixel ? "pixel art" : "living loop"))))));
       return '<button class="world-card" data-world="' + i + '" style="--i:' + i + '"' +
         ' aria-current="' + (i === state.worldIndex) + '"' + (unavailable ? " disabled" : "") + '>' +
         '<span class="world-card-screen" style="background-image:url(\'' + poster + '\')">' +
@@ -2896,6 +3055,11 @@
     // opacity:0 hides it from the eye but not from the keyboard. Without this
     // the return button is a permanent tab stop on a page that never showed it.
     $("#quietReturn").inert = !quiet;
+    // The same trap in reverse: the hidden dock kept ~12 live tab stops, and
+    // so did the shade grip and the twelve tokens still lying on the picture.
+    $("#controlDock").inert = quiet;
+    $("#tokenLayer").inert = quiet;
+    $("#shade").inert = quiet;
     if (quiet) $("#quietReturn").focus();
   }
 
@@ -2911,7 +3075,7 @@
     if (bootDone) return;
     bootDone = true;
     world.classList.remove("booting", "sweeping");
-    $("#sceneTitle").textContent = worlds[state.worldIndex].title;
+    $("#sceneTitle").textContent = displayTitle();
     $$("#channelGrid input[type=range]").forEach(function (inp) {
       inp.style.setProperty("--fill", state.values[inp.dataset.layer] + "%");
     });
@@ -2974,13 +3138,18 @@
 
     var started = Date.now(), TOTAL = 2200, ended = false;
     var fill = $("#bootFill"), pct = $("#bootPct"), status = $("#bootStatus");
+    var bar = $("#bootBar");
+    // The app is fully built behind this opaque overlay; without inert, Tab
+    // walks a machine nobody can see.
+    world.inert = true;
 
     // the daily line: one shared object, offered, never pushed
     var today = todaysPairing();
     var todayEl = $("#bootToday");
+    // NBSPs in the tail: "press T" once wrapped with the T alone on its own line.
     if (todayEl) todayEl.textContent =
       "today \u00b7 " + today.world.title.toLowerCase() +
-      " \u00b7 " + today.preset.title.toLowerCase() + " \u2014 press T";
+      " \u00b7 " + today.preset.title.toLowerCase() + "\u00a0\u2014 press\u00a0T";
 
     function end(e) {
       if (ended) return;
@@ -2993,6 +3162,7 @@
       // The gesture that skipped the boot is the gesture that unlocks audio.
       UISound.unlock();
       UISound.play("boot");
+      world.inert = false;
       el.classList.add("is-done");
       setTimeout(function () { if (el.parentNode) el.remove(); }, 420);
       done();
@@ -3004,6 +3174,12 @@
       var p = Math.round(t * 100);
       if (fill) fill.style.width = p + "%";
       if (pct) pct.textContent = p + "%";
+      // Quarter steps, not every frame: ~130 aria-valuenow writes in 2.2s is
+      // a screen-reader firehose. The visual fill still runs per frame.
+      if (bar) {
+        var step = Math.floor(p / 25) * 25;
+        if (String(step) !== bar.getAttribute("aria-valuenow")) bar.setAttribute("aria-valuenow", String(step));
+      }
       if (status) status.textContent = BOOT_LINES[Math.min(BOOT_LINES.length - 1, Math.floor(t * BOOT_LINES.length))];
       if (t >= 1) { end(); return; }
       requestAnimationFrame(tick);
@@ -3025,7 +3201,7 @@
     inputs.forEach(function (inp) { inp.style.setProperty("--fill", "0%"); });
 
     // Type the scene name in — brief, and it explains what channel you are on.
-    var title = worlds[state.worldIndex].title;
+    var title = displayTitle();
     var per = Math.min(26, Math.floor(340 / Math.max(1, title.length)));
     $("#sceneTitle").textContent = "";
     var ci = 0;
@@ -3073,7 +3249,11 @@
   function bind() {
     $("#worldGrid").addEventListener("click", function (e) {
       var b = e.target.closest("[data-world]");
-      if (b) setWorld(Number(b.dataset.world));
+      // announce=true: this is the one path that is unambiguously a choice,
+      // and it is what latches sceneLocked. It was called with no second
+      // argument — the toast announced a hand-picked scene that had never
+      // actually locked, and the next track title would yank it away.
+      if (b) setWorld(Number(b.dataset.world), true);
     });
     $("#trackList").addEventListener("click", function (e) {
       var b = e.target.closest("[data-track]");
@@ -3262,14 +3442,45 @@
 
     document.addEventListener("keydown", onKey);
 
+    // Geometry is re-derived unconditionally. sizeWeather used to be the only
+    // viewport hook and it ran only with weather on — so rotating a phone
+    // under a clear sky never re-fit the mounted print or the video framing.
+    function onViewport() {
+      var w = worlds[state.worldIndex];
+      if (!w) return;
+      world.classList.toggle("mounted-print", w.kind === "still" && fitsMounted(w));
+      if (w.kind === "local") applyFit(videos[liveVideo], w);
+      if (weatherActive()) sizeWeather();
+    }
     var resizeQueued = false;
-    window.addEventListener("resize", function () {
+    function queueViewport() {
       if (resizeQueued) return;
       resizeQueued = true;
-      requestAnimationFrame(function () { resizeQueued = false; if (weatherActive()) sizeWeather(); });
+      requestAnimationFrame(function () { resizeQueued = false; onViewport(); });
+    }
+    window.addEventListener("resize", queueViewport);
+    // iOS reports the pre-rotation viewport during this event; measure again
+    // once the metrics have settled.
+    window.addEventListener("orientationchange", function () {
+      queueViewport(); setTimeout(onViewport, 250);
     });
     reduceMotion.addEventListener("change", function () {
       if (weatherActive()) startWeather(); else stopWeather();
+    });
+
+    // A slideshow nobody can see is waste, and two buffering videos in a
+    // hidden tab doubly so.
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) {
+        videos.forEach(function (v) { v.pause(); });
+        clearTimeout(state.rotateTimer);
+        return;
+      }
+      var w = worlds[state.worldIndex];
+      if (state.playing && w && w.kind === "local" && !reduceMotion.matches) {
+        var p = videos[liveVideo].play(); if (p && p.catch) p.catch(function () {});
+      }
+      scheduleRotate();
     });
   }
 
@@ -3326,10 +3537,11 @@
     var sharedRoom = decodeRoomHash();
     if (sharedRoom) applySharedRoom(sharedRoom);
     else if (freshVisit) {
-      // A first visit opens on today's pairing with the shade matching the
+      // A first visit opens on the film reel — the scene that moves on its
+      // own — with today's preset in the room and the shade matching the
       // visitor's actual clock: arrive at night, the floating world is dark.
       var t0 = todaysPairing();
-      state.worldIndex = t0.index;
+      state.worldIndex = defaultWorldIndex() || t0.index;
       state.values = mix(t0.preset.values);
       state.activePreset = t0.preset.id;
       var hr = new Date().getHours();
@@ -3367,8 +3579,15 @@
     // have been painted before this point.
     if (w.kind === "still") showStill(w, false);
     if (w.kind === "backdrop") setBackdrop(w);
-    if (w.kind === "local") {
+    if (w.slideshow) {
+      // Mirrors the current clip onto the world, then takes the ordinary
+      // local path below through showLocalWorld's fast branch.
+      liveVideo = 1;   // so the incoming element is #sceneA
+      showFilmSlide(false);
+    } else if (w.kind === "local") {
       videos[0].setAttribute("src", w.video);
+      if (w.poster) videos[0].setAttribute("poster", w.poster);
+      applyFit(videos[0], w);
       videos[0].classList.add("is-live");
       liveVideo = 0;
       if (window.PixelScene && w.pixel) {

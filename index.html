@@ -16,13 +16,8 @@
   <meta name="description" content="Drag sounds onto a 160-year-old painting and hear them rain. Hiroshige's floating world with live weather, a twelve-sound room, and your own music.">
   <title>UKIYO — a floating world machine</title>
   <link rel="preload" href="assets/fonts/plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/barlow-cond-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Silkscreen is a true 8px-grid bitmap face: it is only sharp at whole
-       multiples of 8, which is why it is used at 16 and 32 and nowhere else. -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap">
-  <link rel="stylesheet" href="assets/styles.css?v=65">
+  <link rel="preload" href="assets/fonts/shippori-mincho-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/styles.css?v=68">
 </head>
 <body>
   <!-- Per-channel palette ramps. feColorMatrix flattens to luminance,
@@ -66,14 +61,17 @@
   <!-- The browser will not start audio without a user gesture, so a gate has to
        exist either way. Better a boot screen than a "click to enable sound"
        toast: it is the same click, and it belongs to the machine. -->
-  <div class="boot" id="bootScreen" role="status" aria-label="Starting up">
+  <div class="boot" id="bootScreen" role="dialog" aria-modal="true" aria-labelledby="bootMark">
     <div class="boot-inner">
-      <p class="boot-mark">UKIYO</p>
-      <div class="boot-bar"><span id="bootFill"></span></div>
-      <p class="boot-line"><span id="bootStatus">MEMORY OK</span><span id="bootPct">0%</span></p>
+      <p class="boot-mark" id="bootMark">UKIYO</p>
+      <div class="boot-bar" id="bootBar" role="progressbar" aria-label="Starting up"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="bootFill"></span></div>
+      <p class="boot-line"><span id="bootStatus" role="status" aria-live="polite">MEMORY OK</span><span id="bootPct" aria-hidden="true">0%</span></p>
       <p class="boot-sub">the floating world · 浮世</p>
       <p class="boot-today" id="bootToday"></p>
-      <p class="boot-skip">PRESS ANY KEY TO START</p>
+      <!-- A real button: "press any key" needs something a switch user can
+           actually reach, and the pointerdown listener makes it true anyway. -->
+      <button type="button" class="boot-skip">PRESS ANY KEY TO START</button>
     </div>
   </div>
   <a class="skip-link" href="#controlDock">Skip to player controls</a>
@@ -91,7 +89,8 @@
       <div class="scene-poster" id="scenePoster"></div>
       <!-- Two videos so a world change crossfades instead of blanking on src swap -->
       <video class="scene-video" id="sceneA" muted loop playsinline preload="metadata"></video>
-      <video class="scene-video" id="sceneB" muted loop playsinline preload="none"></video>
+      <!-- metadata, not none: the idle element is the crossfade's warm half. -->
+      <video class="scene-video" id="sceneB" muted loop playsinline preload="metadata"></video>
       <div class="youtube-wrap" id="youtubeWrap"><div id="youtubePlayer"></div></div>
       <!-- A second, permanently muted player: backdrop channels are wallpaper,
            independent of whatever the tuner is playing. -->
@@ -135,7 +134,7 @@
       <svg class="icon" aria-hidden="true"><use href="#i-hourglass-simple"/></svg>
       <span class="micro" id="focusStatusLabel">Focus</span>
       <strong id="focusCountdown">25:00</strong>
-      <button class="hw hw-icon" id="stopFocusButton" aria-label="Stop focus timer" style="min-height:32px;width:32px">
+      <button class="hw hw-icon" id="stopFocusButton" aria-label="Stop focus timer">
         <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
       </button>
     </div>
@@ -312,7 +311,7 @@
           <span class="micro">Focus timer</span>
           <h2 id="focusPopoverTitle" tabindex="-1">Focus timer</h2>
         </div>
-        <button class="hw hw-icon" id="closeFocusButton" aria-label="Close focus timer" style="min-height:36px;width:36px">
+        <button class="hw hw-icon" id="closeFocusButton" aria-label="Close focus timer">
           <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
         </button>
       </div>
@@ -336,7 +335,9 @@
     </section>
 
     <!-- ============ FACEPLATE ============ -->
-    <nav class="control-dock" id="controlDock" aria-label="Player controls">
+    <!-- tabindex="-1": the skip link's fragment jump only moves real focus
+         when the target can programmatically take it. -->
+    <nav class="control-dock" id="controlDock" aria-label="Player controls" tabindex="-1">
       <button class="source-key" id="worldButton" aria-controls="worldPanel" aria-expanded="false"
               aria-label="Scene selector: Rain window">
         <span class="source-thumb" id="sceneThumb" aria-hidden="true"></span>
@@ -359,20 +360,25 @@
         </button>
       </div>
 
-      <button class="now-key" id="musicButton" aria-controls="musicPanel" aria-expanded="false">
-        <span class="now-copy">
-          <small>Playing</small>
-          <strong class="dotmatrix" id="dockSongTitle">Tune a source →</strong>
-            <!-- Below 540px the prev/next keys are hidden, so this is the only
-                 way to move through a track on a phone. -->
-            <span class="scrub" id="scrubWrap" hidden>
-              <input id="scrub" type="range" min="0" max="1000" value="0" step="1"
-                     aria-label="Seek through the track">
-              <output id="scrubTime">0:00 / 0:00</output>
-            </span>
+      <!-- A div, not a button: the scrub range lives in the same LCD well, and
+           an interactive control inside a <button> is invalid HTML — seeking
+           used to open the tuner as a side effect of its own click. -->
+      <div class="now-key">
+        <button class="now-open" id="musicButton" aria-controls="musicPanel" aria-expanded="false">
+          <span class="now-copy">
+            <small>Playing</small>
+            <strong class="dotmatrix" id="dockSongTitle">Tune a source →</strong>
+          </span>
+          <svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>
+        </button>
+        <!-- Below 540px the prev/next keys are hidden, so this is the only
+             way to move through a track on a phone. -->
+        <span class="scrub" id="scrubWrap" hidden>
+          <input id="scrub" type="range" min="0" max="1000" value="0" step="1"
+                 aria-label="Seek through the track">
+          <output id="scrubTime">0:00 / 0:00</output>
         </span>
-        <svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>
-      </button>
+      </div>
 
       <!-- Twelve bars of real output, with a peak cap that falls at a fixed rate.
            A meter that only rises reads as a bar chart; the falling cap is what
@@ -420,10 +426,16 @@
     </nav>
   </main>
 
-  <script src="assets/audio-engine.js?v=65"></script>
-  <script src="assets/ui-sound.js?v=65"></script>
-  <script src="assets/grabbable.js?v=65"></script>
-  <script src="assets/scene.js?v=65"></script>
-  <script src="assets/app.js?v=65"></script>
+  <!-- The film reel. loops.js is a committed empty stub; loops.local.js is
+       written by tools/loops.py and gitignored, so a clean clone gets zero
+       loop scenes instead of thirty broken cards. Loaded before app.js so
+       worlds[] can still be composed at parse time. -->
+  <script src="assets/loops/loops.js?v=68"></script>
+  <script src="assets/loops/loops.local.js?v=68"></script>
+  <script src="assets/audio-engine.js?v=68"></script>
+  <script src="assets/ui-sound.js?v=68"></script>
+  <script src="assets/grabbable.js?v=68"></script>
+  <script src="assets/scene.js?v=68"></script>
+  <script src="assets/app.js?v=68"></script>
 </body>
 </html>

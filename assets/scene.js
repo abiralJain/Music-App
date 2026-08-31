@@ -255,6 +255,11 @@ window.PixelScene = (function () {
     start: function () { if (this._start) this._start(); },
     stop:  function () { if (this._stop) this._stop(); },
 
+    // primed is keyed by ELEMENT, not by media: an element whose src changed
+    // has no presented frame again, and drawImage fails silently. Every src
+    // swap has to retract the mark or a later pixel channel paints nothing.
+    unprime: function (el) { if (primed && el) primed.delete(el); },
+
     // One frame, for reduced-motion and for painting before playback starts.
     redraw: function () { drawFrame(); },
 

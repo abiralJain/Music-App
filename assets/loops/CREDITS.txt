@@ -1,0 +1,7 @@
+Local film loops — personal use only, never committed.
+
+The clips this folder is generated from are stills and scenes from Studio
+Ghibli films (© Studio Ghibli), Makoto Shinkai films (© CoMix Wave Films),
+and various AI-generated homages downloaded from social video sites. They
+are used here as personal desktop ambience for the machine's owner and are
+excluded from the public repository by .gitignore.

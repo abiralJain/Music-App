@@ -10,3 +10,10 @@ assets/original/
 # public, so those stills must never be pushed — the pack lives only on the
 # machines of people who add it themselves. The shipped pack is ukiyoe/.
 assets/scenes/ghibli/
+
+# Encoded background film loops. Derived from local source videos via
+# tools/loops.py; the sources are third-party clips whose provenance this
+# public repo cannot assert, so the same rule as the ghibli pack applies.
+assets/loops/*.mp4
+assets/loops/*.jpg
+assets/loops/loops.local.js
