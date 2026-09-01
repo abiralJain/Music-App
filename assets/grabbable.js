@@ -147,13 +147,15 @@ window.Grabbable = (function () {
     return {
       state: st,
       setTilt: function (d) { tilt = d; },
-      // Move it without a gesture — used by the keyboard path, which must reach
-      // every position a pointer can.
+      // Move it without a gesture — used by the keyboard path and programmatic
+      // re-seating. Deliberately does NOT fire onMove: a programmatic placement
+      // must never write back through the position→value mapping (at boot the
+      // layout can be 0×0, and the degenerate mapping was writing 100 into
+      // every channel). Callers that want the side effect invoke it themselves.
       moveTo: function (x, y, animate) {
         st.x = x; st.y = y;
         if (animate === false || reduce.matches) { el.style.transition = "none"; paint(); }
         else settle();
-        if (opts.onMove) opts.onMove(st);
       },
       destroy: function () {
         cancelAnimationFrame(frame);

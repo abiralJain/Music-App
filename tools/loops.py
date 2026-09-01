@@ -192,10 +192,13 @@ def encode():
         # clip's resolution, and portrait is exactly where the phone needs it.
         scale = ("scale=w='min(1280,iw)':h='min(1280,ih)':"
                  "force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos")
-        base = rotf + scale + ",fps=24"
+        # Light denoise before a mild sharpen: the sources are 720p-class web
+        # encodes, so sharpening alone amplifies their compression noise. This
+        # pair recovers perceived detail without inventing halos.
+        base = rotf + scale + ",fps=24,hqdn3d=1.2:1.2:4:4,unsharp=5:5:0.4:3:3:0.0"
 
         vcodec = ["-c:v", "libx264", "-profile:v", "high", "-pix_fmt", "yuv420p",
-                  "-preset", "slow", "-crf", "24",
+                  "-preset", "slow", "-crf", "19",
                   # Fixed 2s GOP: the loop attribute restarts by seeking to 0,
                   # and an open GOP makes that seek expensive.
                   "-g", "48", "-keyint_min", "48", "-sc_threshold", "0",
@@ -220,7 +223,7 @@ def encode():
         # Poster from the OUTPUT, so it matches post-rotation/post-trim exactly.
         run(["ffmpeg", "-nostdin", "-y", "-v", "error",
              "-ss", str(max(0.0, out_dur * 0.4)), "-i", dst,
-             "-frames:v", "1", "-vf", "scale=640:-2", "-q:v", "5", poster])
+             "-frames:v", "1", "-vf", "scale=960:-2", "-q:v", "3", poster])
 
         om = ffprobe(dst)
         accent, luma = avg_color(poster)

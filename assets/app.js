@@ -25,7 +25,24 @@
   var STATIONS = [
     { id: "-sanFLupL-E", label: "Ghibli piano for sleep",      note: "1 h 55 m" },
     { id: "-pbjXqByPLA", label: "The best of Ghibli piano",     note: "1 h 21 m" },
-    { id: "7voSN82FGF0", label: "Ghibli summer night piano",    note: "7 h 18 m" }
+    { id: "7voSN82FGF0", label: "Ghibli summer night piano",    note: "7 h 18 m" },
+    // The house library, added 2026-09-01 (owner's picks; titles from oEmbed).
+    // Not player-probed like the three above — if one stops embedding, the
+    // self-heal in sourceFailed() walks to the next station on its own.
+    { id: "sF80I-TQiW0", label: "90s chill lofi · rain",        note: "The Japanese Town" },
+    { id: "gUbNlN_SqpE", label: "Seaside coffee lofi",          note: "Healing Me" },
+    { id: "JCKBaJDRMw4", label: "Chill beats to work to",       note: "Lofi Girl" },
+    { id: "p_LcrQeZzwI", label: "Deep focus study lofi",        note: "Little Soul" },
+    { id: "NWw1ZuDIjlw", label: "Mochi's summer café",     note: "Mochi Cat Lofi" },
+    { id: "BCxTQq0UiFs", label: "Chill lofi mix vol. 32",       note: "Art Is Sound" },
+    { id: "HGl75kurxok", label: "Piano Ghibli collection",      note: "Vangakuz" },
+    { id: "I4fxYapxu5M", label: "3 hours of Studio Ghibli",     note: "relaxing piano" },
+    { id: "Njt1io9jakQ", label: "Ghibli concert, unbroken",     note: "Relaxation Day" },
+    { id: "MzgMBrtrFc4", label: "Japanese bamboo flute",        note: "guzheng · erhu" },
+    { id: "Zu_pBbCwovA", label: "Poems of the Moon",            note: "BigRicePiano" },
+    { id: "r7IplE0fZcM", label: "Deep focus Asian flute",       note: "traditional" },
+    { id: "XmBji07OtwA", label: "Chinese instrumental",         note: "flute · guzheng · erhu" },
+    { id: "9JCwQEJgVtA", label: "Chinese classical guzheng",    note: "traditional" }
   ];
 
   // What YouTube's numeric onError codes actually mean, so the app can say
@@ -48,39 +65,10 @@
       body: "Your room and scene are untouched. Try another link below." };
   }
 
-  // Looping video backdrops, played muted in their own player so they are
-  // independent of whatever the tuner is playing.
-  //
-  // Every id here was probed with a real YT.Player and reported isPlayable on
-  // 2026-08-29. That check is not optional: of sixteen candidates, SIX came
-  // back errorCode:"auth" (embedding switched off by the uploader) while still
-  // returning a perfectly valid oEmbed response — which is exactly why the
-  // README says oEmbed cannot be used to test embeddability.
-  //
-  // These are third-party uploads of copyrighted footage and can be withdrawn
-  // at any time, the same way the original hardcoded Ghibli video was. The
-  // channel disables itself if that happens rather than showing a dead frame.
-  // `z9Ug-3qhrwY` is from an official HBO Max channel and `b-cI-vK2Dzo` is
-  // published royalty-free, so those two are the most durable of the set.
-  var BACKDROPS = [
-    { id: "ghibli-nature",  title: "Ghibli nature",   videoId: "z9Ug-3qhrwY",
-      note: "Studio Ghibli scenery · official upload" },
-    { id: "howls-hills",    title: "Howl's hills",    videoId: "ipQJR0rcvzw",
-      note: "Moving Castle scenery · 10 h, no music" },
-    { id: "ghibli-meadow",  title: "Ghibli meadow",   videoId: "KAqUpjcs_xc",
-      note: "Ghibli-inspired meadow · 6 h" },
-    { id: "cyber-loft",     title: "Cyberpunk loft",  videoId: "pCo1g5NQAqc",
-      note: "Rain over a neon city · 10 h" },
-    { id: "jungle-room",    title: "Jungle bedroom",  videoId: "b-cI-vK2Dzo",
-      note: "Rain loop · royalty-free" },
-    { id: "quiet-meadow",   title: "Quiet meadow",    videoId: "fQf8KdPjO_Y",
-      note: "Open field · 10 min loop" }
-  ];
-
-  // The filmed scenes. Each appears twice below: once as itself, once through
-  // the pixel grid.
   /* ---------- scene packs ----------
-     Two libraries of paintings.
+     Two libraries of paintings. Each pack is shown as ONE slideshow scene —
+     the paintings drift (Ken Burns) and rotate, so nothing on screen is ever
+     a static frame.
 
      `ukiyoe` ships. Hiroshige and Hokusai painted the exact weather this
      machine renders — sudden rain, evening snow, morning mist, fireflies —
@@ -215,17 +203,6 @@
     }
   };
 
-  // The pack has to be known before worlds[] is composed, which happens at
-  // parse time — so peek at the persisted blob rather than waiting for the
-  // full restore().
-  var activePack = "ukiyoe";
-  try {
-    var packPeek = JSON.parse(localStorage.getItem("dreamWorldsV4") || "{}");
-    if (PACKS[packPeek.pack]) activePack = packPeek.pack;
-  } catch (e) {}
-
-  var STILLS = PACKS[activePack].scenes;
-
   var FILMED = [
     { id: "rain-window", title: "Rain window", note: "A quiet city seen through rain",
       video: "assets/rain-window.mp4", poster: "assets/rain-window-poster.jpg", ramp: "slate",
@@ -238,65 +215,47 @@
       tone: "light", moods: ["lake", "bright", "clear", "study"] }
   ];
 
-  // The pixel pass used to be applied to every channel unconditionally, so the
-  // filmed scenes were still loading and playing but never shown — the canvas
-  // covered them. `pixel` is now per channel, and each filmed scene is offered
-  // both ways rather than one look replacing the other.
+  /* ---------- the scene list ----------
+     Everything moves. The film reel leads (every clip, one after another),
+     then every clip as its own scene, then the three filmed loops, then the
+     two painting slideshows — never a static frame — then the tuned source. */
   var worlds = [];
-  // Stills lead. The app used to open on a near-monochrome rainy city measured
-  // at 9.5% saturation, which is most of why it felt like a grey afternoon.
-  STILLS.forEach(function (s) {
-    var pk = PACKS[activePack];
-    worlds.push({ id: s.id, title: s.title, kind: "still", note: s.note,
-                  art: pk.base + s.file + pk.ext,
-                  poster: pk.base + "thumb-" + s.file + pk.thumbExt,
-                  moods: s.moods, tone: s.tone, orient: s.orient || "landscape",
-                  weather: s.weather || null, artist: s.artist || "",
-                  ramp: null, pixel: false });
+  var LOOPS = (window.DW_LOOPS && window.DW_LOOPS.clips) || [];
+  var LOOP_BASE = (window.DW_LOOPS && window.DW_LOOPS.base) || "assets/loops/";
+  // The film reel: one world that plays every clip in turn, mirroring
+  // whichever clip is up. Deliberately no moods: the music matcher must
+  // never land you mid-reel.
+  worlds.push({ id: "film-slideshow", title: "Slideshow", kind: "local",
+                slideshow: true,
+                video: null, poster: null, fit: null, bytes: 0,
+                tone: "light", moods: null, ramp: null, pixel: false });
+  // Every clip is also its own scene, so the whole library is visible and
+  // choosable rather than trapped inside the reel.
+  LOOPS.forEach(function (c) {
+    worlds.push({ id: c.id, title: c.title, kind: "local",
+                  video: LOOP_BASE + c.file, poster: LOOP_BASE + c.poster,
+                  fit: c.fit || null, bytes: c.bytes || 0,
+                  tone: c.tone || "light", accent: c.accent || null,
+                  moods: c.moods || null, ramp: null, pixel: false });
   });
   FILMED.forEach(function (s) {
-    worlds.push({ id: s.id, title: s.title, kind: "local", note: s.note,
+    worlds.push({ id: s.id, title: s.title, kind: "local",
                   video: s.video, poster: s.poster, ramp: null, pixel: false,
                   tone: s.tone, moods: s.moods });
   });
-  FILMED.forEach(function (s) {
-    worlds.push({ id: s.id + "-pixel", title: s.title, kind: "local",
-                  note: s.note + " · pixel art",
-                  video: s.video, poster: s.poster, ramp: s.ramp, pixel: true });
-  });
-  // The film reel. Thirty-odd local loops arrive as ONE world, not thirty
-  // cards: the clips live in LOOPS and the slideshow world mirrors whichever
-  // clip is up, mutating in place the way `blocked` already does. Loaded
-  // synchronously ahead of this file (loops.js / loops.local.js) so worlds[]
-  // is still composed at parse time. No clips => the card is disabled, which
-  // is the shipped state of a public clone.
-  // Deliberately no moods: the music matcher must never land you mid-reel.
-  var LOOPS = (window.DW_LOOPS && window.DW_LOOPS.clips) || [];
-  var LOOP_BASE = (window.DW_LOOPS && window.DW_LOOPS.base) || "assets/loops/";
-  worlds.push({ id: "film-slideshow", title: "Slideshow", kind: "local",
-                slideshow: true,
-                note: "every film, one after another",
-                video: null, poster: null, fit: null, bytes: 0,
-                tone: "light", moods: null, ramp: null, pixel: false });
-  BACKDROPS.forEach(function (b) {
-    worlds.push({ id: b.id, title: b.title, kind: "backdrop", note: b.note,
-                  videoId: b.videoId, video: null, poster: null,
-                  ramp: null, pixel: false });
-  });
+  // The painting packs, one slideshow scene each: the print drifts (Ken
+  // Burns), the pack rotates, and each print brings its own weather.
+  worlds.push({ id: "ukiyoe-show", title: "The Floating World", kind: "artshow",
+                pack: "ukiyoe", art: null, poster: null, tone: "light",
+                orient: "landscape", ramp: null, pixel: false });
+  worlds.push({ id: "ghibli-show", title: "Ghibli", kind: "artshow",
+                pack: "ghibli", art: null, poster: null, tone: "light",
+                orient: "landscape", ramp: null, pixel: false });
   // No pixel twin for the tuned source: a cross-origin iframe cannot be drawn
-  // to a canvas, so the ramp never applied to it. What it used to show was the
-  // last local video, pixelated, painted over the video you actually tuned.
+  // to a canvas, so the ramp never applied to it.
   worlds.push({ id: "your-source", title: "Your source", kind: "youtube",
-                note: "Your tuned video as the scene",
                 video: null, poster: null, ramp: null, pixel: false });
-  worlds.push({ id: "gallery", title: "Gallery", kind: "gallery",
-                note: "Your pixel-art scenes, rotating",
-                video: null, poster: null, ramp: null, pixel: true });
 
-  // Rotation for the Gallery channel. "time" maps scenes to the part of day,
-  // which is the only mode that means anything on its own; "interval" just
-  // cycles. Both crossfade like any other channel change.
-  var ROTATE_MS = 8 * 60000;
   function partOfDay(h) {
     if (h < 7)  return "night";
     if (h < 11) return "dawn";
@@ -345,6 +304,10 @@
     document.documentElement.style.colorScheme = m === "day" ? "light" : "dark";
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", MODE_THEME[m] || MODE_THEME.night);
+    // The shade is this same mode seen once more: whenever the mode changes
+    // from anywhere else — the Display row, the clock, a scene's tone — the
+    // blind moves to match, so the grip's position never lies about the light.
+    if (!shade.dragging && Math.abs(shade.v - SHADE_POS[m]) > 0.01) animateShade(SHADE_POS[m], false);
     var btn = $("#modeButton");
     if (btn) {
       btn.setAttribute("aria-label", "Display mode: " + MODE_LABEL[state.mode] +
@@ -356,8 +319,11 @@
     }
     // Only "auto" needs to keep watching the clock.
     clearInterval(modeClockTimer);
+    // Compare against resolvedMode(), not the raw clock: scene tone wins over
+    // the clock in auto, and checking the clock here made the timer fight the
+    // scene (and the shade) once a minute, flipping the chrome back and forth.
     if (state.mode === "auto") modeClockTimer = setInterval(function () {
-      if (document.documentElement.getAttribute("data-mode") !== modeForClock()) applyMode();
+      if (document.documentElement.getAttribute("data-mode") !== resolvedMode()) applyMode();
     }, 60000);
   }
 
@@ -373,18 +339,18 @@
   // as equipment; twelve coloured objects read as things you can pick up. The
   // hues are held at a similar lightness so no single one shouts over the rest.
   var roomLayers = [
-    { id: "rain",    name: "Gentle rain",    note: "window",  icon: "i-cloud-rain",      tint: "#6FB4F2" },
-    { id: "forest",  name: "Forest morning", note: "birds",   icon: "i-tree",            tint: "#6FD08C" },
-    { id: "cafe",    name: "Café murmur",    note: "distant", icon: "i-coffee",          tint: "#E0A167" },
-    { id: "brown",   name: "Brown noise",    note: "deep",    icon: "i-wave-sine",       tint: "#D09D77" },
-    { id: "soft",    name: "Soft air",       note: "tonal",   icon: "i-wind",            tint: "#8FD7D2" },
-    { id: "white",   name: "White noise",    note: "clean",   icon: "i-radio",           tint: "#BFCBD8" },
-    { id: "wind",    name: "Open window",    note: "gusts",   icon: "i-wind",            tint: "#7FD2C0" },
-    { id: "ocean",   name: "Ocean tide",     note: "swell",   icon: "i-waves",           tint: "#5FBBD8" },
-    { id: "stream",  name: "Small stream",   note: "water",   icon: "i-drop",            tint: "#79CFE8" },
-    { id: "fire",    name: "Fireplace",      note: "crackle", icon: "i-fire",            tint: "#F2925F" },
-    { id: "night",   name: "Night garden",   note: "insects", icon: "i-moon-stars",      tint: "#B99BEA" },
-    { id: "thunder", name: "Distant thunder",note: "rumble",  icon: "i-cloud-lightning", tint: "#98A4E8" }
+    { id: "rain",    name: "Gentle rain",    short: "Rain",    icon: "i-cloud-rain",      tint: "#6FB4F2" },
+    { id: "forest",  name: "Forest morning", short: "Birds",   icon: "i-tree",            tint: "#6FD08C" },
+    { id: "cafe",    name: "Café murmur",    short: "Café",    icon: "i-coffee",          tint: "#E0A167" },
+    { id: "brown",   name: "Brown noise",    short: "Brown",   icon: "i-wave-sine",       tint: "#D09D77" },
+    { id: "soft",    name: "Soft air",       short: "Air",     icon: "i-wind",            tint: "#8FD7D2" },
+    { id: "white",   name: "White noise",    short: "White",   icon: "i-radio",           tint: "#BFCBD8" },
+    { id: "wind",    name: "Open window",    short: "Wind",    icon: "i-wind",            tint: "#7FD2C0" },
+    { id: "ocean",   name: "Ocean tide",     short: "Ocean",   icon: "i-waves",           tint: "#5FBBD8" },
+    { id: "stream",  name: "Small stream",   short: "Stream",  icon: "i-drop",            tint: "#79CFE8" },
+    { id: "fire",    name: "Fireplace",      short: "Fire",    icon: "i-fire",            tint: "#F2925F" },
+    { id: "night",   name: "Night garden",   short: "Night",   icon: "i-moon-stars",      tint: "#B99BEA" },
+    { id: "thunder", name: "Distant thunder",short: "Thunder", icon: "i-cloud-lightning", tint: "#98A4E8" }
   ];
 
   var emptyRoom = {};
@@ -408,7 +374,7 @@
   var state = {
     worldIndex: 0, playing: false, musicLevel: 52, roomLevel: 62,
     values: mix(presets[0].values), muted: {}, activePreset: presets[0].id, savedRoom: null,
-    weather: "none", weatherIntensity: 48, drift: false, driftTimer: null,
+    weather: "none", weatherIntensity: 64, drift: false, driftTimer: null,
     mode: "auto",              // auto | night | dusk | day
     sceneLocked: false,        // a hand-picked scene wins over the music matcher
     weatherLocked: false,      // a hand-picked effect wins over the room mix
@@ -418,7 +384,9 @@
     source: null,              // { kind:'video'|'playlist', id, label, station? }
     savedSources: [],          // [{ kind, id, label, savedAt }] — the user's own
     stationIndex: -1,
-    gallery: [], galleryIndex: 0, slideIndex: 0, rotate: "time", rotateTimer: null,
+    slideIndex: 0, artIndex: { ukiyoe: 0, ghibli: 0 },
+    rotate: "time", rotateTimer: null,
+    shuffle: false,            // the slot machine picks at random when on
     tracks: [], trackIndex: 0,
     ytApiLoading: false, ytReady: false, ytFailed: false
   };
@@ -443,16 +411,16 @@
   function writeState() {
     try {
       localStorage.setItem("dreamWorldsV4", JSON.stringify({
-        worldIndex: state.pendingGallery != null ? state.pendingGallery : state.worldIndex,
+        worldIndex: state.worldIndex,
         musicLevel: state.musicLevel,
         roomLevel: state.roomLevel, values: state.values,
         muted: state.muted, activePreset: state.activePreset, savedRoom: state.savedRoom,
         weather: state.weather, weatherIntensity: state.weatherIntensity, drift: state.drift,
         source: state.source, savedSources: state.savedSources, trackIndex: state.trackIndex,
-        rotate: state.rotate, galleryIndex: state.galleryIndex,
-        slideIndex: state.slideIndex,
+        rotate: state.rotate,
+        slideIndex: state.slideIndex, artIndex: state.artIndex,
+        shuffle: state.shuffle,
         worldId: (worlds[state.worldIndex] || {}).id,
-        pack: activePack,
         mode: state.mode, sound: state.sound, sceneLocked: state.sceneLocked,
         weatherLocked: state.weatherLocked
       }));
@@ -481,7 +449,7 @@
     state.activePreset = saved.activePreset || null;
     state.savedRoom = saved.savedRoom || null;
     state.weather = WEATHERS.indexOf(saved.weather) >= 0 ? saved.weather : "none";
-    state.weatherIntensity = Math.max(10, Math.min(100, Number(saved.weatherIntensity) || 48));
+    state.weatherIntensity = Math.max(10, Math.min(100, Number(saved.weatherIntensity) || 64));
     state.drift = Boolean(saved.drift);
     state.source = saved.source || null;
     state.savedSources = (Array.isArray(saved.savedSources) ? saved.savedSources : [])
@@ -493,23 +461,24 @@
         if (worlds[wi].id === saved.worldId) { state.worldIndex = wi; break; }
       }
     }
+    // Playback never survives a reload, so a restored video scene would be a
+    // black stage. Boot on the film reel instead; the first play brings the
+    // video back as the backdrop on its own (showSourceScene).
+    if (worlds[state.worldIndex] && worlds[state.worldIndex].kind === "youtube") state.worldIndex = 0;
     if (MODES.indexOf(saved.mode) >= 0) state.mode = saved.mode;
     if (typeof saved.sound === "boolean") state.sound = saved.sound;
     state.sceneLocked = Boolean(saved.sceneLocked);
     state.weatherLocked = Boolean(saved.weatherLocked);
-    state.galleryIndex = Math.max(0, Number(saved.galleryIndex) || 0);
     state.slideIndex = Math.max(0, Number(saved.slideIndex) || 0);
+    if (saved.artIndex && typeof saved.artIndex === "object") {
+      for (var pk in state.artIndex) {
+        state.artIndex[pk] = Math.max(0, Number(saved.artIndex[pk]) || 0);
+      }
+    }
+    state.shuffle = Boolean(saved.shuffle);
     state.trackIndex = Math.max(0, Number(saved.trackIndex) || 0);
     // A saved "Your source" world is meaningless without a source.
     if (worlds[state.worldIndex].kind === "youtube" && !state.source) state.worldIndex = 0;
-    // The manifest loads async. Park on the first scene meanwhile, but remember
-    // the choice so loadGallery can put it back, and keep writing the remembered
-    // index — persisting the 0 is what used to erase the setting for good.
-    if (worlds[state.worldIndex].kind === "gallery") {
-      state.pendingGallery = state.worldIndex;
-      state.worldIndex = 0;
-    }
-    if (worlds[state.worldIndex].blocked) state.worldIndex = 0;
     // A saved slideshow with the films since removed falls back to the start.
     if (worlds[state.worldIndex].slideshow && !(window.DW_LOOPS && window.DW_LOOPS.clips.length)) {
       state.worldIndex = 0;
@@ -545,75 +514,23 @@
 
   function paintWorld() {
     var w = worlds[state.worldIndex];
-    var poster = w.poster ||
-      (w.kind === "backdrop" ? ytPoster(w.videoId) : "") ||
-      (state.source ? ytPoster(state.source.id) : "");
-    $("#sceneTitle").textContent = w.title;
-    // Say what the picture IS, not which branch of the renderer drew it.
-    $("#sceneKind").textContent = w.kind === "still" ? "Painting"
-      : w.kind === "youtube" ? "Your video"
-      : w.kind === "gallery" ? "Pixel art"
-      : w.kind === "backdrop" ? "Looping video"
-      : w.pixel ? "Pixel art" : "Filmed loop";
-    // Scenes are numbered, not "channels" — the mixer already owns that word for
-    // its twelve audio layers, and 28 of one next to 12 of the other read as a
-    // contradiction.
-    $("#channelChip").textContent = "NO. " + (state.worldIndex + 1 < 10 ? "0" : "") + (state.worldIndex + 1);
+    var poster = w.poster || "";
+    // The video scene carries its own picture; a big title bar over it reads
+    // as clutter (owner directive, 2026-09-01). CSS hides the readout here.
+    world.classList.toggle("video-scene", w.kind === "youtube");
+    $("#sceneTitle").textContent = displayTitle();
     $("#dockWorldTitle").textContent = w.title;
     $("#worldButton").setAttribute("aria-label", "Scene selector: " + w.title);
-    if (poster) {
-      $("#sceneThumb").style.backgroundImage = "url('" + poster + "')";
-      // The dock thumbnail wants the small file; the full-screen plate behind
-      // the scene must not, or a 300px thumbnail gets stretched over the whole
-      // display while the real image decodes.
-      $("#scenePoster").style.backgroundImage = "url('" + (w.art || poster) + "')";
-    }
+    // No borrowed banners: a tuned YouTube source shows a plain dark screen
+    // in the dock, never the video's own thumbnail.
+    $("#sceneThumb").style.backgroundImage = poster ? "url('" + poster + "')" : "none";
+    var plate = w.art || poster;
+    $("#scenePoster").style.backgroundImage = plate ? "url('" + plate + "')" : "none";
     world.classList.toggle("pixel", !!w.pixel);
     if (window.PixelScene) PixelScene.setRamp(w.pixel ? w.ramp : null);   // null => untouched
     renderWorlds();
   }
 
-  function ytPoster(id) { return "https://i.ytimg.com/vi/" + id + "/maxresdefault.jpg"; }
-
-  function loadGallery() {
-    fetch("assets/wallpapers/manifest.json", { cache: "no-cache" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (m) {
-        var list = (m && m.scenes) || [];
-        state.gallery = list.filter(function (s) { return s && s.file; }).map(function (s) {
-          return { src: "assets/wallpapers/" + s.file,
-                   label: s.label || s.file.replace(/\.[a-z0-9]+$/i, ""),
-                   timeOfDay: s.timeOfDay || "any",
-                   // Parsed but never rendered before. The shipped art is
-                   // CC-BY, which requires attribution wherever the work
-                   // appears — so the credit has to reach the screen.
-                   credit: s.credit || "" };
-        });
-        renderWorlds();
-        if (state.pendingGallery != null && state.gallery.length) {
-          var back = state.pendingGallery;
-          state.pendingGallery = null;
-          setWorld(back, false);
-        } else if (worlds[state.worldIndex].kind === "gallery") { showGallery(false); }
-      })
-      .catch(function () { state.gallery = []; state.pendingGallery = null; renderWorlds(); });
-  }
-
-  // Pick by part of day when possible, else just advance.
-  function pickGalleryScene() {
-    if (!state.gallery.length) return null;
-    if (state.rotate === "time") {
-      var want = partOfDay(new Date().getHours());
-      var matches = state.gallery.filter(function (s) { return s.timeOfDay === want; });
-      if (matches.length) return matches[Math.floor(Math.random() * matches.length)];
-    }
-    state.galleryIndex = (state.galleryIndex + 1) % state.gallery.length;
-    return state.gallery[state.galleryIndex];
-  }
-
-  // A still is one image, so all the life has to come from the camera. The
-  // Ken Burns drift is CSS on the layer itself; the class alternates so a new
-  // still restarts the animation instead of inheriting the old one's position.
   /* ---------- follow the music ----------
      YouTube exposes no genre, so the only honest signal is the title the
      player already hands back. Keyword hits are scored against the mood tags
@@ -672,10 +589,12 @@
 
   function followMusic(title) {
     if (state.sceneLocked) return;
-    // The film reel holds its ground: it is the default scene precisely
-    // because it moves on its own, and a track title must not yank the user
-    // out of it — only picking a scene by hand does that.
-    if (worlds[state.worldIndex] && worlds[state.worldIndex].slideshow) return;
+    // The slideshows hold their ground: they move on their own, and a track
+    // title must not yank the user out of one — only a hand-picked scene does.
+    // The tuned video holds its ground too: it IS what is playing, so no
+    // mood-matched painting outranks it.
+    var cw = worlds[state.worldIndex];
+    if (cw && (cw.slideshow || cw.kind === "artshow" || cw.kind === "youtube")) return;
     var moods = classifyTrack(title);
     var i = sceneForMoods(moods);
     if (i < 0 || i === state.worldIndex) return;
@@ -718,16 +637,54 @@
     return true;
   }
 
-  function showGallery(animate) {
-    var scene = pickGalleryScene();
-    if (!scene) return false;
-    if (window.PixelScene) {
-      PixelScene.setRamp(null);
-      PixelScene.showArt(scene.src, scene.label, animate === false ? 0 : 640);
+  /* ---------- the painting slideshows ----------
+     One world per pack. The current print drifts under the Ken Burns camera,
+     and the pack advances on a timer with a crossfade — a moving gallery
+     rather than a wall of stills. Each print brings its own weather unless a
+     hand-picked sky or the room already owns it. */
+
+  var ART_MS = 45 * 1000;
+
+  function currentArt(w) {
+    var pk = PACKS[w.pack];
+    return pk.scenes[state.artIndex[w.pack] % pk.scenes.length];
+  }
+
+  function showArtSlide(animate) {
+    var sw = worlds[state.worldIndex];
+    if (!sw || sw.kind !== "artshow") return false;
+    var pk = PACKS[sw.pack];
+    var s = currentArt(sw);
+    // The artshow world mirrors whichever print is up, so the dock thumb,
+    // the postcard and the mounted-print logic all read one shape of world.
+    sw.art = pk.base + s.file + pk.ext;
+    sw.poster = pk.base + "thumb-" + s.file + pk.thumbExt;
+    sw.tone = s.tone || "light";
+    sw.orient = s.orient || "landscape";
+    sw.artist = s.artist || "";
+    showStill(sw, animate !== false && !reduceMotion.matches);
+    $("#sceneTitle").textContent = s.title;
+    $("#sceneThumb").style.backgroundImage = "url('" + sw.poster + "')";
+    $("#scenePoster").style.backgroundImage = "url('" + sw.art + "')";
+    // The print's own sky comes with it, unless someone already owns the sky.
+    if (s.weather && !state.weatherLocked && !roomWeather() &&
+        s.weather !== state.weather && FX_BY_ID[s.weather]) {
+      state.weatherIntensity = Math.max(state.weatherIntensity, 60);
+      var wSl = $("#weatherIntensity");
+      if (wSl) { wSl.value = state.weatherIntensity; wSl.style.setProperty("--fill", state.weatherIntensity + "%"); }
+      setWeather(s.weather, false);
     }
-    $("#sceneKind").textContent = scene.label;
+    if (state.mode === "auto") applyMode();
     scheduleRotate();
     return true;
+  }
+
+  function advanceArt() {
+    var sw = worlds[state.worldIndex];
+    if (!sw || sw.kind !== "artshow") return;
+    state.artIndex[sw.pack] = (state.artIndex[sw.pack] + 1) % PACKS[sw.pack].scenes.length;
+    persist();
+    showArtSlide(true);
   }
 
   /* ---------- the film slideshow ----------
@@ -745,7 +702,15 @@
   // own name, everywhere else the world's.
   function displayTitle() {
     var w = worlds[state.worldIndex];
-    return (w && w.slideshow && LOOPS.length) ? currentClip().title : (w ? w.title : "");
+    if (!w) return "";
+    if (w.slideshow && LOOPS.length) return currentClip().title;
+    if (w.kind === "artshow") return currentArt(w).title;
+    // The video scene is named by what is playing in it, not "Your source".
+    if (w.kind === "youtube" && state.source) {
+      var t = state.tracks[state.trackIndex];
+      return (t && t.title) || state.source.label;
+    }
+    return w.title;
   }
 
   function showFilmSlide(animate) {
@@ -762,7 +727,6 @@
     sw.tone = clip.tone || "light";
     showLocalWorld(sw, animate !== false && !reduceMotion.matches);
     $("#sceneTitle").textContent = clip.title;
-    $("#sceneKind").textContent = "Film · slideshow";
     $("#sceneThumb").style.backgroundImage = "url('" + sw.poster + "')";
     $("#scenePoster").style.backgroundImage = "url('" + sw.poster + "')";
     // The chrome harmonizes with the clip: its tone flips day/night in auto,
@@ -783,7 +747,7 @@
   function rotateSpec() {
     var w = worlds[state.worldIndex];
     if (!w) return null;
-    if (w.kind === "gallery") return { ms: ROTATE_MS, n: state.gallery.length, go: showGallery };
+    if (w.kind === "artshow") return { ms: ART_MS, n: PACKS[w.pack].scenes.length, go: advanceArt };
     if (w.slideshow) {
       // Let a long clip finish at least one pass before moving on.
       var dwell = Math.max(FILM_MS, (currentClip() && currentClip().dur || 0) * 1000 + 4000);
@@ -877,14 +841,6 @@
       toast("Tune in a source first, then this scene becomes available.");
       return;
     }
-    if (w.kind === "gallery" && !state.gallery.length) {
-      toast("The pixel-art gallery is empty. Add your own art to fill it.");
-      return;
-    }
-    if (w.kind === "backdrop" && w.blocked) {
-      toast("That backdrop is no longer embeddable. Pick another scene.");
-      return;
-    }
     if (w.slideshow && !LOOPS.length) {
       toast("No films added yet. See assets/loops/README.md to add your own.");
       return;
@@ -897,54 +853,35 @@
     state.worldIndex = index;
     paintWorld();
     clearTimeout(state.rotateTimer);
-    world.classList.toggle("still-scene", w.kind === "still");
+    world.classList.toggle("still-scene", w.kind === "artshow");
     // Nothing removed this on leaving a portrait print, so the washi mat
     // followed you into every other scene.
-    world.classList.toggle("mounted-print", w.kind === "still" && fitsMounted(w));
-    // The placard's accent rule belongs to the film reel; everything else
-    // gets the house amber back.
-    if (!w.slideshow) document.documentElement.style.removeProperty("--scene-accent");
-    // The print's own weather comes with it — Sudden Shower arrives raining —
-    // unless a hand-picked effect or a live room channel already owns the sky.
-    if (w.kind === "still" && w.weather && !state.weatherLocked && !roomWeather()) {
-      if (w.weather !== state.weather && FX_BY_ID[w.weather]) {
-        state.weatherIntensity = Math.max(state.weatherIntensity, 44);
-        var wSlider = $("#weatherIntensity");
-        if (wSlider) { wSlider.value = state.weatherIntensity; wSlider.style.setProperty("--fill", state.weatherIntensity + "%"); }
-        setWeather(w.weather, false);
-      }
-    }
+    world.classList.toggle("mounted-print", w.kind === "artshow" && fitsMounted(w));
+    // The placard's accent rule belongs to scenes that declare one; everything
+    // else gets the house amber back.
+    if (w.accent) document.documentElement.style.setProperty("--scene-accent", w.accent);
+    else if (!w.slideshow) document.documentElement.style.removeProperty("--scene-accent");
     if (state.mode === "auto") applyMode();
-    if (w.kind === "still") {
+    if (w.kind === "artshow") {
       videos[liveVideo].pause();
       videos[liveVideo].classList.remove("is-live");
       $("#youtubeWrap").classList.remove("is-live");
-      hideBackdrop();
-      showStill(w, true);
-    } else if (w.kind === "gallery") {
-      videos[liveVideo].pause();
-      $("#youtubeWrap").classList.remove("is-live");
-      hideBackdrop();
-      showGallery(true);
-    } else if (w.kind === "backdrop") {
-      videos[liveVideo].classList.remove("is-live");
-      videos[liveVideo].pause();
-      $("#youtubeWrap").classList.remove("is-live");
-      if (window.PixelScene) PixelScene.hideCanvas();
-      setBackdrop(w);
+      showArtSlide(true);
     } else if (w.kind === "youtube") {
       videos[liveVideo].classList.remove("is-live");
       videos[liveVideo].pause();
-      hideBackdrop();
-      // The canvas used to stay live here, still painting whichever local
-      // video was loaded last — so "Your source" showed a pixelated garden
-      // loop sitting on top of the video you had actually tuned. The iframe
-      // is the only thing that can honestly show a cross-origin source.
+      // The iframe is the only thing that can honestly show a cross-origin
+      // source — the pixel canvas must come off screen with it. It fades in
+      // only once frames are actually playing; a cued embed shows YouTube's
+      // own chrome (logo, title bar, red button), which is never the scene.
       if (window.PixelScene) PixelScene.hideCanvas();
-      if (state.ytReady) $("#youtubeWrap").classList.add("is-live");
+      var ytState = -1;
+      try { ytState = ytPlayer ? ytPlayer.getPlayerState() : -1; } catch (err) {}
+      if (state.ytReady && (ytState === 1 || ytState === 2 || ytState === 3)) {
+        $("#youtubeWrap").classList.add("is-live");
+      }
     } else {
       $("#youtubeWrap").classList.remove("is-live");
-      hideBackdrop();
       if (window.PixelScene) {
         if (w.pixel) PixelScene.showVideo(); else PixelScene.hideCanvas();
       }
@@ -952,47 +889,27 @@
     }
     persist();
     closeSurface();
-    if (announce !== false) toast(w.title + " is now your scene. Music and room stayed put.");
+    if (announce !== false) toast(displayTitle() + " is now your scene.");
   }
 
+  // The cards carry a picture and a name, nothing else — the picture is the
+  // information. Scenes that cannot show anything right now are simply not
+  // listed rather than shown disabled with an excuse.
   function renderWorlds() {
-    // Derived, not written by hand: this label said "four channels" through
-    // two commits that changed how many there are.
-    var count = $("#worldPanelCount");
-    if (count) count.textContent = "Scenes · " + worlds.length + " to choose from";
-    var credits = $("#sceneCredits");
-    if (credits) {
-      var lines = state.gallery.map(function (g) { return g.credit; }).filter(Boolean);
-      credits.hidden = lines.length === 0;
-      credits.textContent = lines.length ? "Scene art: " + lines.join(" · ") : "";
-    }
     $("#worldGrid").innerHTML = worlds.map(function (w, i) {
-      var unavailable = (w.kind === "youtube" && (!state.source || state.ytFailed)) ||
-                        (w.kind === "gallery" && !state.gallery.length) ||
-                        (w.slideshow && !LOOPS.length) ||
-                        (w.kind === "backdrop" && w.blocked);
-      var poster = w.poster ||
-                   (w.slideshow && LOOPS.length ? LOOP_BASE + LOOPS[state.slideIndex % LOOPS.length].poster : "") ||
-                   (w.kind === "backdrop" ? ytPoster(w.videoId) : "") ||
-                   (w.kind === "gallery" && state.gallery.length ? state.gallery[0].src : "") ||
-                   (w.kind === "youtube" && state.source ? ytPoster(state.source.id) : "");
-      var kind = unavailable
-        ? (w.kind === "gallery" ? "no art added"
-        : (w.slideshow ? "no films added"
-        : (w.kind === "backdrop" ? "embedding blocked" : "unavailable")))
-        : (w.slideshow ? LOOPS.length + (LOOPS.length === 1 ? " film" : " films")
-        : (w.kind === "gallery" ? state.gallery.length + (state.gallery.length === 1 ? " scene" : " scenes")
-        : (w.kind === "youtube" ? "tuned source"
-        : (w.kind === "backdrop" ? "video backdrop"
-        : (w.kind === "still" ? "painting"
-        : (w.pixel ? "pixel art" : "living loop"))))));
-      return '<button class="world-card" data-world="' + i + '" style="--i:' + i + '"' +
-        ' aria-current="' + (i === state.worldIndex) + '"' + (unavailable ? " disabled" : "") + '>' +
-        '<span class="world-card-screen" style="background-image:url(\'' + poster + '\')">' +
-          '<span class="world-card-tag">CH ' + (i + 1 < 10 ? "0" : "") + (i + 1) + '</span>' +
-        '</span>' +
-        '<span class="world-card-copy"><strong>' + w.title + '</strong><small>' + w.note + '</small></span>' +
-        '<span class="world-card-kind">' + kind + '</span>' +
+      if (w.kind === "youtube" && (!state.source || state.ytFailed)) return "";
+      if (w.slideshow && !LOOPS.length) return "";
+      var poster = "";
+      if (w.slideshow) poster = LOOP_BASE + LOOPS[state.slideIndex % LOOPS.length].poster;
+      else if (w.kind === "artshow") {
+        var pk = PACKS[w.pack], s = pk.scenes[state.artIndex[w.pack] % pk.scenes.length];
+        poster = pk.base + "thumb-" + s.file + pk.thumbExt;
+      } else poster = w.poster || "";
+      return '<button class="world-card" data-world="' + i + '" style="--i:' + (i % 12) + '"' +
+        ' aria-current="' + (i === state.worldIndex) + '">' +
+        '<span class="world-card-screen"' +
+          (poster ? ' style="background-image:url(\'' + poster + '\')"' : '') + '></span>' +
+        '<span class="world-card-copy"><strong>' + w.title + '</strong></span>' +
       '</button>';
     }).join("");
   }
@@ -1015,6 +932,10 @@
 
   function setSource(source, announce) {
     state.source = source;
+    // A fresh tune returns the scene to its default: the source's own video
+    // (showSourceScene, once the player is ready). A scene picked BY HAND
+    // after tuning latches the lock again and wins until the next tune.
+    state.sceneLocked = false;
     state.ytFailed = false;
     state.ytReady = false;
     state.trackIndex = 0;
@@ -1110,11 +1031,25 @@
     }, 12000);
   }
 
+  // The tuned video is the default backdrop (owner directive, 2026-09-01):
+  // whatever is playing, you are also looking at it — unless a hand-picked
+  // scene holds the lock, in which case the pick wins until the next tune.
+  function showSourceScene() {
+    if (state.sceneLocked || state.ytFailed || !state.source) return;
+    for (var i = 0; i < worlds.length; i++) {
+      if (worlds[i].kind === "youtube") {
+        if (i !== state.worldIndex) setWorld(i, false);
+        return;
+      }
+    }
+  }
+
   function createPlayer() {
     if (!state.source || ytPlayer) return;
     var vars = {
       autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3,
       modestbranding: 1, playsinline: 1, rel: 0,
+      vq: "hd1080",   // unofficial and often ignored, but costs nothing
       origin: location.origin
     };
     var config = { playerVars: vars, events: {
@@ -1131,18 +1066,34 @@
         clearTimeout(ytFailTimer);
         try { e.target.setVolume(Math.round(state.musicLevel * 0.8)); } catch (err) {}
 
+        // The machine introduces itself once, the first time there is
+        // actually something for it to pick.
+        try {
+          if (!localStorage.getItem("dwSlotToast") && !localStorage.getItem("dwSlotSeen")) {
+            localStorage.setItem("dwSlotToast", "1");
+            setTimeout(function () {
+              toast("Try the slot machine — pull the lever to pick what plays next.", 5600);
+            }, 2400);
+          }
+        } catch (err) {}
+
         if (state.source.kind === "playlist") {
           var ids = [];
           try { ids = e.target.getPlaylist() || []; } catch (err) {}
           state.tracks = ids.map(function (_, i) { return { title: "Track " + (i + 1), subtitle: "" }; });
           refreshCurrentTrackTitle();
+          prefetchTrackTitles(ids);
         } else {
           state.tracks = [{ title: vd.title || state.source.label, subtitle: "" }];
         }
         $("#sourceNotice").hidden = true;
         paintTuner();
         paintWorld();
-        if (worlds[state.worldIndex].kind === "youtube") $("#youtubeWrap").classList.add("is-live");
+        // NOT shown yet: a ready-but-unstarted embed renders YouTube's cued
+        // chrome — title bar, logo, the giant red button. The backdrop fades
+        // in on the first PLAYING state, when there are real frames to show.
+        // Best effort on quality; the oversized iframe is the real lever.
+        try { e.target.setPlaybackQuality("hd1080"); } catch (err) {}
         if (state.playing) { try { e.target.playVideo(); } catch (err) {} }
       },
       onStateChange: function (e) {
@@ -1150,13 +1101,21 @@
         if (e.data === 2 && state.playing) { state.playing = false; reflectPlaying(); stopScrub(); }
         if (e.data === 0) {
           if (state.source && state.source.kind === "playlist") { refreshCurrentTrackTitle(); }
-          else { state.playing = false; reflectPlaying(); stopScrub(); }
+          else {
+            state.playing = false; reflectPlaying(); stopScrub();
+            // The end screen is a wall of suggested thumbnails — never the
+            // backdrop. Fall back to the film reel until the next play.
+            $("#youtubeWrap").classList.remove("is-live");
+            if (worlds[state.worldIndex].kind === "youtube") setWorld(0, false);
+          }
         }
         if (e.data === 1) {
           startScrub();
           paintScrub();
           state.ytFailed = false;
           refreshCurrentTrackTitle();
+          try { e.target.setPlaybackQuality("hd1080"); } catch (err) {}
+          showSourceScene();
           if (worlds[state.worldIndex].kind === "youtube") $("#youtubeWrap").classList.add("is-live");
         }
       },
@@ -1171,67 +1130,34 @@
     catch (e) { sourceFailed(5); }
   }
 
-  /* ---------- backdrop channels: video wallpaper, always muted ---------- */
+  var lastMatchedTitle = "";
 
-  var bdPlayer = null, bdVideoId = null;
-
-  function backdropFailed(w, code) {
-    w.blocked = true;
-    $("#backdropWrap").classList.remove("is-live");
-    toast(w.title + " will not play here — the uploader blocked embedding. Trying another scene.");
-    renderWorlds();
-    // Fall back to a scene that cannot rot: a local file.
-    var next = 0;
-    setWorld(next, false);
-  }
-
-  function setBackdrop(w) {
-    var wrap = $("#backdropWrap");
-    ensureYouTubeApi(function () {
-      if (worlds[state.worldIndex] !== w) return;      // user moved on while loading
-      if (bdPlayer && bdVideoId === w.videoId) {
-        wrap.classList.add("is-live");
-        try { bdPlayer.mute(); bdPlayer.playVideo(); } catch (e) {}
-        return;
-      }
-      if (bdPlayer) { try { bdPlayer.destroy(); } catch (e) {} bdPlayer = null; }
-      $("#backdropWrap").innerHTML = '<div id="backdropPlayer"></div>';
-      bdVideoId = w.videoId;
-      try {
-        bdPlayer = new YT.Player("backdropPlayer", {
-          videoId: w.videoId,
-          playerVars: {
-            autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3,
-            modestbranding: 1, playsinline: 1, rel: 0, mute: 1,
-            // YouTube only loops a single video if it is also named as the
-            // playlist; loop:1 alone does nothing.
-            loop: 1, playlist: w.videoId,
-            origin: location.origin
-          },
-          events: {
-            onReady: function (e) {
-              var d = {};
-              try { d = e.target.getVideoData() || {}; } catch (err) {}
-              if (d.isPlayable === false) { backdropFailed(w, 150); return; }
-              // Wallpaper never makes sound. The tuner and the room own the
-              // audio; a backdrop competing with them is the exact collision
-              // the three independent layers exist to prevent.
-              try { e.target.mute(); e.target.playVideo(); } catch (err) {}
-              if (worlds[state.worldIndex] === w) wrap.classList.add("is-live");
-            },
-            onError: function (e) { backdropFailed(w, e && e.data); }
-          }
-        });
-      } catch (e) { backdropFailed(w, 5); }
+  /* ---------- real names for the reel ----------
+     The iframe API hands back video IDs but no titles until each one plays,
+     which left the slot machine spinning "Track 7". oEmbed knows every title
+     without a key; noembed proxies it with CORS. Fetched politely, painted in
+     batches. Cosmetic: any failure just leaves the placeholder. */
+  var titlePaintTimer = null;
+  function prefetchTrackTitles(ids) {
+    var mySource = state.source;
+    ids.slice(0, 100).forEach(function (id, i) {
+      if (!id) return;
+      setTimeout(function () {
+        if (state.source !== mySource) return;   // retuned while fetching
+        fetch("https://noembed.com/embed?url=" +
+              encodeURIComponent("https://www.youtube.com/watch?v=" + id))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            if (!d || !d.title || state.source !== mySource || !state.tracks[i]) return;
+            if (state.tracks[i].loaded) return;
+            state.tracks[i] = { title: d.title, subtitle: "", loaded: true };
+            clearTimeout(titlePaintTimer);
+            titlePaintTimer = setTimeout(function () { renderTracks(); paintScrub(); }, 400);
+          })
+          .catch(function () {});
+      }, i * 130);
     });
   }
-
-  function hideBackdrop() {
-    $("#backdropWrap").classList.remove("is-live");
-    if (bdPlayer) { try { bdPlayer.pauseVideo(); } catch (e) {} }
-  }
-
-  var lastMatchedTitle = "";
 
   function refreshCurrentTrackTitle() {
     if (!ytPlayer || !state.tracks.length) return;
@@ -1246,6 +1172,8 @@
       }
     } catch (e) {}
     paintTuner();
+    // When the video IS the scene, the placard names the track playing in it.
+    if (worlds[state.worldIndex].kind === "youtube") $("#sceneTitle").textContent = displayTitle();
     var cur = state.tracks[state.trackIndex];
     var name = cur ? cur.title : (state.source ? state.source.label : "");
     if (name && name !== lastMatchedTitle) { lastMatchedTitle = name; followMusic(name); }
@@ -1280,14 +1208,21 @@
     $("#nextButton").disabled = mode === "none";
     $("#previousButton").setAttribute("aria-label",
       mode === "seek" ? "Back " + SEEK_SECONDS + " seconds" : "Previous track");
-    $("#nextButton").setAttribute("aria-label",
-      mode === "seek" ? "Forward " + SEEK_SECONDS + " seconds" : "Next track");
+    $("#nextButton").setAttribute("aria-label", "Next — pull the slot machine");
+    var slotKey = $("#slotButton");
+    if (slotKey) {
+      slotKey.disabled = mode === "none";
+      slotKey.setAttribute("aria-label", mode === "track"
+        ? "Slot machine — pick the next track"
+        : "Slot machine — pick the next station");
+    }
     $("#tuner").hidden = false;
     renderStations();
     $("#tunerHint").textContent = state.source && !state.ytFailed
       ? "Tuned to " + state.source.label + ". Paste another link to change it."
       : "Paste a link, or start with the suggested station below.";
     renderTracks();
+    paintScrub();
   }
 
   var SAVED_SOURCE_MAX = 12;
@@ -1386,21 +1321,46 @@
 
   var scrubTimer = null, scrubbing = false;
 
-  function scrubEls() { return { wrap: $("#scrubWrap"), bar: $("#scrub"), out: $("#scrubTime") }; }
+  // Two bars, one position: the compact one in the dock's LCD and the
+  // full-size one at the top of the tuner panel. Both read and write the
+  // same player.
+  function scrubBars() {
+    return [
+      { wrap: $("#scrubWrap"), bar: $("#scrub"),
+        paint: function (at, dur) {
+          var o = $("#scrubTime");
+          if (o) o.textContent = formatTime(Math.round(at)) + " / " + formatTime(Math.round(dur));
+        } },
+      { wrap: $("#panelNow"), bar: $("#scrubPanel"),
+        paint: function (at, dur) {
+          var a = $("#scrubPanelAt"), d = $("#scrubPanelDur");
+          if (a) a.textContent = formatTime(Math.round(at));
+          if (d) d.textContent = formatTime(Math.round(dur));
+        } }
+    ];
+  }
 
   function paintScrub() {
-    var e = scrubEls();
-    if (!e.wrap) return;
     var live = ytPlayer && state.ytReady && !state.ytFailed;
-    e.wrap.hidden = !live;
-    if (!live || scrubbing) return;
     var at = 0, dur = 0;
-    try { at = Number(ytPlayer.getCurrentTime()) || 0; dur = Number(ytPlayer.getDuration()) || 0; } catch (err) { return; }
-    if (dur <= 0) return;
-    var p = Math.max(0, Math.min(1000, Math.round((at / dur) * 1000)));
-    e.bar.value = p;
-    e.bar.style.setProperty("--fill", (p / 10) + "%");
-    e.out.textContent = formatTime(Math.round(at)) + " / " + formatTime(Math.round(dur));
+    if (live) {
+      try { at = Number(ytPlayer.getCurrentTime()) || 0; dur = Number(ytPlayer.getDuration()) || 0; }
+      catch (err) { return; }
+    }
+    var p = dur > 0 ? Math.max(0, Math.min(1000, Math.round((at / dur) * 1000))) : 0;
+    scrubBars().forEach(function (e) {
+      if (!e.wrap) return;
+      e.wrap.hidden = !live;
+      if (!live || scrubbing || dur <= 0) return;
+      e.bar.value = p;
+      e.bar.style.setProperty("--fill", (p / 10) + "%");
+      e.paint(at, dur);
+    });
+    var nowTitle = $("#panelNowTitle");
+    if (nowTitle) {
+      var t = currentTrack();
+      nowTitle.textContent = t ? t.title : (state.source ? state.source.label : "—");
+    }
   }
 
   function startScrub() {
@@ -1413,26 +1373,27 @@
   function stopScrub() { clearInterval(scrubTimer); scrubTimer = null; }
 
   function bindScrub() {
-    var e = scrubEls();
-    if (!e.bar) return;
-    e.bar.addEventListener("pointerdown", function () { scrubbing = true; });
-    e.bar.addEventListener("input", function () {
-      var dur = 0;
-      try { dur = Number(ytPlayer.getDuration()) || 0; } catch (err) {}
-      e.bar.style.setProperty("--fill", (e.bar.value / 10) + "%");
-      if (dur > 0) e.out.textContent = formatTime(Math.round((e.bar.value / 1000) * dur)) + " / " + formatTime(Math.round(dur));
+    scrubBars().forEach(function (e) {
+      if (!e.bar) return;
+      e.bar.addEventListener("pointerdown", function () { scrubbing = true; });
+      e.bar.addEventListener("input", function () {
+        var dur = 0;
+        try { dur = Number(ytPlayer.getDuration()) || 0; } catch (err) {}
+        e.bar.style.setProperty("--fill", (e.bar.value / 10) + "%");
+        if (dur > 0) e.paint((e.bar.value / 1000) * dur, dur);
+      });
+      var commit = function () {
+        if (!scrubbing) return;
+        scrubbing = false;
+        try {
+          var dur = Number(ytPlayer.getDuration()) || 0;
+          if (dur > 0) ytPlayer.seekTo((e.bar.value / 1000) * dur, true);
+        } catch (err) {}
+        UISound.play("tick");
+      };
+      e.bar.addEventListener("change", commit);
+      e.bar.addEventListener("pointerup", commit);
     });
-    var commit = function () {
-      if (!scrubbing) return;
-      scrubbing = false;
-      try {
-        var dur = Number(ytPlayer.getDuration()) || 0;
-        if (dur > 0) ytPlayer.seekTo((e.bar.value / 1000) * dur, true);
-      } catch (err) {}
-      UISound.play("tick");
-    };
-    e.bar.addEventListener("change", commit);
-    window.addEventListener("pointerup", commit);
   }
 
   // "track" when there is a playlist to step through, "seek" for a single
@@ -1462,8 +1423,309 @@
   function transportStep(dir) {
     var mode = transportMode();
     if (mode === "none") return;
-    if (mode === "track") selectTrack(state.trackIndex + dir);
-    else seekBy(dir * SEEK_SECONDS);
+    // Forward is always the machine — that is the whole gesture, and it works
+    // on a single-video station too (the reels pick a station instead of a
+    // track). Back stays instant: a rewind you have to gamble for is a bad
+    // rewind, and it is the only way to undo an unlucky spin.
+    if (dir > 0) { openSlot(); return; }
+    if (mode === "track") selectTrack(state.trackIndex - 1);
+    else seekBy(-SEEK_SECONDS);
+  }
+
+  /* ---------- the slot machine ----------
+     Pressing Next summons a machine instead of silently advancing: three
+     reels, a lever, and a moment of not knowing.
+
+     It works whatever is tuned. A playlist offers its own tracks; a single
+     video — which is every one of the curated stations — offers the other
+     stations and everything you have saved. That was the bug: the machine
+     only knew how to pick tracks, so on a station the transport quietly fell
+     back to seeking and the machine never appeared at all.
+
+     Landing is staggered — sides first, answer last — and clicking mid-spin
+     stops the next reel by hand, the way the stop buttons on a real cabinet
+     do. */
+
+  var SLOT_ICONS = ["i-cloud-rain", "i-tree", "i-coffee", "i-fire", "i-moon-stars",
+                    "i-sparkle", "i-waves", "i-drop", "i-snowflake", "i-wind",
+                    "i-radio", "i-seal"];
+  var SLOT_CELL = 46;                  // must match --slot-cell in styles.css
+  var slot = { open: false, spinning: false, target: -1, pool: null,
+               anims: [], tick: null, stopped: 0 };
+
+  function paintSlotMode() {
+    var n = $("#slotModeNormal"), s = $("#slotModeShuffle");
+    if (n) n.setAttribute("aria-pressed", String(!state.shuffle));
+    if (s) s.setAttribute("aria-pressed", String(state.shuffle));
+  }
+
+  // Everything the machine could land on, and how to play it.
+  function slotPool() {
+    if (state.tracks.length > 1) {
+      return { kind: "track", at: state.trackIndex,
+               items: state.tracks.map(function (t) { return { label: t.title }; }) };
+    }
+    var items = [];
+    STATIONS.forEach(function (st, i) {
+      items.push({ label: st.label, note: st.note,
+                   source: { kind: "video", id: st.id, label: st.label, station: true },
+                   stationIndex: i });
+    });
+    state.savedSources.forEach(function (x) {
+      items.push({ label: x.label,
+                   source: { kind: x.kind, id: x.id, label: x.label } });
+    });
+    // Never offer what is already on air.
+    items = items.filter(function (it) {
+      return !(state.source && it.source.id === state.source.id &&
+               it.source.kind === state.source.kind);
+    });
+    return { kind: "source", at: -1, items: items };
+  }
+
+  function slotTargetIndex(pool) {
+    var n = pool.items.length;
+    if (n < 2) return 0;
+    if (state.shuffle || pool.kind === "source") {
+      var pick;
+      do { pick = Math.floor(Math.random() * n); } while (pick === pool.at && n > 1);
+      return pick;
+    }
+    return (pool.at + 1) % n;
+  }
+
+  // Fill the strips so the target lands on the payline after a few laps.
+  // Returns the strip index of the winning cell.
+  function buildSlotReels(pool, target) {
+    var n = pool.items.length;
+    var from = pool.at >= 0 ? pool.at : Math.floor(Math.random() * n);
+    var cells = [from], idx = from;
+    var laps = Math.max(14, Math.min(26, n * 2));
+    for (var k = 0; k < laps; k++) { idx = (idx + 1) % n; cells.push(idx); }
+    while (cells[cells.length - 1] !== target) { idx = (idx + 1) % n; cells.push(idx); }
+    cells.push((target + 1) % n);
+    $("#slotReelT").innerHTML = cells.map(function (i) {
+      return "<li>" + escapeHtml(pool.items[i].label) + "</li>";
+    }).join("");
+    ["slotReelA", "slotReelB"].forEach(function (id, which) {
+      var m = [];
+      for (var j = 0; j < cells.length; j++) {
+        m.push('<li><svg class="icon"><use href="#' +
+          SLOT_ICONS[(j * 5 + which * 7) % SLOT_ICONS.length] + '"/></svg></li>');
+      }
+      document.getElementById(id).innerHTML = m.join("");
+    });
+    return cells.length - 2;
+  }
+
+  function slotReels() { return [$("#slotReelA"), $("#slotReelT"), $("#slotReelB")]; }
+
+  function openSlot() {
+    if (slot.open) return;
+    var pool = slotPool();
+    if (!pool.items.length) {
+      toast("Tune in a source first — then the machine has something to pick.");
+      return;
+    }
+    // Seen once, the attention glint on the dock key retires for good.
+    try { localStorage.setItem("dwSlotSeen", "1"); } catch (e) {}
+    var sk = $("#slotButton");
+    if (sk) sk.classList.add("is-seen");
+    slot.pool = pool;
+    slot.open = true; slot.spinning = false; slot.target = -1; slot.stopped = 0;
+    paintSlotMode();
+    // Order only means something for a playlist; a pool of sources is always
+    // a lucky dip, so the toggle steps aside rather than lying.
+    var modes = $(".slot-mode");
+    if (modes) modes.hidden = pool.kind !== "track";
+    $("#slotHint").textContent = "Pull the lever";
+    $("#slotMarquee").textContent = pool.kind === "track" ? "NEXT TRACK" : "NEXT STATION";
+    // A neutral cover strip: the machine must not leak the answer at rest.
+    $("#slotReelT").innerHTML = "<li></li><li>?</li><li></li>";
+    ["slotReelA", "slotReelB"].forEach(function (id, which) {
+      document.getElementById(id).innerHTML =
+        '<li></li><li><svg class="icon"><use href="#' + SLOT_ICONS[which * 6] +
+        '"/></svg></li><li></li>';
+    });
+    slotReels().forEach(function (ul) {
+      ul.style.transform = "translateY(0)";
+      ul.classList.remove("is-spinning");
+    });
+    var veil = $("#slotVeil");
+    veil.hidden = false;
+    // Forced layout, then the class: the fade still animates, but nothing
+    // depends on rAF (throttled to zero in hidden panes and background tabs).
+    void veil.offsetWidth;
+    veil.classList.add("is-on");
+    UISound.play("open");
+    try { $("#slotLever").focus(); } catch (e) {}
+  }
+
+  function closeSlot(restoreFocus) {
+    if (!slot.open) return;
+    slot.open = false; slot.spinning = false;
+    clearInterval(slot.tick); slot.tick = null;
+    slot.anims.forEach(function (a) { try { a.cancel(); } catch (e) {} });
+    slot.anims = [];
+    var veil = $("#slotVeil");
+    veil.classList.remove("is-on");
+    setTimeout(function () { veil.hidden = true; }, 220);
+    UISound.play("close");
+    if (restoreFocus !== false) { try { $("#slotButton").focus(); } catch (e) {} }
+  }
+
+  function spinSlot() {
+    if (!slot.open || slot.spinning) return;
+    var pool = slotPool();
+    slot.pool = pool;
+    if (!pool || pool.items.length < 1) return;
+    // Kill any fill:forwards transforms from the previous pull before the
+    // reels are rebuilt, or the old animation fights the new one.
+    slot.anims.forEach(function (a) { try { a.cancel(); } catch (e) {} });
+    slot.anims = [];
+    slot.spinning = true; slot.stopped = 0;
+    slot.target = slotTargetIndex(pool);
+    var last = buildSlotReels(pool, slot.target);
+    var finalY = -(last - 1) * SLOT_CELL;
+    $("#slotHint").textContent = "Tap to stop a reel";
+    $("#slotMachine").classList.add("is-spinning");
+    var reels = slotReels();
+    var durs = [1500, 2400, 1950];      // sides land first, the answer last
+    slot.anims = [];
+    var landed = 0;
+    reels.forEach(function (ul, i) {
+      ul.style.transform = "translateY(0)";
+      ul.classList.add("is-spinning");
+      var a = ul.animate([
+        { transform: "translateY(0)", easing: "cubic-bezier(.25,.5,.35,1)" },
+        { transform: "translateY(" + (finalY - 16) + "px)", offset: .9,
+          easing: "cubic-bezier(.34,1.45,.55,1)" },
+        { transform: "translateY(" + finalY + "px)" }
+      ], { duration: durs[i], fill: "forwards" });
+      a.addEventListener("finish", function () {
+        ul.classList.remove("is-spinning");
+        UISound.play("stop");
+        if (++landed === reels.length) landSlot();
+      });
+      slot.anims.push(a);
+    });
+    clearInterval(slot.tick);
+    slot.tick = setInterval(function () { UISound.play("reel"); }, 150);
+    setTimeout(function () { clearInterval(slot.tick); }, Math.max.apply(null, durs));
+  }
+
+  // Stop the next still-spinning reel by hand, left to right.
+  function stopNextReel() {
+    if (!slot.spinning) return;
+    var a = slot.anims[slot.stopped];
+    if (!a) return;
+    slot.stopped++;
+    try { a.finish(); } catch (e) {}
+  }
+
+  function skipSlotSpin() {
+    if (!slot.spinning) return;
+    slot.anims.forEach(function (a) { try { a.finish(); } catch (e) {} });
+  }
+
+  // The reels have settled: play whatever they are showing — and STAY OPEN.
+  // The machine is an audition booth: listen, and if it is not the one, the
+  // lever is right there. It only closes when the user closes it.
+  function landSlot() {
+    if (!slot.open || slot.target < 0) return;
+    slot.spinning = false;
+    clearInterval(slot.tick); slot.tick = null;
+    var m = $("#slotMachine");
+    m.classList.remove("is-spinning");
+    m.classList.add("is-won");
+    setTimeout(function () {
+      var mm = $("#slotMachine");
+      if (mm) mm.classList.remove("is-won");
+    }, 1300);
+    UISound.play("win");
+    var pool = slot.pool, pick = pool.items[slot.target];
+    if (!pick) return;
+    $("#slotHint").innerHTML = '<strong>' + escapeHtml(pick.label) + '</strong>' +
+      '<small>Not it? Pull again.</small>';
+    $("#slotMarquee").textContent = state.shuffle && pool.kind === "track"
+      ? "FATE SAYS" : "NOW PLAYING";
+    if (pool.kind === "track") selectTrack(slot.target, false);
+    else {
+      if (typeof pick.stationIndex === "number") state.stationIndex = pick.stationIndex;
+      setSource(pick.source, false);
+      if (!state.playing) playAll();
+    }
+    try { $("#slotLever").focus(); } catch (e) {}
+  }
+
+  function bindSlot() {
+    var lever = $("#slotLever");
+    if (!lever) return;
+    var drag = { on: false, y0: 0, moved: 0, fired: false };
+    lever.addEventListener("pointerdown", function (e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      lever.setPointerCapture(e.pointerId);
+      drag.on = true; drag.y0 = e.clientY; drag.moved = 0; drag.fired = false;
+      lever.classList.add("is-held");
+      e.preventDefault();
+    });
+    lever.addEventListener("pointermove", function (e) {
+      if (!drag.on) return;
+      var dy = Math.max(0, Math.min(76, e.clientY - drag.y0));
+      drag.moved = Math.max(drag.moved, dy);
+      lever.style.setProperty("--pull", (dy / 76).toFixed(3));
+      if (dy >= 60 && !drag.fired && !slot.spinning) {
+        drag.fired = true;
+        UISound.play("press");
+        spinSlot();
+      }
+    });
+    function release(e) {
+      if (!drag.on) return;
+      drag.on = false;
+      try { lever.releasePointerCapture(e.pointerId); } catch (err) {}
+      lever.classList.remove("is-held");
+      lever.style.setProperty("--pull", "0");
+    }
+    lever.addEventListener("pointerup", release);
+    lever.addEventListener("pointercancel", release);
+    // Keyboard and plain clicks pull it too — the drag is flavour, not a gate.
+    lever.addEventListener("click", function () {
+      if (drag.moved > 8 || drag.fired) return;
+      if (slot.spinning) { stopNextReel(); return; }
+      lever.classList.add("is-autopull");
+      setTimeout(function () { lever.classList.remove("is-autopull"); }, 460);
+      spinSlot();
+    });
+
+    // Anywhere on the cabinet: spin it, or stop the next reel.
+    $(".slot-cab").addEventListener("click", function () {
+      if (slot.spinning) stopNextReel(); else spinSlot();
+    });
+
+    $("#slotClose").addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (slot.spinning) { skipSlotSpin(); return; }
+      closeSlot();
+    });
+    $("#slotVeil").addEventListener("pointerdown", function (e) {
+      if (e.target !== e.currentTarget) return;
+      if (slot.spinning) { skipSlotSpin(); return; }
+      closeSlot();
+    });
+    $("#slotModeNormal").addEventListener("click", function (e) {
+      e.stopPropagation();
+      state.shuffle = false; paintSlotMode(); persist(); UISound.play("tick");
+    });
+    $("#slotModeShuffle").addEventListener("click", function (e) {
+      e.stopPropagation();
+      state.shuffle = true; paintSlotMode(); persist(); UISound.play("tick");
+    });
+    var key = $("#slotButton");
+    if (key) {
+      key.addEventListener("click", openSlot);
+      try { if (localStorage.getItem("dwSlotSeen")) key.classList.add("is-seen"); } catch (e) {}
+    }
   }
 
   function selectTrack(index, announce) {
@@ -1566,28 +1828,27 @@
     $("#presetList").innerHTML = presets.map(function (p, i) {
       return '<button class="preset" data-preset="' + p.id + '" style="--i:' + i + '"' +
         ' aria-current="' + (state.activePreset === p.id) + '">' +
-        '<span><strong>' + p.title + '</strong><small>' + p.note + '</small></span></button>';
+        '<span><strong>' + p.title + '</strong></span></button>';
     }).join("");
   }
 
+  // Twelve fader strips, like the desk the dock pretends to be. Icon, a
+  // vertical fader, the name, a mute key — nothing to read, only to move.
   function renderChannels() {
     $("#channelGrid").innerHTML = roomLayers.map(function (l, i) {
       var v = state.values[l.id], m = Boolean(state.muted[l.id]);
-      return '<div class="channel' + (v > 0 && !m ? " is-live" : "") + '" data-channel="' + l.id + '" style="--i:' + i + '">' +
-        '<div class="channel-top">' +
-          '<span class="channel-icon"><svg class="icon"><use href="#' + l.icon + '"/></svg></span>' +
-          '<span class="channel-name"><strong>' + l.name + '</strong><small>' + l.note + '</small></span>' +
-          '<output id="out-' + l.id + '" aria-live="off">' + (m ? "muted" : v + "%") + '</output>' +
-        '</div>' +
-        '<div class="channel-meter-row"><span class="meter" aria-hidden="true">' +
-          '<span class="meter-fill" id="meter-' + l.id + '"></span></span></div>' +
-        '<div class="channel-bottom">' +
-          '<button class="mute' + (m ? " is-muted" : "") + '" data-mute="' + l.id + '"' +
-            ' aria-label="' + (m ? "Unmute " : "Mute ") + l.name + '">' +
-            '<svg class="icon"><use href="#' + (m ? "i-speaker-slash" : "i-speaker-simple-low") + '"/></svg></button>' +
+      return '<div class="channel strip' + (v > 0 && !m ? " is-live" : "") + '" data-channel="' + l.id + '"' +
+        ' style="--i:' + i + ';--tint:' + l.tint + '">' +
+        '<span class="strip-icon" title="' + l.name + '"><svg class="icon"><use href="#' + l.icon + '"/></svg></span>' +
+        '<output id="out-' + l.id + '" aria-live="off">' + (m ? "mute" : v + "%") + '</output>' +
+        '<span class="vfader">' +
           '<input type="range" min="0" max="100" value="' + v + '" data-layer="' + l.id + '"' +
-            ' aria-label="' + l.name + ' level" style="--fill:' + v + '%">' +
-        '</div>' +
+            ' aria-label="' + l.name + ' level" aria-orientation="vertical" style="--fill:' + v + '%">' +
+        '</span>' +
+        '<strong>' + l.short + '</strong>' +
+        '<button class="mute' + (m ? " is-muted" : "") + '" data-mute="' + l.id + '"' +
+          ' aria-label="' + (m ? "Unmute " : "Mute ") + l.name + '">' +
+          '<svg class="icon"><use href="#' + (m ? "i-speaker-slash" : "i-speaker-simple-low") + '"/></svg></button>' +
       '</div>';
     }).join("");
   }
@@ -1604,7 +1865,7 @@
     var out = document.getElementById("out-" + id);
     if (ch) ch.classList.toggle("is-live", v > 0 && !state.muted[id]);
     if (input) { input.value = v; input.style.setProperty("--fill", v + "%"); }
-    if (out) out.textContent = state.muted[id] ? "muted" : v + "%";
+    if (out) out.textContent = state.muted[id] ? "mute" : v + "%";
     if (fromUser) renderPresets();
     if (state.drift) swayResync();
     if (fromUser) syncWeatherToRoom();
@@ -1646,7 +1907,6 @@
   function saveRoom() {
     state.savedRoom = { values: mix(state.values), muted: JSON.parse(JSON.stringify(state.muted)) };
     $("#savedRoomButton").disabled = false;
-    $("#savedRoomHint").textContent = "Ready whenever you return";
     writeState();
     if (state.playing) AmbienceEngine.chime();
     toast("Your mix is saved on this device.");
@@ -1917,7 +2177,9 @@
       }
     }
     var sh = Number(p.get("sh"));
-    if (sh > 0) setTimeout(function () { paintShade(sh / 100); }, 50);
+    // Commit rather than paint: a shared room's shade should bring its light
+    // with it, not leave the chrome contradicting a drawn blind.
+    if (sh > 0) setTimeout(function () { commitShade(sh / 100); }, 50);
     var name = p.get("n");
     toast(name ? "A room from a friend: “" + name + "”" : "A room from a friend.", 4200);
     // The link has been delivered; a reload should be the visitor's own state.
@@ -2008,7 +2270,7 @@
         c.font = "600 30px 'Silkscreen', monospace";
         c.fillText("UKIYO", cx + 58, 82);
 
-        c.font = "700 34px 'Barlow Condensed', sans-serif";
+        c.font = "700 30px 'Shippori Mincho', Georgia, serif";
         wrapText(c, "“" + name + "”", cx, 160, cw, 40);
 
         c.font = "16px 'IBM Plex Mono', monospace";
@@ -2077,70 +2339,104 @@
 
   /* ---------- the window shade ----------
      Pulling it binds the scene's brightness AND the chrome's palette to the
-     gesture, updating on every pointermove. Released past halfway it commits to
-     night; below, it springs back to day. That continuous binding is the whole
-     reason this is a shade and not a menu row. */
+     gesture, updating on every pointermove. Release snaps to the nearest of
+     three detents — open (day), half-drawn (dusk), drawn (night) — and the
+     detent BECOMES the display mode: the shade and the Display row are the
+     same control seen twice. The old build only moved the chrome in auto mode
+     and let the clock timer yank it back a minute later, which read as broken.
+     applyMode() moves the blind whenever the mode changes from anywhere else,
+     so the two can never disagree. */
 
-  var shade = { v: 0, dragging: false, startY: 0, startV: 0, h: 1 };
+  var shade = { v: 0, dragging: false, startY: 0, startV: 0, h: 1, seq: 0 };
+  var SHADE_POS = { day: 0, dusk: 0.5, night: 1 };
+  var SHADE_TRAVEL = 0.55;   // fraction of the window the blind travels — must match the 55% in styles.css
 
-  function paintShade(v) {
+  function modeForShade(v) { return v < 0.25 ? "day" : v < 0.7 ? "dusk" : "night"; }
+
+  // `live` marks a change owned by the user's hand (or an animation finishing
+  // one): only those crossfade the chrome mid-flight. Programmatic syncs from
+  // applyMode() arrive with the mode already set and must not write it again.
+  function paintShade(v, live) {
     shade.v = Math.max(0, Math.min(1, v));
     world.style.setProperty("--shade", shade.v.toFixed(3));
+    var m = modeForShade(shade.v);
+    var grip = $("#shadeGrip");
+    if (grip) {
+      grip.setAttribute("aria-valuenow", String(Math.round(shade.v * 100)));
+      grip.setAttribute("aria-valuetext", MODE_LABEL[m]);
+      grip.setAttribute("data-hint", m === "day" ? "Pull for night" : m === "night" ? "Lift for day" : "Dusk");
+    }
     // Crossfade the faceplate through dusk on the way down, so the chrome
     // travels with the light instead of snapping at the end.
-    // Open shade = daylight; drawn = night. This was inverted.
-    var m = shade.v < 0.25 ? "day" : shade.v < 0.7 ? "dusk" : "night";
-    if (state.mode === "auto" && document.documentElement.getAttribute("data-mode") !== m) {
+    if (live && document.documentElement.getAttribute("data-mode") !== m) {
       document.documentElement.setAttribute("data-mode", m);
     }
+  }
+
+  function animateShade(to, live) {
+    var seq = ++shade.seq;
+    if (reduceMotion.matches) { paintShade(to, live); return; }
+    var from = shade.v, t0 = performance.now(), MS = 420, settled = false;
+    (function step(now) {
+      if (seq !== shade.seq) return;             // a newer gesture owns the shade
+      var p = Math.min(1, (now - t0) / MS);
+      // easeOutQuint, the same shape as --ease-out
+      var e = 1 - Math.pow(1 - p, 5);
+      paintShade(from + (to - from) * e, live);
+      if (p < 1) requestAnimationFrame(step);
+      else settled = true;
+    })(t0);
+    // rAF is throttled to nothing in background tabs — where an ambience app
+    // spends its life — so the destination is guaranteed on a timer. Same
+    // lesson as the token drag: never let a frame callback own a final state.
+    setTimeout(function () {
+      if (seq === shade.seq && !settled) { settled = true; paintShade(to, live); }
+    }, MS + 80);
+  }
+
+  // Release rule: the nearest detent wins, and the detent becomes the mode —
+  // set BEFORE the blind settles, not after: a slideshow advance mid-animation
+  // calls applyMode(), and if the mode were still pending, that call would
+  // resolve against the old mode and yank the blind straight back. A drag that
+  // lands where auto already resolves stays on auto, so the person who never
+  // asked for a manual override keeps the clock and the scene tone.
+  function commitShade(v) {
+    var to = v < 0.25 ? 0 : v < 0.7 ? 0.5 : 1;
+    var m = modeForShade(to);
+    if (!(state.mode === "auto" && m === resolvedMode())) state.mode = m;
+    applyMode();          // sets the chrome and animates the blind to its detent
+    persist();
+    return m;
   }
 
   function bindShade() {
     var grip = $("#shadeGrip");
     if (!grip) return;
-    paintShade(0);
+    // No initial paint: applyMode() runs first at boot and slides the blind to
+    // the mode's own position. Painting 0 here used to stomp the boot mode
+    // back to "day" on every load, whatever the hour or the scene.
 
     function down(e) {
       if (e.button !== undefined && e.button !== 0) return;
-      grip.setPointerCapture(e.pointerId);
+      try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+      shade.seq++;                               // cancel any in-flight animation
       shade.dragging = true;
       shade.startY = e.clientY;
       shade.startV = shade.v;
-      shade.h = Math.max(1, world.getBoundingClientRect().height);
+      shade.h = Math.max(1, world.getBoundingClientRect().height * SHADE_TRAVEL);
       $("#shade").style.transition = "none";
       UISound.play("press");
       e.preventDefault();
     }
     function move(e) {
       if (!shade.dragging) return;
-      paintShade(shade.startV + (e.clientY - shade.startY) / shade.h);
+      paintShade(shade.startV + (e.clientY - shade.startY) / shade.h, true);
     }
     function up(e) {
       if (!shade.dragging) return;
       shade.dragging = false;
       try { grip.releasePointerCapture(e.pointerId); } catch (err) {}
-      // Past halfway it commits; below, it springs back. Same rule as the
-      // reference: a shade you let go of does not hover.
-      var to = shade.v >= 0.5 ? 1 : 0;
-      animateShade(to);
-      UISound.play(to ? "off" : "on");
-    }
-
-    function animateShade(to) {
-      if (reduceMotion.matches) { paintShade(to); return; }
-      var from = shade.v, t0 = performance.now(), MS = 420, settled = false;
-      (function step(now) {
-        var p = Math.min(1, (now - t0) / MS);
-        // easeOutQuint, the same shape as --ease-out
-        var e = 1 - Math.pow(1 - p, 5);
-        paintShade(from + (to - from) * e);
-        if (p < 1) requestAnimationFrame(step);
-        else settled = true;
-      })(t0);
-      // rAF is throttled to nothing in background tabs — where an ambience app
-      // spends its life — so the destination is guaranteed on a timer. Same
-      // lesson as the token drag: never let a frame callback own a final state.
-      setTimeout(function () { if (!settled) paintShade(to); }, MS + 80);
+      UISound.play(commitShade(shade.v) === "night" ? "off" : "on");
     }
 
     grip.addEventListener("pointerdown", down);
@@ -2148,17 +2444,57 @@
     grip.addEventListener("pointerup", up);
     grip.addEventListener("pointercancel", up);
     // Keyboard: the shade must be reachable without a pointer (SC 2.5.7).
+    // Steps walk the three detents rather than raw tenths, so every keypress
+    // lands on a state that means something.
     grip.addEventListener("keydown", function (e) {
-      var step = 0.1, to = null;
-      if (e.key === "ArrowDown") to = shade.v + step;
-      else if (e.key === "ArrowUp") to = shade.v - step;
-      else if (e.key === "Home") to = 0;
-      else if (e.key === "End") to = 1;
-      else if (e.key === "Enter" || e.key === " ") to = shade.v >= 0.5 ? 0 : 1;
+      var order = ["day", "dusk", "night"];
+      var i = order.indexOf(modeForShade(shade.v)), to = null;
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") to = order[Math.min(2, i + 1)];
+      else if (e.key === "ArrowUp" || e.key === "ArrowLeft") to = order[Math.max(0, i - 1)];
+      else if (e.key === "Home") to = "day";
+      else if (e.key === "End") to = "night";
+      else if (e.key === "Enter" || e.key === " ") to = shade.v >= 0.5 ? "day" : "night";
       if (to === null) return;
       e.preventDefault();
-      animateShade(Math.max(0, Math.min(1, to)));
+      commitShade(SHADE_POS[to]);
     });
+  }
+
+  // The grip is quiet by design, so the first visit gets one pointer at it.
+  // Any interaction with it — ever — retires the hint for good.
+  function shadeHint() {
+    var el = $("#shade"), grip = $("#shadeGrip");
+    if (!el || !grip) return;
+    try { if (localStorage.getItem("dwShadeHint")) return; } catch (e) { return; }
+    function dismiss() {
+      el.classList.remove("shade-hint");
+      try { localStorage.setItem("dwShadeHint", "1"); } catch (e) {}
+    }
+    grip.addEventListener("pointerdown", dismiss, { once: true });
+    grip.addEventListener("keydown", dismiss, { once: true });
+    setTimeout(function () {
+      try { if (localStorage.getItem("dwShadeHint")) return; } catch (e) { return; }
+      el.classList.add("shade-hint");
+      toast("The blind at the top switches day and night — pull its handle.", 5200);
+    }, 2600);
+  }
+
+  // The chips explain themselves once: they are sounds you can pick up.
+  // Touching any token — ever — retires the hint for good.
+  function tokensHint() {
+    var host = $("#tokenLayer");
+    if (!host) return;
+    try { if (localStorage.getItem("dwTokenHint")) return; } catch (e) { return; }
+    function dismiss() {
+      try { localStorage.setItem("dwTokenHint", "1"); } catch (e) {}
+    }
+    host.addEventListener("pointerdown", dismiss, { once: true });
+    setTimeout(function () {
+      try { if (localStorage.getItem("dwTokenHint")) return; } catch (e) { return; }
+      if (window.innerWidth <= 640) return;   // no tokens on a phone
+      toast("The small chips are sounds — drag one onto the scene. Higher is louder, left is left.", 6000);
+      dismiss();
+    }, 9800);
   }
 
   /* ---------- sound tokens ----------
@@ -2264,7 +2600,15 @@
         '<span class="token-copy"><strong>' + l.name + '</strong>' +
         '<span class="token-val"></span></span>';
 
-      var pos = valuesToToken(state.values[l.id] || 0, 0, i);
+      // A live channel that was never panned sits at dead centre, so three
+      // live chips stacked in one column over the picture — often the face.
+      // Fan them into a gentle stereo spread instead; silent channels park.
+      var pan0 = AmbienceEngine.getPan ? AmbienceEngine.getPan(l.id) : 0;
+      if ((state.values[l.id] || 0) > 0 && !pan0 && AmbienceEngine.setPan) {
+        pan0 = ((i % 3) - 1) * 0.34;
+        AmbienceEngine.setPan(l.id, pan0);
+      }
+      var pos = valuesToToken(state.values[l.id] || 0, pan0, i);
       var grab = Grabbable.make(el, {
         tilt: Grabbable.tiltFor(i),
         bounds: tokenBounds,
@@ -2425,6 +2769,73 @@
                      fireflies: "255,206,102", embers: "255,148,58",
                      none: "255,232,168" };
 
+  /* ---------- the whip ----------
+     Double-tap the empty scene: right half cracks the whip upward and steps
+     the volume up, left half mirrors it and steps down. On touch, a vertical
+     drag on the right half rides the level continuously — the VLC gesture.
+     The gesture drives the music level when a source is tuned, otherwise the
+     room, so it always does something audible. The sliders remain the
+     visible, accessible path to the same values. */
+
+  var WHIP_STEP = 5;
+  var whipTimer = null;
+
+  function applyMusicLevel(v) {
+    state.musicLevel = Math.max(0, Math.min(100, Math.round(v)));
+    var inp = $("#musicVolume");
+    if (inp) { inp.value = state.musicLevel; inp.style.setProperty("--fill", state.musicLevel + "%"); }
+    var out = $("#musicOutput");
+    if (out) out.textContent = state.musicLevel + "%";
+    if (ytPlayer && state.ytReady) { try { ytPlayer.setVolume(Math.round(state.musicLevel * 0.8)); } catch (e) {} }
+    persist();
+  }
+
+  function applyRoomLevel(v) {
+    state.roomLevel = Math.max(0, Math.min(100, Math.round(v)));
+    var inp = $("#roomVolume");
+    if (inp) { inp.value = state.roomLevel; inp.style.setProperty("--fill", state.roomLevel + "%"); }
+    var out = $("#roomOutput");
+    if (out) out.textContent = state.roomLevel + "%";
+    AmbienceEngine.setMaster(state.roomLevel);
+    wakeRoom();
+    persist();
+  }
+
+  function whipTargetsMusic() { return Boolean(state.source) && !state.ytFailed; }
+
+  function showWhip(dir, x, y, level, sustain) {
+    var el = $("#whip");
+    if (!el) return;
+    el.hidden = false;
+    el.classList.toggle("is-down", dir < 0);
+    el.style.left = Math.max(60, Math.min(window.innerWidth - 60, x)) + "px";
+    el.style.top = Math.max(60, Math.min(window.innerHeight - 150, y)) + "px";
+    $("#whipRead").textContent = (dir > 0 ? "+" : "−") + level + "%";
+    if (!sustain || !el.classList.contains("is-go")) {
+      el.classList.remove("is-go");
+      void el.offsetWidth;
+      el.classList.add("is-go");
+      // A swipe rides the level continuously, so it must not re-lash on every
+      // frame — only a discrete double-tap throws the rope. The rope carries
+      // its own lash/crack audio; nothing is layered on top of it.
+      if (!sustain && window.WhipFX) {
+        WhipFX.crack(dir, x, y, dir > 0 ? "#FFC24A" : "#FF836A", null);
+      }
+    }
+    clearTimeout(whipTimer);
+    whipTimer = setTimeout(function () {
+      el.classList.remove("is-go");
+      el.hidden = true;
+    }, sustain ? 900 : 900);
+  }
+
+  function whipVolume(dir, x, y) {
+    var level;
+    if (whipTargetsMusic()) { applyMusicLevel(state.musicLevel + dir * WHIP_STEP); level = state.musicLevel; }
+    else { applyRoomLevel(state.roomLevel + dir * WHIP_STEP); level = state.roomLevel; }
+    showWhip(dir, x, y, level, false);
+  }
+
   var pokedThisSession = false;
   function pokeScene(x, y) {
     if (reduceMotion.matches) return;
@@ -2449,7 +2860,6 @@
     }
     if (sparks.length > 320) sparks.splice(0, sparks.length - 320);
     startWeather();
-    UISound.play("tick");
   }
 
   function stepSparks(c) {
@@ -2544,14 +2954,14 @@
     { id: "none", label: "Off", icon: "i-x" },
 
     { id: "rain", label: "Rain", icon: "i-cloud-rain",
-      count: function (t) { return Math.round(lerp(40, 420, t * t * .55 + t * .45)); },
+      count: function (t) { return Math.round(lerp(90, 620, t * t * .55 + t * .45)); },
       make: function (t, anywhere) {
         return { x: Math.random() * weather.w,
                  y: anywhere ? Math.random() * weather.h : rnd(-140, -10),
                  v: lerp(6, 19, t) * rnd(.75, 1.35),
                  len: lerp(10, 40, t) * rnd(.65, 1.4),
                  w: lerp(.8, 1.7, t),
-                 a: lerp(.12, .42, t) * rnd(.65, 1.25) };
+                 a: lerp(.22, .58, t) * rnd(.65, 1.25) };
       },
       step: function (p, t) { p.y += p.v; p.x -= lerp(.4, 3.4, t); return p.y < weather.h + 50; },
       draw: function (c, p, t) {
@@ -2564,14 +2974,14 @@
       } },
 
     { id: "snow", label: "Snow", icon: "i-snowflake",
-      count: function (t) { return Math.round(lerp(30, 260, t)); },
+      count: function (t) { return Math.round(lerp(70, 430, t)); },
       make: function (t, anywhere) {
         return { x: Math.random() * weather.w,
                  y: anywhere ? Math.random() * weather.h : -16,
                  v: lerp(.35, 2.6, t) * rnd(.55, 1.5),
                  r: lerp(.9, 3.6, t) * rnd(.5, 1.3),
                  sway: lerp(6, 38, t), ph: Math.random() * 6.283,
-                 a: lerp(.22, .7, t) * rnd(.6, 1.2) };
+                 a: lerp(.34, .88, t) * rnd(.6, 1.2) };
       },
       step: function (p, t, now) {
         p.y += p.v;
@@ -2585,14 +2995,14 @@
 
     { id: "mist", label: "Mist", icon: "i-wind",
       // Bands rather than points — same loop, a different primitive.
-      count: function (t) { return Math.round(lerp(3, 7, t)); },
+      count: function (t) { return Math.round(lerp(4, 11, t)); },
       make: function (t, anywhere) {
         var h = lerp(80, 210, t) * rnd(.7, 1.5);
         return { x: anywhere ? Math.random() * weather.w : -weather.w * .7,
                  y: Math.random() * weather.h, h: h,
                  bw: weather.w * rnd(.8, 1.7),
                  v: lerp(.08, .42, t) * rnd(.5, 1.5),
-                 a: lerp(.06, .26, t) };
+                 a: lerp(.11, .40, t) };
       },
       step: function (p) { p.x += p.v; return p.x < weather.w * 1.5; },
       draw: function (c, p) {
@@ -2606,30 +3016,30 @@
 
     { id: "petals", label: "Petals", icon: "i-drop",
       fx: driftFall({ rgb: "247,186,196", squash: .55,
-                      nMin: 14, nMax: 120, vMin: .5, vMax: 2.4, rMin: 2.4, rMax: 6.5,
+                      nMin: 34, nMax: 220, vMin: .5, vMax: 2.4, rMin: 3.2, rMax: 8.5,
                       swayMin: 14, swayMax: 46, spinMin: .02, spinMax: .1,
-                      aMin: .34, aMax: .72 }) },
+                      aMin: .48, aMax: .88 }) },
 
     { id: "leaves", label: "Leaves", icon: "i-tree",
       fx: driftFall({ rgb: "216,158,74", squash: .42,
-                      nMin: 10, nMax: 80, vMin: .4, vMax: 1.8, rMin: 3.4, rMax: 10,
+                      nMin: 26, nMax: 170, vMin: .4, vMax: 1.8, rMin: 4.2, rMax: 12.5,
                       swayMin: 18, swayMax: 58, spinMin: .01, spinMax: .06,
-                      aMin: .36, aMax: .78 }) },
+                      aMin: .5, aMax: .9 }) },
 
     { id: "fireflies", label: "Fireflies", icon: "i-sparkle", blend: "lighter",
-      count: function (t) { return Math.round(lerp(14, 80, t)); },
+      count: function (t) { return Math.round(lerp(34, 175, t)); },
       make: function (t, anywhere) {
         return { x: Math.random() * weather.w,
                  y: anywhere ? Math.random() * weather.h : weather.h + 12,
                  v: lerp(.12, .55, t) * rnd(.5, 1.5),
-                 r: lerp(1.3, 2.8, t) * rnd(.7, 1.3),
+                 r: lerp(1.9, 3.8, t) * rnd(.7, 1.3),
                  wander: lerp(.35, 1.2, t),
                  ph: Math.random() * 6.283,
                  // Fading fully to zero and back is what sells them; always-on
                  // dots read as dust.
                  lifePh: Math.random() * 6.283,
                  lifeP: rnd(2200, 5200),
-                 a: lerp(.3, .7, t) };
+                 a: lerp(.55, .95, t) };
       },
       step: function (p, t, now) {
         p.y -= p.v;
@@ -2638,21 +3048,21 @@
       },
       draw: function (c, p, t, now) {
         var env = (Math.sin((now / p.lifeP) * 6.283 + p.lifePh) + 1) / 2;
-        drawGlow(c, "255,206,102", p.x, p.y, p.r, p.a * env * env);
+        drawGlow(c, "255,206,102", p.x, p.y, p.r, p.a * (0.3 + 0.7 * env * env));
       } },
 
     { id: "embers", label: "Embers", icon: "i-fire", blend: "lighter",
-      count: function (t) { return Math.round(lerp(18, 130, t)); },
+      count: function (t) { return Math.round(lerp(42, 250, t)); },
       make: function (t, anywhere) {
         return { x: Math.random() * weather.w,
                  y: anywhere ? Math.random() * weather.h : weather.h + 12,
                  v: lerp(.5, 2.1, t) * rnd(.5, 1.6),
-                 r: lerp(.9, 2.4, t) * rnd(.6, 1.4),
+                 r: lerp(1.4, 3.4, t) * rnd(.6, 1.4),
                  wander: lerp(.45, 1.6, t),
                  ph: Math.random() * 6.283,
                  born: Date.now(),
                  life: lerp(6200, 3200, t) * rnd(.7, 1.3),
-                 a: lerp(.32, .8, t) };
+                 a: lerp(.55, .95, t) };
       },
       step: function (p, t, now) {
         p.y -= p.v;
@@ -2729,7 +3139,7 @@
   function sizeWeather() {
     if (typeof reseatTokens === "function") reseatTokens();
     var wNow = worlds[state.worldIndex];
-    if (wNow && wNow.kind === "still") world.classList.toggle("mounted-print", fitsMounted(wNow));
+    if (wNow && wNow.kind === "artshow") world.classList.toggle("mounted-print", fitsMounted(wNow));
     if (!weather.canvas) return;
     var ratio = Math.min(1.5, window.devicePixelRatio || 1);
     weather.w = window.innerWidth; weather.h = window.innerHeight;
@@ -2917,6 +3327,7 @@
   function dockHeldOpen() {
     var more = $("#moreMenu");
     return Boolean(state.surface) || dockHeld ||
+           (typeof tour === "object" && tour.on) ||   // the tour points at dock keys
            (more && more.classList.contains("is-open")) ||
            $("#controlDock").contains(document.activeElement);
   }
@@ -3106,14 +3517,14 @@
   function todaysPairing() {
     var d = new Date();
     var seed = d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate();
-    var stillWorlds = [];
-    for (var i = 0; i < worlds.length; i++) if (worlds[i].kind === "still") stillWorlds.push(i);
-    var wi = stillWorlds[seed % stillWorlds.length];
-    var w = worlds[wi];
+    // A date-seeded scene from the moving library, so everyone shares one.
+    var pool = [];
+    for (var i = 0; i < worlds.length; i++) {
+      if (worlds[i].kind === "local" && !worlds[i].slideshow) pool.push(i);
+    }
+    var wi = pool.length ? pool[seed % pool.length] : 0;
     var preset = presets[seed % presets.length];
-    // the print's own sky first; the season's sky on the clear ones
-    var wx = (w.weather && w.weather !== "none" && FX_BY_ID[w.weather]) ? w.weather : seasonWeather();
-    return { index: wi, world: w, preset: preset, weather: wx };
+    return { index: wi, world: worlds[wi], preset: preset, weather: seasonWeather() };
   }
 
   function applyToday(announce) {
@@ -3286,20 +3697,12 @@
     // both, so raising the room raised the music with it and the balance
     // between them could never change — which read as "the mixer does nothing".
     $("#musicVolume").addEventListener("input", function (e) {
-      state.musicLevel = Number(e.target.value);
-      $("#musicOutput").textContent = state.musicLevel + "%";
-      e.target.style.setProperty("--fill", state.musicLevel + "%");
-      if (ytPlayer && state.ytReady) { try { ytPlayer.setVolume(Math.round(state.musicLevel * 0.8)); } catch (err) {} }
-      persist();
+      applyMusicLevel(Number(e.target.value));
     });
     $("#roomVolume").addEventListener("input", function (e) {
-      state.roomLevel = Number(e.target.value);
-      $("#roomOutput").textContent = state.roomLevel + "%";
-      e.target.style.setProperty("--fill", state.roomLevel + "%");
-      AmbienceEngine.setMaster(state.roomLevel);
-      // A fader that moves must make sound, even before the first Play.
-      wakeRoom();
-      persist();
+      // applyRoomLevel wakes the room: a fader that moves must make sound,
+      // even before the first Play.
+      applyRoomLevel(Number(e.target.value));
     });
 
     $("#worldButton").addEventListener("click", function (e) { openSurface("worldPanel", e.currentTarget); });
@@ -3400,19 +3803,6 @@
         "Nothing yet. Some things only come out at certain hours, in certain weather.", 5200);
     });
     $("#roomLinkButton").addEventListener("click", function () { closeMore(); copyRoomLink(); });
-    var packLabel = $("#packValue");
-    if (packLabel) packLabel.textContent = activePack === "ukiyoe" ? "Floating world" : "Ghibli";
-    $("#packButton").addEventListener("click", function () {
-      var next = activePack === "ukiyoe" ? "ghibli" : "ukiyoe";
-      try {
-        var blob = JSON.parse(localStorage.getItem("dreamWorldsV4") || "{}");
-        blob.pack = next;
-        // A saved scene from the other pack cannot exist in this one.
-        delete blob.worldId; blob.worldIndex = 0;
-        localStorage.setItem("dreamWorldsV4", JSON.stringify(blob));
-      } catch (e) {}
-      location.reload();
-    });
     $("#soundButton").addEventListener("click", function () {
       state.sound = !state.sound;
       UISound.setEnabled(state.sound);
@@ -3448,7 +3838,7 @@
     function onViewport() {
       var w = worlds[state.worldIndex];
       if (!w) return;
-      world.classList.toggle("mounted-print", w.kind === "still" && fitsMounted(w));
+      world.classList.toggle("mounted-print", w.kind === "artshow" && fitsMounted(w));
       if (w.kind === "local") applyFit(videos[liveVideo], w);
       if (weatherActive()) sizeWeather();
     }
@@ -3502,6 +3892,11 @@
     var target = e.target;
 
     if (e.key === "Escape") {
+      if (slot.open) {
+        e.preventDefault();
+        if (slot.spinning) skipSlotSpin(); else closeSlot();
+        return;
+      }
       if (state.surface || $("#moreMenu").classList.contains("is-open")) {
         e.preventDefault(); closeSurface(); closeMore();
       } else if (world.classList.contains("quiet")) {
@@ -3528,6 +3923,148 @@
     }
   }
 
+  /* ---------- the tour ----------
+     A first-visit walkthrough: one spotlight, one pixel dialog, six stops.
+     Fully skippable, shown once, replayable from the More menu. Steps whose
+     target is not on this layout (tokens on a phone, say) skip themselves. */
+
+  var TOUR_STEPS = [
+    { sel: "#worldButton",
+      text: "Scenes. Pick the window you look through — every one of them moves." },
+    { sel: "#tokenLayer .token",
+      text: "These chips are sounds. Drag one onto the scene — higher is louder, left is left." },
+    { sel: "#shadeGrip",
+      text: "The blind. Pull it down for night, lift it for day." },
+    { sel: "#playButton",
+      text: "Play. The music and the room both come alive here." },
+    { sel: "#slotButton",
+      text: "The slot machine. Pull the lever and let the reels pick what plays next — songs from a playlist, stations otherwise." },
+    { sel: null, zone: "right",
+      text: "Double-tap the right side of the scene: the cat whips the volume up. Left side brings it down." },
+    { sel: "#roomButton",
+      text: "The mixer. Twelve sounds on faders, presets, and the weather outside." },
+    { sel: "#musicButton",
+      text: "The tuner. Paste any YouTube video or playlist and it plays here." }
+  ];
+
+  var tour = { on: false, i: -1 };
+
+  function tourEls() {
+    return { root: $("#tour"), spot: $("#tourSpot"), card: $("#tourCard"),
+             text: $("#tourText"), dots: $("#tourDots"), next: $("#tourNext") };
+  }
+
+  function tourTargetRect(step) {
+    if (step.zone === "right") {
+      var w = window.innerWidth, h = window.innerHeight;
+      return { left: w * 0.62, top: h * 0.3, width: w * 0.3, height: h * 0.32 };
+    }
+    var el = step.sel && document.querySelector(step.sel);
+    if (!el) return null;
+    var visible = typeof el.checkVisibility === "function" ? el.checkVisibility() : el.offsetParent !== null;
+    if (!visible) return null;
+    var r = el.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return null;
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  }
+
+  function showTourStep(i) {
+    var e = tourEls();
+    if (!e.root) return;
+    // walk forward past steps that cannot be shown on this layout
+    var rect = null, step = null;
+    while (i < TOUR_STEPS.length && !rect) {
+      step = TOUR_STEPS[i];
+      rect = tourTargetRect(step);
+      if (!rect) i++;
+    }
+    if (!rect) { endTour(true); return; }
+    tour.i = i;
+    wakeDock();
+    var PAD = 8;
+    e.spot.style.left = (rect.left - PAD) + "px";
+    e.spot.style.top = (rect.top - PAD) + "px";
+    e.spot.style.width = (rect.width + PAD * 2) + "px";
+    e.spot.style.height = (rect.height + PAD * 2) + "px";
+    e.text.textContent = step.text;
+    e.next.textContent = i >= TOUR_STEPS.length - 1 ? "Done" : "Next";
+    e.dots.innerHTML = TOUR_STEPS.map(function (_, d) {
+      return '<i' + (d === i ? ' class="is-on"' : '') + '></i>';
+    }).join("");
+    // The card sits under the spotlight when there is room, above otherwise.
+    // Measured synchronously — rAF is throttled to nothing in hidden panes,
+    // which left an invisible full-screen overlay eating every click.
+    var card = e.card;
+    var ch = card.offsetHeight, cw = card.offsetWidth;
+    var below = rect.top + rect.height + 20;
+    var top = (below + ch < window.innerHeight - 12) ? below : Math.max(12, rect.top - ch - 20);
+    var left = Math.max(12, Math.min(window.innerWidth - cw - 12,
+                rect.left + rect.width / 2 - cw / 2));
+    card.style.top = top + "px";
+    card.style.left = left + "px";
+  }
+
+  function startTour() {
+    var e = tourEls();
+    if (!e.root || tour.on) return;
+    tour.on = true;
+    closeSurface(false); closeMore();
+    // the tour explains the shade and the tokens, so their one-shot toasts retire
+    try {
+      localStorage.setItem("dwShadeHint", "1");
+      localStorage.setItem("dwTokenHint", "1");
+    } catch (err) {}
+    var wasIdle = world.classList.contains("dock-idle");
+    wakeDock();
+    e.root.hidden = false;
+    e.root.classList.add("is-on");
+    UISound.play("open");
+    // A withdrawn dock needs its 220ms to slide back before its keys can be
+    // measured; measuring mid-flight put the spotlight on empty scene.
+    setTimeout(function () {
+      if (!tour.on) return;
+      showTourStep(0);
+      try { e.next.focus(); } catch (err) {}
+    }, wasIdle ? 280 : 0);
+  }
+
+  function endTour(completed) {
+    var e = tourEls();
+    if (!e.root || !tour.on) return;
+    tour.on = false; tour.i = -1;
+    e.root.classList.remove("is-on");
+    setTimeout(function () { e.root.hidden = true; }, 220);
+    try { localStorage.setItem("dwTourDone", "1"); } catch (err) {}
+    UISound.play("close");
+    if (completed) toast("That is the whole machine. It is yours now.", 4200);
+  }
+
+  function bindTour() {
+    var e = tourEls();
+    if (!e.root) return;
+    e.next.addEventListener("click", function () {
+      if (tour.i >= TOUR_STEPS.length - 1) { endTour(true); return; }
+      UISound.play("tick");
+      showTourStep(tour.i + 1);
+    });
+    $("#tourSkip").addEventListener("click", function () { endTour(false); });
+    var tb = $("#tourButton");
+    if (tb) tb.addEventListener("click", function () { closeMore(); startTour(); });
+    document.addEventListener("keydown", function (ev) {
+      if (!tour.on) return;
+      if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); endTour(false); }
+      if (ev.key === "ArrowRight" || ev.key === "Enter") {
+        // the buttons handle their own Enter; arrows always advance
+        if (ev.key === "Enter" && (ev.target === e.next || ev.target === $("#tourSkip"))) return;
+        ev.preventDefault();
+        if (tour.i >= TOUR_STEPS.length - 1) endTour(true); else showTourStep(tour.i + 1);
+      }
+    }, true);
+    window.addEventListener("resize", function () {
+      if (tour.on && tour.i >= 0) showTourStep(tour.i);
+    });
+  }
+
   /* ---------- init ---------- */
 
   function init() {
@@ -3544,9 +4081,12 @@
       state.worldIndex = defaultWorldIndex() || t0.index;
       state.values = mix(t0.preset.values);
       state.activePreset = t0.preset.id;
-      var hr = new Date().getHours();
-      var sv = (hr >= 21 || hr < 5) ? 0.85 : (hr >= 17) ? 0.45 : 0;
-      if (sv) setTimeout(function () { paintShade(sv); }, 80);
+      // Arrive in the evening and the floating world is dark: the clock wins
+      // the very first impression, before any preference exists. commitShade
+      // routes it through the same path as a hand on the grip, so the chrome,
+      // the blind, and the Display row all agree.
+      var m0 = modeForClock();
+      if (m0 !== "day") setTimeout(function () { commitShade(SHADE_POS[m0]); }, 80);
     }
 
     // Panels ship with [hidden] so there is no flash before JS; swap that for
@@ -3577,8 +4117,7 @@
     }
     // useArt has only just been handed the layers, so a still world could not
     // have been painted before this point.
-    if (w.kind === "still") showStill(w, false);
-    if (w.kind === "backdrop") setBackdrop(w);
+    if (w.kind === "artshow") showArtSlide(false);
     if (w.slideshow) {
       // Mirrors the current clip onto the world, then takes the ordinary
       // local path below through showLocalWorld's fast branch.
@@ -3612,10 +4151,7 @@
       b.setAttribute("aria-pressed", String(i === 0));
     });
 
-    if (state.savedRoom) {
-      $("#savedRoomButton").disabled = false;
-      $("#savedRoomHint").textContent = "Ready whenever you return";
-    }
+    if (state.savedRoom) $("#savedRoomButton").disabled = false;
     applyMode();
     UISound.setEnabled(state.sound);
     if ($("#soundButton")) {
@@ -3623,7 +4159,14 @@
       $("#soundValue").textContent = state.sound ? "On" : "Off";
     }
     bindShade();
+    shadeHint();
+    tokensHint();
     renderTokens();
+    // The pane can lay out AFTER init (0×0 at boot in an embedded browser):
+    // re-seat the tokens whenever the world's box actually changes.
+    if (typeof ResizeObserver === "function") {
+      new ResizeObserver(function () { reseatTokens(); }).observe(world);
+    }
     renderWeatherOptions();
     setWeather(state.weather, false);
     syncWeatherToRoom();
@@ -3633,14 +4176,48 @@
     bind();
     bindDockIdle();
     bindScrub();
+    bindSlot();
+    bindTour();
 
-    // Poking the scene. Bound on the scene layer rather than the document so a
-    // press on the dock or inside a panel is never mistaken for one.
+    // Poking the scene and the whip gestures. Bound on the scene layer rather
+    // than the document so a press on the dock or inside a panel is never
+    // mistaken for one; anything interactive is excluded outright.
+    var tap = { t: 0, x: 0, y: 0 };
+    var vswipe = { on: false, y0: 0, lvl0: 0, moved: false };
+    var SCENE_GUARD = ".control-dock, .panel, .more-menu, .toast, .readout, " +
+                      ".focus-popover, .slot-veil, .token, .shade, button, input, a";
+
     world.addEventListener("pointerdown", function (e) {
       if (e.button !== undefined && e.button !== 0) return;
-      if (e.target.closest(".control-dock, .panel, .more-menu, .toast, .readout, .focus-popover")) return;
+      if (e.target.closest(SCENE_GUARD)) return;
+      var now = Date.now();
+      var isDouble = (now - tap.t) < 380 &&
+        Math.abs(e.clientX - tap.x) < 48 && Math.abs(e.clientY - tap.y) < 48;
+      tap.t = now; tap.x = e.clientX; tap.y = e.clientY;
+      if (isDouble) {
+        tap.t = 0;
+        whipVolume(e.clientX > window.innerWidth / 2 ? 1 : -1, e.clientX, e.clientY);
+        return;
+      }
+      // Touch only, right half: a vertical drag rides the level continuously.
+      if (e.pointerType === "touch" && e.clientX > window.innerWidth * 0.55) {
+        vswipe.on = true; vswipe.y0 = e.clientY; vswipe.moved = false;
+        vswipe.lvl0 = whipTargetsMusic() ? state.musicLevel : state.roomLevel;
+      }
       pokeScene(e.clientX, e.clientY);
     });
+    world.addEventListener("pointermove", function (e) {
+      if (!vswipe.on) return;
+      var dy = vswipe.y0 - e.clientY;                 // up = louder
+      if (Math.abs(dy) < 18 && !vswipe.moved) return;
+      vswipe.moved = true;
+      var lvl = vswipe.lvl0 + dy / 3;
+      if (whipTargetsMusic()) { applyMusicLevel(lvl); lvl = state.musicLevel; }
+      else { applyRoomLevel(lvl); lvl = state.roomLevel; }
+      showWhip(dy >= 0 ? 1 : -1, e.clientX, e.clientY, lvl, true);
+    }, { passive: true });
+    world.addEventListener("pointerup", function () { vswipe.on = false; });
+    world.addEventListener("pointercancel", function () { vswipe.on = false; });
     // The console is part of the toy. A deliberate public surface — also how
     // the test harness reaches the room codec without prying the IIFE open.
     window.UKIYO = {
@@ -3655,7 +4232,7 @@
           });
         });
       },
-      pack: activePack
+      crafted: "Rushali Singh & Abiral Jain"
     };
     try {
       console.log(
@@ -3671,10 +4248,15 @@
     setTimeout(tryStartMoment, 25000);   // one early roll, so a long first visit can be lucky
     paintMomentShelf();
 
-    runBoot(powerOn);
+    runBoot(function () {
+      powerOn();
+      // First visit ever: offer the walkthrough once the machine is on.
+      var seenTour = null;
+      try { seenTour = localStorage.getItem("dwTourDone"); } catch (e) {}
+      if (!seenTour && !reduceMotion.matches) setTimeout(startTour, 1400);
+    });
 
     if (state.source) loadYouTubeApi();
-    loadGallery();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
