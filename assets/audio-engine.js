@@ -93,6 +93,8 @@ window.AmbienceEngine = (function () {
   var ctx = null;
   var bus = null, tone = null, limiter = null;
   var layers = Object.create(null);
+  // Pans requested before their layer exists — applied when it is built.
+  var pendingPan = Object.create(null);
   var buffers = { white: null, brown: null };
   var building = Object.create(null);
   // Room output scalar. This was 0.62, which capped a channel at 100% around
@@ -200,7 +202,9 @@ window.AmbienceEngine = (function () {
     // Stereo placement. A token dragged left should be heard on the left;
     // without this, position could only ever mean volume.
     var panner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-    if (panner) panner.pan.value = 0;
+    // A pan asked for before the layer existed (the token layout does this at
+    // boot) applies the moment the node is real.
+    if (panner) panner.pan.value = pendingPan[id] || 0;
 
     var analyser = ctx.createAnalyser();
     analyser.fftSize = 256;
@@ -213,7 +217,7 @@ window.AmbienceEngine = (function () {
       lfo: null, lfoDepth: 0, lfoRate: 0, lfoPhase: Math.random() * Math.PI * 2,
       nextEvent: 0, element: null, heads: [], chainIn: null,
       analyser: analyser, meterBuf: new Uint8Array(analyser.fftSize), failed: false,
-      panner: panner, pan: 0
+      panner: panner, pan: pendingPan[id] || 0
     };
 
     // depthGain -> layerGain -> [panner] -> bus
@@ -497,14 +501,20 @@ window.AmbienceEngine = (function () {
     // -1 hard left, 0 centre, +1 hard right. Ramped rather than set, because a
     // step in pan is as audible as a step in gain.
     setPan: function (id, pan) {
+      var p = Math.max(-1, Math.min(1, Number(pan) || 0));
+      // Remembered even before the layer is built, or a pan set at boot
+      // silently vanished and every token re-centred on the next reseat.
+      pendingPan[id] = p;
       var node = layers[id];
       if (!node || !node.panner || !ctx) return;
-      var p = Math.max(-1, Math.min(1, Number(pan) || 0));
       node.pan = p;
       node.panner.pan.setTargetAtTime(p, ctx.currentTime, 0.05);
     },
 
-    getPan: function (id) { return layers[id] ? layers[id].pan : 0; },
+    getPan: function (id) {
+      var node = layers[id];
+      return node ? node.pan : (pendingPan[id] || 0);
+    },
 
     setMaster: function (v) {
       master = Math.max(0, Math.min(100, v)) / 100;

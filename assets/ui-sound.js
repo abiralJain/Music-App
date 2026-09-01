@@ -51,7 +51,7 @@ window.UISound = (function () {
     shaper.oversample = "2x";
 
     bus = ctx.createGain();
-    bus.gain.value = 0.5;
+    bus.gain.value = 0.42;
 
     // Nothing below 180Hz: that is where the ambience bed and any music live,
     // and a UI click has no business there. Carving it out is what lets these
@@ -128,8 +128,10 @@ window.UISound = (function () {
   var SFX = {
     // A wooden key. Hyoshigi register: a bright, hard contact and a short
     // hollow body — wood on wood, not metal on metal.
-    press:    function () { hiss({ freq: 2050, slide: 1400, dur: 0.03, q: 2.6, gain: 0.15 });
-                            tone({ freq: 640, slide: 470, dur: 0.045, gain: 0.09, type: "triangle" }); },
+    // Softened 2026-09: the old voicing read as a clack forty times a minute.
+    // Lower band, lower gain — a felt pad, not a switch.
+    press:    function () { hiss({ freq: 1500, slide: 1050, dur: 0.028, q: 2.2, gain: 0.09 });
+                            tone({ freq: 560, slide: 430, dur: 0.04, gain: 0.05, type: "triangle" }); },
     // Hover is the quietest thing here on purpose; it fires constantly.
     hover:    function () { hiss({ freq: 5200, dur: 0.022, q: 2.2, gain: 0.035 }); },
     // Rising minor third: something switched on.
@@ -144,7 +146,7 @@ window.UISound = (function () {
     close:    function () { hiss({ freq: 3000, slide: 500, dur: 0.11, q: 0.7, gain: 0.08 });
                             tone({ freq: 660, slide: 300, dur: 0.1,  gain: 0.09 }); },
     // Fires on every fader step, so it is nearly nothing — a detent, not a note.
-    tick:     function () { hiss({ freq: 3800, dur: 0.014, q: 3.4, gain: 0.05 }); },
+    tick:     function () { hiss({ freq: 3400, dur: 0.013, q: 3.2, gain: 0.03 }); },
     // A physical clunk: low, short, no pitch to speak of.
     mute:     function () { hiss({ freq: 420, filter: "lowpass", dur: 0.07, q: 0.6, gain: 0.2 }); },
     // Paper landing on paper — the token drop. A soft low push of air with a
@@ -159,6 +161,26 @@ window.UISound = (function () {
     // Two flat notes. Errors should sound like a shrug, not an alarm.
     error:    function () { tone({ freq: 200, dur: 0.1,  gain: 0.16 });
                             tone({ freq: 150, dur: 0.16, gain: 0.16, delay: 0.09 }); },
+    // The slot machine's own voices — it must not reuse the fader sounds.
+    // reel: a low wooden ratchet, one click per notch.
+    reel:     function () { hiss({ freq: 700, dur: 0.02, q: 2.0, gain: 0.045 });
+                            tone({ freq: 300, slide: 240, dur: 0.02, gain: 0.03, type: "triangle" }); },
+    // stop: a reel landing — brighter and shorter than the token thump.
+    stop:     function () { hiss({ freq: 320, filter: "lowpass", dur: 0.06, q: 0.6, gain: 0.2, attack: 0.003 });
+                            hiss({ freq: 2100, dur: 0.014, q: 2.2, gain: 0.06 }); },
+    // win: the landing moment. Three rising pentatonic notes — the one
+    // little jingle in the app, and it is earned.
+    win:      function () { [523.25, 659.25, 783.99].forEach(function (f, i) {
+                              tone({ freq: f, dur: 0.16 + i * 0.06, gain: 0.09,
+                                     type: "triangle", clean: true, vary: 0.004,
+                                     delay: i * 0.09, attack: 0.008 });
+                            }); },
+    // The whip. lash is air being moved; crack is the one loud sound in the
+    // whole interface — a snap, a low body, and a short breath of tail.
+    lash:     function () { hiss({ freq: 350, slide: 2400, dur: 0.3, q: 0.8, gain: 0.1, attack: 0.03 }); },
+    crack:    function () { hiss({ freq: 2600, filter: "highpass", dur: 0.035, q: 0.7, gain: 0.5, attack: 0.001 });
+                            tone({ freq: 110, slide: 55, dur: 0.12, gain: 0.22, type: "sine", clean: true, attack: 0.002 });
+                            hiss({ freq: 1400, dur: 0.16, q: 0.6, gain: 0.08, delay: 0.03 }); },
     // The boot chime. The only sound allowed to be a chord.
     boot:     function () { [392, 523.25, 659.25, 784].forEach(function (f, i) {
                               tone({ freq: f, dur: 0.5 + i * 0.1, gain: 0.075,
