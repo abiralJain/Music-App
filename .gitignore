@@ -11,9 +11,8 @@ assets/original/
 # machines of people who add it themselves. The shipped pack is ukiyoe/.
 assets/scenes/ghibli/
 
-# Encoded background film loops. Derived from local source videos via
-# tools/loops.py; the sources are third-party clips whose provenance this
-# public repo cannot assert, so the same rule as the ghibli pack applies.
-assets/loops/*.mp4
-assets/loops/*.jpg
-assets/loops/loops.local.js
+# Encoded background film loops (assets/loops/*.mp4, *.jpg, loops.local.js)
+# were excluded here — third-party clips of unverifiable provenance in a
+# public repo — until 2026-09-01, when the owner explicitly asked for them
+# to be pushed anyway. Left unignored on purpose; do not silently restore
+# this exclusion.
